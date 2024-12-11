@@ -1,0 +1,47 @@
+{
+  "project_info": {
+    "project_number": "901483395681",
+    "project_id": "gavio-3d35c",
+    "storage_bucket": "gavio-3d35c.appspot.com"
+  },
+  "client": [
+    {
+      "client_info": {
+        "mobilesdk_app_id": "1:901483395681:android:b4cd9de3e504aeea770820",
+        "android_client_info": {
+          "package_name": "com.gastosdiarios.gavio"
+        }
+      },
+      "oauth_client": [
+        {
+          "client_id": "901483395681-k6159bmu6d6l1h2fhcl9uqd68ao8ni9m.apps.googleusercontent.com",
+          "client_type": 1,
+          "android_info": {
+            "package_name": "com.gastosdiarios.gavio",
+            "certificate_hash": "6d0a006fb766ab639dec15fbcf0068efead35005"
+          }
+        },
+        {
+          "client_id": "901483395681-k9rf60c92kvv1ve1iu4fls3cro0pc8dc.apps.googleusercontent.com",
+          "client_type": 3
+        }
+      ],
+      "api_key": [
+        {
+          "current_key": "AIzaSyCz0Q9PtgGqQfkexXS0Z5GDuRbNfNYEMls"
+        }
+      ],
+      "services": {
+        "appinvite_service": {
+          "other_platform_oauth_client": [
+            {
+              "client_id": "901483395681-k9rf60c92kvv1ve1iu4fls3cro0pc8dc.apps.googleusercontent.com",
+              "client_type": 3
+            }
+          ]
+        }
+      }
+    }
+  ],
+  "configuration_version": "1"
+}
