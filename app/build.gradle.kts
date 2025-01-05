@@ -1,4 +1,3 @@
-
 plugins {
     alias(libs.plugins.android.application)//ORIGINAL
     alias(libs.plugins.jetbrains.kotlin.android)//ORIGINAL
@@ -6,6 +5,7 @@ plugins {
     alias(libs.plugins.crashlytics)
     alias(libs.plugins.ksp)
     alias(libs.plugins.hilt)
+    alias(libs.plugins.kotlin.serialization)
 }
 
 android {
@@ -45,7 +45,7 @@ android {
         compose = true
     }
     composeOptions {
-       kotlinCompilerExtensionVersion = "1.5.1"
+        kotlinCompilerExtensionVersion = "1.5.1"
     }
     packaging {
         resources {
@@ -55,7 +55,17 @@ android {
 }
 
 dependencies {
-    //google play services  dependencia base
+    implementation (libs.accompanist.systemuicontroller)//agregado 20/12/2024
+    //splash screen
+    implementation(libs.androidx.core.splashscreen)
+    //hilt navigation compose
+    implementation(libs.androidx.hilt.navigation.compose)//agregado 18/12/2024
+    //autenticacion biometrica
+    implementation(libs.androidx.biometric)//agregado 16/12/2024
+//    implementation("androidx.appcompat:appcompat:1.6.1")
+
+    //refrescar pantalla
+    implementation(libs.androidx.swiperefreshlayout)
 
     //credential manager
     implementation(libs.androidx.credentials)
@@ -94,4 +104,6 @@ dependencies {
     androidTestImplementation(libs.androidx.ui.test.junit4)//ORIGINAL
     debugImplementation(libs.androidx.ui.tooling)//ORIGINAL
     debugImplementation(libs.androidx.ui.test.manifest)//ORIGINAL
+
+    implementation(libs.kotlinx.serialization.json)
 }

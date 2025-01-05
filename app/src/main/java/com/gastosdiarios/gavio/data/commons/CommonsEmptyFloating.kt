@@ -12,14 +12,14 @@ import androidx.compose.ui.Modifier
 import androidx.compose.ui.unit.dp
 
 @Composable
-fun CommonsEmptyFloating(onClick: () -> Unit){
-    Box {
+fun CommonsEmptyFloating(onClick: () -> Unit, modifier: Modifier){
+    Box(modifier) {
         CommonsIsEmpty()
         FloatingActionButton(
             onClick = onClick,
             modifier = Modifier
                 .align(alignment = Alignment.BottomEnd)
-                .padding(10.dp)
+                .padding(20.dp)
         )
         { Icon(Icons.Default.Add, contentDescription = null) }
     }

@@ -21,6 +21,10 @@ object MathUtils {
         return BigDecimal(alto - menos).setScale(2, RoundingMode.HALF_EVEN).toDouble()
     }
 
+    fun minus(nuevoValor: String, valorExistente: String): Double {
+        return nuevoValor.toDouble().minus(valorExistente.toDouble())
+    }
+
     fun bigDecimalToDouble(value: Double): Double {
         return BigDecimal(value).setScale(2, RoundingMode.HALF_EVEN).toDouble()
     }

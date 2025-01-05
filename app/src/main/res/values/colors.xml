@@ -13,4 +13,5 @@
     <color name="rojoDinero">#B3261E</color>
     <color name="grayTres">#C7C7CC</color>
     <color name="grayCuatro">#8E8E93</color>
+    <color name="transparent">#00FFFFFF</color>
 </resources>

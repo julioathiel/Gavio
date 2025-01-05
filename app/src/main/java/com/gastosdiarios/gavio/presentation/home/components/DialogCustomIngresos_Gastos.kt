@@ -1,9 +1,6 @@
 package com.gastosdiarios.gavio.presentation.home.components
 
-import android.text.TextUtils
-import android.util.Log
 import androidx.compose.foundation.layout.Arrangement
-import androidx.compose.foundation.layout.Box
 import androidx.compose.foundation.layout.Column
 import androidx.compose.foundation.layout.Row
 import androidx.compose.foundation.layout.fillMaxWidth
@@ -11,7 +8,6 @@ import androidx.compose.foundation.layout.height
 import androidx.compose.foundation.layout.padding
 import androidx.compose.foundation.shape.RoundedCornerShape
 import androidx.compose.foundation.text.KeyboardOptions
-import androidx.compose.foundation.text.input.InputTransformation.Companion.keyboardOptions
 import androidx.compose.material3.Button
 import androidx.compose.material3.ExperimentalMaterial3Api
 import androidx.compose.material3.MaterialTheme
@@ -31,15 +27,11 @@ import androidx.compose.runtime.setValue
 import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.graphics.Color
-import androidx.compose.ui.layout.onGloballyPositioned
-import androidx.compose.ui.layout.onSizeChanged
 import androidx.compose.ui.res.colorResource
 import androidx.compose.ui.res.stringResource
 import androidx.compose.ui.text.TextStyle
 import androidx.compose.ui.text.input.KeyboardType
 import androidx.compose.ui.text.style.TextAlign
-import androidx.compose.ui.unit.IntSize
-import androidx.compose.ui.unit.TextUnit
 import androidx.compose.ui.unit.dp
 import androidx.compose.ui.unit.sp
 import androidx.navigation.NavController
@@ -193,8 +185,7 @@ fun TextFieldDinero(
     onTextChanged: (String) -> Unit
 ) {
     val maxLength = 10
-    var textSize by remember { mutableStateOf(60.sp) }
-    var textFieldWidth by remember { mutableFloatStateOf(0f) }
+    val textSize by remember { mutableStateOf(50.sp) }
 
     OutlinedTextField(
         value = cantidadIngresada.take(maxLength),
@@ -221,8 +212,8 @@ fun TextFieldDinero(
         ),
         colors = TextFieldDefaults.colors(
             unfocusedIndicatorColor = Color.Transparent,
-            unfocusedContainerColor = MaterialTheme.colorScheme.surfaceContainer,
-            focusedContainerColor = MaterialTheme.colorScheme.surfaceContainer
+            unfocusedContainerColor = Color.Transparent,
+            focusedContainerColor = Color.Transparent
         ),
         keyboardOptions = KeyboardOptions(keyboardType = KeyboardType.Decimal),
         shape = RoundedCornerShape(20.dp),

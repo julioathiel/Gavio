@@ -35,7 +35,10 @@ fun BodyHeader(viewModel: HomeViewModel, onNavigationMovimientos: () -> Unit) {
         horizontalArrangement = Arrangement.SpaceBetween,
         verticalAlignment = Alignment.CenterVertically
     ) {
-        Text(text = stringResource(R.string.tu_dinero_actual))
+        Text(
+            text = stringResource(R.string.tu_dinero_actual),
+            color = MaterialTheme.colorScheme.onSurface
+        )
 
         TextButton(
             onClick = { onNavigationMovimientos() },
@@ -47,12 +50,12 @@ fun BodyHeader(viewModel: HomeViewModel, onNavigationMovimientos: () -> Unit) {
             ) {
                 Text(
                     text = stringResource(R.string.ir_a_movimientos),
-                    color = MaterialTheme.colorScheme.onBackground
+                    color = MaterialTheme.colorScheme.onSurface,
                 )
                 Icon(
                     painter = painterResource(id = R.drawable.ic_navigate_next),
                     contentDescription = null,
-                    tint = MaterialTheme.colorScheme.onBackground,
+                    tint = MaterialTheme.colorScheme.onSurface,
                 )
             }
         }
@@ -66,12 +69,12 @@ fun BodyHeader(viewModel: HomeViewModel, onNavigationMovimientos: () -> Unit) {
             Text(
                 limitDia,
                 modifier = Modifier.padding(end = 4.dp),
-                color = MaterialTheme.colorScheme.onBackground,
+                color = MaterialTheme.colorScheme.onSurface,
                 style = MaterialTheme.typography.titleMedium
             )
             Text(
                 stringResource(R.string.por_dia),
-                color = MaterialTheme.colorScheme.onBackground,
+                color = MaterialTheme.colorScheme.onSurface,
                 style = MaterialTheme.typography.titleMedium
             )
         }

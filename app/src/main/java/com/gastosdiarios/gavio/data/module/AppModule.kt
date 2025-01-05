@@ -5,6 +5,8 @@ import android.app.Application
 import android.content.Context
 import android.content.pm.PackageManager
 import android.content.res.Resources
+import androidx.appcompat.app.AppCompatActivity
+import com.gastosdiarios.gavio.MainActivity
 import com.gastosdiarios.gavio.data.DataStorePreferences
 import com.google.firebase.auth.FirebaseAuth
 import com.google.firebase.firestore.FirebaseFirestore
@@ -22,15 +24,15 @@ import javax.inject.Singleton
 object AppModule {
     @Provides
     @Singleton
-    fun provideFirebaseAuth(): FirebaseAuth{
+    fun provideFirebaseAuth(): FirebaseAuth {
         return FirebaseAuth.getInstance()
     }
 
-    @Provides
-    @Singleton
-    fun provideUserId(auth: FirebaseAuth): String? {
-        return auth.currentUser?.uid
-    }
+//    @Provides
+//    @Singleton
+//    fun provideUserId(auth: FirebaseAuth): String? {
+//        return auth.currentUser?.uid
+//    }
 
     @Provides
     @Singleton
@@ -52,4 +54,17 @@ object AppModule {
     fun providePackageManager(application: Application): PackageManager {
         return application.packageManager
     }
+
+    @Provides
+    @Singleton
+    fun provideContext(application: Application): Context {
+        return application.applicationContext
+    }
+
+    @Provides
+    @Singleton
+    fun provideMainActivityProvider(mainActivity: AppCompatActivity): AppCompatActivity {
+        return mainActivity
+    }
+
 }

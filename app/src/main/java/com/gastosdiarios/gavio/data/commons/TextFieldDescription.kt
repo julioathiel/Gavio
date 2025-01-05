@@ -23,8 +23,8 @@ fun TextFieldDescription(
         maxLines = 1,
         colors = TextFieldDefaults.colors(
             unfocusedIndicatorColor = Color.Transparent,
-            unfocusedContainerColor = MaterialTheme.colorScheme.surfaceContainer,
-            focusedContainerColor = MaterialTheme.colorScheme.surfaceContainer,
+            unfocusedContainerColor = Color.Transparent,
+            focusedContainerColor = Color.Transparent,
 
         )
     ,

@@ -32,7 +32,7 @@ fun ListConf(
 
     Column(
         modifier = modifier
-            .background(color = MaterialTheme.colorScheme.background)
+            .background(color = MaterialTheme.colorScheme.surface)
             .verticalScroll(
                 rememberScrollState()
             )

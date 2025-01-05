@@ -14,6 +14,7 @@ import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.res.painterResource
 import androidx.compose.ui.res.stringResource
+import androidx.compose.ui.text.style.TextAlign
 import androidx.compose.ui.unit.dp
 import com.gastosdiarios.gavio.R
 
@@ -21,7 +22,7 @@ import com.gastosdiarios.gavio.R
 @Composable
 fun CommonsIsEmpty() {
     Column(
-        modifier = Modifier.fillMaxSize().background(MaterialTheme.colorScheme.background),
+        modifier = Modifier.fillMaxSize().background(MaterialTheme.colorScheme.surface),
         horizontalAlignment = Alignment.CenterHorizontally,
         verticalArrangement = Arrangement.Center
     ) {
@@ -29,7 +30,7 @@ fun CommonsIsEmpty() {
             painter = painterResource(id = R.drawable.ic_no_data),
             contentDescription = null,
             modifier = Modifier
-                .size(200.dp)
+                .size(150.dp)
                 .align(Alignment.CenterHorizontally)
         )
      //   CommonsLoaderData(modifier = Modifier.size(300.dp), image = R.raw.no_data_lottie, repeat = true)
@@ -39,5 +40,6 @@ fun CommonsIsEmpty() {
             style = MaterialTheme.typography.titleMedium,
             color = MaterialTheme.colorScheme.onBackground
         )
+
     }
 }

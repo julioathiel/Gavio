@@ -44,7 +44,8 @@ import androidx.compose.ui.graphics.drawscope.translate
 import androidx.compose.ui.graphics.nativeCanvas
 import androidx.compose.ui.graphics.toArgb
 import androidx.compose.ui.platform.LocalDensity
-import androidx.compose.ui.text.TextStyle
+import androidx.compose.ui.text.font.FontWeight
+import androidx.compose.ui.text.style.TextAlign
 import androidx.compose.ui.unit.dp
 import androidx.compose.ui.unit.sp
 import kotlinx.coroutines.delay
@@ -56,7 +57,7 @@ import java.util.Locale
 fun <T> BarGraph(config: BarGraphConfig<T>) {
     var selectedBarIndex by remember { mutableIntStateOf(-1) }
     val ejeCartesianoX = 30
-    Column(Modifier.fillMaxWidth(), horizontalAlignment = Alignment.CenterHorizontally) {
+    Column(Modifier.fillMaxWidth().padding(16.dp), horizontalAlignment = Alignment.CenterHorizontally) {
         //gráfico donde muestra el dinero de cada barra al ser seleccionada
         ViewBarText(selectedBarIndex = selectedBarIndex, config = config)
 
@@ -66,7 +67,7 @@ fun <T> BarGraph(config: BarGraphConfig<T>) {
             contentAlignment = Alignment.TopCenter
         ) {
 
-            Spacer(modifier = Modifier.padding(30.dp))
+
             Box(
                 modifier = Modifier.height(config.altura)
             ) {
@@ -114,26 +115,29 @@ fun <T> ViewBarText(
         ""
     }
 
-    Box(
+    Column(
         modifier = Modifier
-            .fillMaxWidth()
-            .height(config.viewBarHeigth)
-            .padding(config.viewBarPaddingBottom)
-            .background(
-                color = config.viewBarContainerColor,
-                shape = RoundedCornerShape(config.viewBarCornerRadius)
-            ),
-        contentAlignment = Alignment.Center
+            .fillMaxSize()
+            .padding(bottom = config.viewBarPaddingBottom),
     ) {
+        Text(text = "Total",modifier = Modifier.padding(start = 10.dp), textAlign = TextAlign.Start)
+
         val textDinero = selectedBarValue.toDoubleOrNull()?.let { amount ->
             formattedCurrency(amount)
-        } ?: ""
+        } ?: "$ 0.00"
         Text(
             text = textDinero,
-            style = TextStyle(color = config.viewBarTextColor, fontSize = config.viewBarTextSize)
+            modifier = Modifier.padding(start = 10.dp),
+            textAlign = TextAlign.Start,
+            color = config.viewBarTextColor,
+            fontSize = config.viewBarTextSize,
+            fontWeight = FontWeight.Bold,
         )
     }
+
+    Spacer(modifier = Modifier.height(16.dp))
 }
+
 fun formattedCurrency(amount: Double): String {
     val currencyFormat = NumberFormat.getCurrencyInstance(Locale("es", "AR"))
     val formattedAmount = currencyFormat.format(amount)
@@ -214,7 +218,7 @@ private fun <T> LazyRowItems(
     //esto ayuda a que si no se ve el ultimo mes en pantalla, se pueda visualizar
     LaunchedEffect(state) {
         try {
-            if(config.barGraphList.isNotEmpty()){
+            if (config.barGraphList.isNotEmpty()) {
                 delay(3000)
                 state.scrollToItem(index = config.barGraphList.size - 1)
             }
@@ -234,7 +238,8 @@ private fun <T> LazyRowItems(
         items(config.barGraphList.size) { index ->
             val animationBarra by remember { mutableStateOf(false) }
             val calendar = Calendar.getInstance()
-            val currentMonth = calendar.getDisplayName(Calendar.MONTH, Calendar.SHORT, Locale.getDefault())
+            val currentMonth =
+                calendar.getDisplayName(Calendar.MONTH, Calendar.SHORT, Locale.getDefault())
 
 //            LaunchedEffect(key1 = true) {
 //                animationBarra = true
@@ -268,7 +273,7 @@ private fun <T> LazyRowItems(
                     //muestra cada barra del mes
                     Box(
                         modifier = Modifier
-                           // .fillMaxHeight(graphBarHeight)
+                            // .fillMaxHeight(graphBarHeight)
                             .fillMaxHeight(item)
                             .width(config.dataBarWidth)
                             .background(barColor, barShape)
@@ -307,7 +312,6 @@ private fun <T> LazyRowItems(
         }
     }
 }
-
 
 
 @Composable

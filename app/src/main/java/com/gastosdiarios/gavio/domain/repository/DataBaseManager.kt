@@ -19,6 +19,7 @@ import com.gastosdiarios.gavio.domain.repository.repositoriesFirestrore.TotalIng
 import com.gastosdiarios.gavio.domain.repository.repositoriesFirestrore.TransactionsFirestore
 import com.gastosdiarios.gavio.domain.repository.repositoriesFirestrore.UserCategoryGastosFirestore
 import com.gastosdiarios.gavio.domain.repository.repositoriesFirestrore.UserCategoryIngresosFirestore
+import com.google.firebase.auth.FirebaseAuth
 import javax.inject.Inject
 
 class DataBaseManager @Inject constructor(
@@ -48,15 +49,6 @@ class DataBaseManager @Inject constructor(
 
    //----------------------------------------------//
 
-    suspend fun deleteAllApp() {
-        dateFirestore.delete()
-        totalGastosFirestore.delete()
-        currentMoneyFirestore.delete()
-        totalIngresosFirestore.delete()
-        transactionsFirestore.deleteAll()
-        gastosPorCategoriaFirestore.deleteAll()
-    }
-
     //FUNCION PARA LA PANTALLA DE TRANSACTIONS
     suspend fun deleteAllScreenTransactions() {
         totalGastosFirestore.delete()
@@ -78,10 +70,19 @@ class DataBaseManager @Inject constructor(
     //----------------------------------------------//
 
     suspend fun deleteCurrentMoney() = currentMoneyFirestore.delete()
-    suspend fun deleteAllTransactions() = transactionsFirestore.deleteAll()
-    suspend fun deleteAllGastosPorCategory() = gastosPorCategoriaFirestore.deleteAll()
+    private suspend fun deleteAllTransactions() = transactionsFirestore.deleteAll()
+    private suspend fun deleteAllGastosPorCategory() = gastosPorCategoriaFirestore.deleteAll()
 
     suspend fun deleteTransaction(item: TransactionModel) {
         transactionsFirestore.delete(item)
+    }
+
+    suspend fun resetAllApp() {
+        dateFirestore.delete()
+        deleteAllTransactions()
+        deleteAllGastosPorCategory()
+        totalGastosFirestore.createOrUpdate(TotalGastosModel(totalGastos = 0.0))
+        totalIngresosFirestore.createOrUpdate(TotalIngresosModel(totalIngresos = 0.0))
+        currentMoneyFirestore.createOrUpdate(CurrentMoneyModel(money = 0.0, checked = true))
     }
 }

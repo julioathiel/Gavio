@@ -27,8 +27,8 @@ fun SwitchWithText(
 
         Switch(
             checked = selectedSwitchNumber == numberSwitch,
-            onCheckedChange = { isChecked ->
-                if (isChecked) {
+            onCheckedChange = { newState ->
+                if (newState) {
                     isActivated(true)
                 }
             },

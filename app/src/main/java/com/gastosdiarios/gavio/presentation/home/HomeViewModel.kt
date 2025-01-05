@@ -1,7 +1,10 @@
 package com.gastosdiarios.gavio.presentation.home
 
+import android.app.Application
+import android.content.Context
 import android.content.res.Resources
 import android.util.Log
+import android.widget.Toast
 import androidx.lifecycle.ViewModel
 import androidx.lifecycle.viewModelScope
 import com.gastosdiarios.gavio.R
@@ -12,6 +15,8 @@ import com.gastosdiarios.gavio.data.ui_state.HomeUiState
 import com.gastosdiarios.gavio.data.ui_state.ListUiState
 import com.gastosdiarios.gavio.domain.model.CategoryGastos
 import com.gastosdiarios.gavio.domain.model.CategoryIngresos
+import com.gastosdiarios.gavio.domain.model.RefreshDataModel
+import com.gastosdiarios.gavio.domain.model.SeguridadBiometrica
 import com.gastosdiarios.gavio.domain.model.UserCreateCategoriesModel
 import com.gastosdiarios.gavio.domain.model.defaultCategoriesGastosList
 import com.gastosdiarios.gavio.domain.model.defaultCategoriesIngresosList
@@ -39,7 +44,9 @@ import com.gastosdiarios.gavio.utils.DateUtils.converterFechaPersonalizada
 import com.gastosdiarios.gavio.utils.DateUtils.obtenerFechaActual
 import com.gastosdiarios.gavio.utils.DateUtils.parsearFechaALocalDate
 import com.gastosdiarios.gavio.utils.MathUtils
+import com.gastosdiarios.gavio.utils.RefreshDataUtils
 import com.google.firebase.auth.FirebaseUser
+import dagger.hilt.android.internal.Contexts.getApplication
 import dagger.hilt.android.lifecycle.HiltViewModel
 import kotlinx.coroutines.Dispatchers
 import kotlinx.coroutines.async
@@ -66,6 +73,7 @@ import javax.inject.Inject
 
 @HiltViewModel
 class HomeViewModel @Inject constructor(
+    private val context: Context,
     private val resources: Resources,
     private val authFirebaseImp: AuthFirebaseImp,
     private val dbm: DataBaseManager,
@@ -83,10 +91,16 @@ class HomeViewModel @Inject constructor(
     private val _homeUiState = MutableStateFlow(HomeUiState())
     val homeUiState: StateFlow<HomeUiState> = _homeUiState.asStateFlow()
 
+    private val _isRefreshing = MutableStateFlow(RefreshDataModel(isRefreshing = false))
+    val isRefreshing: StateFlow<RefreshDataModel> = _isRefreshing.asStateFlow()
+
     private val _transactionUiState = MutableStateFlow(ListUiState<TransactionModel>())
 
     private val circularBuffer = CircularBuffer(capacity = LIMIT_MONTH, db = barDataFirestore)
 
+    init {
+        calculandoInit()
+    }
 
     fun calculandoInit() {
         viewModelScope.launch {
@@ -158,7 +172,7 @@ class HomeViewModel @Inject constructor(
                     null -> {
                         // Si fechaGuardada es nula y dias restantes tambien se asigna un valor predeterminado
                         initMostrandoAlUsuario()
-                     //  manejarFechayDiasRestantesNulos()
+                        //  manejarFechayDiasRestantesNulos()
                     }
                 }
             } catch (e: Exception) {
@@ -194,10 +208,9 @@ class HomeViewModel @Inject constructor(
         }
     }
 
-   private fun initMostrandoAlUsuario() {
+    private fun initMostrandoAlUsuario() {
         viewModelScope.launch {
-            try{
-
+            try {
                 _homeUiState.update { it.copy(isLoading = true) }
                 getMaxDate()
                 mostrarCurrentMoney()
@@ -207,7 +220,7 @@ class HomeViewModel @Inject constructor(
                 listCatGastosNueva()
                 listCatIngresosNueva()
                 _homeUiState.update { _homeUiState.value.copy(isLoading = false) }
-            }catch (e:Exception){
+            } catch (e: Exception) {
                 _homeUiState.update { it.copy(isError = true) }
                 Log.e(tag, "initMostrandoAlUsuario no hay internet: ${e.message}")
             }
@@ -313,12 +326,9 @@ class HomeViewModel @Inject constructor(
     private fun getMaxDate() {
         viewModelScope.launch {
             //obteniendo fecha guardada maxima por el usuario
-            Log.d("getMax","getMaxDate")
             dataStorePreferences.getFechaMaximoMes().collect { maxDate ->
-                Log.d(tag, "getMaxDate: ${maxDate.numeroGuardado}")
                 _homeUiState.update { it.copy(selectedOptionFechaMaxima = maxDate.numeroGuardado.toInt()) }
             }
-            Log.d(tag, "getMaxDate: ${_homeUiState.value.selectedOptionFechaMaxima}")
         }
     }
 
@@ -554,13 +564,10 @@ class HomeViewModel @Inject constructor(
         categoryIcon: Int,
         isChecked: Boolean
     ) {
-        val day = SimpleDateFormat("dd", Locale.getDefault()).format(Date()).toInt()
-        val formattedDay = String.format(Locale.getDefault(), "%02d", day)
-        val dateFormat = SimpleDateFormat("$formattedDay MMM yyyy", Locale.getDefault())
-
         viewModelScope.launch {
             val list = withContext(Dispatchers.IO) { dbm.getTransactions() }
             val newIndex = list.maxOfOrNull { it.index ?: 0 }?.plus(1) ?: 0
+            val currentDate = obtenerFechaActual().toString()
 
             transactionsFirestore.create(
                 TransactionModel(
@@ -568,7 +575,7 @@ class HomeViewModel @Inject constructor(
                     subTitle = description,
                     cash = cantidad,
                     select = isChecked,
-                    date = dateFormat.format(Date()),
+                    date = currentDate,
                     icon = categoryIcon.toString(),
                     index = newIndex
                 )
@@ -678,6 +685,17 @@ class HomeViewModel @Inject constructor(
     fun getCurrentUser(): FirebaseUser? = authFirebaseImp.getCurrentUser()
 
     fun resetErrorState() {
-       _homeUiState.update { it.copy(isError = false) }
+        _homeUiState.update { it.copy(isError = false) }
+    }
+
+    fun refreshData() {
+        RefreshDataUtils.refreshData(
+            viewModelScope,
+            isRefreshing = _isRefreshing,
+            dataLoading = {
+                initMostrandoAlUsuario()
+                Toast.makeText(context, "actualizado", Toast.LENGTH_SHORT).show()
+            }
+        )
     }
 }

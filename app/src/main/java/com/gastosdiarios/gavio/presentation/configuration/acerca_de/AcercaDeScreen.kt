@@ -1,6 +1,7 @@
 package com.gastosdiarios.gavio.presentation.configuration.acerca_de
 
 import androidx.compose.foundation.Image
+import androidx.compose.foundation.background
 import androidx.compose.foundation.layout.Arrangement
 import androidx.compose.foundation.layout.Column
 import androidx.compose.foundation.layout.PaddingValues
@@ -18,10 +19,11 @@ import androidx.compose.runtime.getValue
 import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.unit.dp
+import androidx.hilt.navigation.compose.hiltViewModel
 import coil.compose.rememberAsyncImagePainter
 
 @Composable
-fun AcercaDeScreen(viewModel: AcercaDeViewModel) {
+fun AcercaDeScreen(viewModel: AcercaDeViewModel = hiltViewModel()) {
     Scaffold(
         containerColor = MaterialTheme.colorScheme.background,
         content = {
@@ -38,6 +40,7 @@ fun Content(viewModel: AcercaDeViewModel, paddingValues: PaddingValues) {
     Column(
         modifier = Modifier
             .padding(paddingValues)
+            .background(MaterialTheme.colorScheme.surface)
             .fillMaxSize(),
         verticalArrangement = Arrangement.Center,
         horizontalAlignment = Alignment.CenterHorizontally

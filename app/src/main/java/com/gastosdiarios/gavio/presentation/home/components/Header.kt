@@ -5,6 +5,7 @@ import androidx.compose.foundation.layout.Column
 import androidx.compose.foundation.layout.Row
 import androidx.compose.foundation.layout.fillMaxWidth
 import androidx.compose.foundation.layout.padding
+import androidx.compose.material3.MaterialTheme
 import androidx.compose.material3.Text
 import androidx.compose.runtime.Composable
 import androidx.compose.ui.Alignment
@@ -44,10 +45,10 @@ fun Header(viewModel: HomeViewModel) {
 //        }
 //
 //        Spacer(modifier = Modifier.padding(4.dp))
-        Column(Modifier.fillMaxWidth()) {
-            val primerName = currentUser?.displayName?.split(" ")?.firstOrNull()
-            if (primerName.isNullOrEmpty()) Text(text = "Hola, Usuario")
-            else Text(text = "Hola, $primerName")
-        }
+//        Column(Modifier.fillMaxWidth()) {
+//            val primerName = currentUser?.displayName?.split(" ")?.firstOrNull()
+//            if (primerName.isNullOrEmpty()) Text(text = "Hola", color = MaterialTheme.colorScheme.onSurface)
+//            else Text(text = "Hola, $primerName", color = MaterialTheme.colorScheme.onSurface)
+//        }
     }
 }

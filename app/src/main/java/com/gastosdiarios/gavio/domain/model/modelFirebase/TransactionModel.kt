@@ -1,5 +1,7 @@
 package com.gastosdiarios.gavio.domain.model.modelFirebase
 
+import java.time.LocalDate
+
 data class TransactionModel(
      val uid: String? = null,
      val title: String? = null,

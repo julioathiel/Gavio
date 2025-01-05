@@ -7,7 +7,7 @@ sealed class OnActionsMovimientos {
     data class EditItem(
         val title: String,
         val nuevoValor: String,
-        val description: String,
+        val nuevaDescription: String,
         val item: TransactionModel
     ) : OnActionsMovimientos()
 }

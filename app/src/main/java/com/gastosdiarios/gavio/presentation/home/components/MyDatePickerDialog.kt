@@ -26,7 +26,7 @@ fun MyDatePickerDialog(homeViewModel: HomeViewModel) {
     TextButton(onClick = { showDatePicker = true }) {
         Text(
             text = stringResource(id = R.string.editar),
-            color = MaterialTheme.colorScheme.onSecondaryContainer
+            color = MaterialTheme.colorScheme.onSurface
         )
     }
     if (showDatePicker) {

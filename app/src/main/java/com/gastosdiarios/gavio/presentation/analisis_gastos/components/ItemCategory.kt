@@ -2,31 +2,34 @@ package com.gastosdiarios.gavio.presentation.analisis_gastos.components
 
 import androidx.compose.animation.core.animateFloatAsState
 import androidx.compose.animation.core.tween
-import androidx.compose.foundation.Image
 import androidx.compose.foundation.background
+import androidx.compose.foundation.clickable
+import androidx.compose.foundation.layout.Arrangement
 import androidx.compose.foundation.layout.Box
 import androidx.compose.foundation.layout.Column
 import androidx.compose.foundation.layout.Row
 import androidx.compose.foundation.layout.Spacer
+import androidx.compose.foundation.layout.fillMaxSize
 import androidx.compose.foundation.layout.fillMaxWidth
+import androidx.compose.foundation.layout.height
 import androidx.compose.foundation.layout.padding
-import androidx.compose.foundation.layout.size
-import androidx.compose.foundation.layout.width
-import androidx.compose.foundation.shape.CircleShape
-import androidx.compose.material3.LinearProgressIndicator
+import androidx.compose.material3.Card
+import androidx.compose.material3.CardDefaults
+import androidx.compose.material3.CircularProgressIndicator
 import androidx.compose.material3.MaterialTheme
 import androidx.compose.material3.Text
 import androidx.compose.runtime.Composable
 import androidx.compose.runtime.collectAsState
 import androidx.compose.runtime.getValue
+import androidx.compose.runtime.mutableStateOf
+import androidx.compose.runtime.remember
+import androidx.compose.runtime.setValue
 import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
-import androidx.compose.ui.draw.clip
-import androidx.compose.ui.graphics.ColorFilter
-import androidx.compose.ui.res.painterResource
-import androidx.compose.ui.text.style.TextAlign
+import androidx.compose.ui.graphics.Color
+import androidx.compose.ui.text.style.TextOverflow
 import androidx.compose.ui.unit.dp
-import androidx.compose.ui.unit.sp
+import com.gastosdiarios.gavio.data.commons.ProfileIcon
 import com.gastosdiarios.gavio.domain.model.modelFirebase.GastosPorCategoriaModel
 import com.gastosdiarios.gavio.presentation.analisis_gastos.AnalisisGastosViewModel
 import com.gastosdiarios.gavio.utils.CurrencyUtils
@@ -37,14 +40,16 @@ import com.gastosdiarios.gavio.utils.MathUtils
 fun ItemCategory(
     uiState: GastosPorCategoriaModel,
     uiStateList: List<GastosPorCategoriaModel>,
-    viewModel: AnalisisGastosViewModel
+    viewModel: AnalisisGastosViewModel,
+    tertiaryContainer: Color,
+    onTertiary: Color,
 ) {
+    var expanded by remember { mutableStateOf(false) }
     val totalGastado = CurrencyUtils.formattedCurrency(uiState.totalGastado ?: 0.0)
-
-    val progressMaximoTotal:Double? by viewModel.totalIngresosRegister.collectAsState()
+    val progressMaximoTotal: Double? by viewModel.totalIngresosRegister.collectAsState()
 
     val movimientoCategoria = when (uiStateList.size) {
-        uiStateList.size -> uiStateList.find{ it.title == uiState.title  }
+        uiStateList.size -> uiStateList.find { it.title == uiState.title }
         else -> null
     }
 
@@ -52,58 +57,76 @@ fun ItemCategory(
     // Obtén el valor actual de los gastos para el ProgressBar, por ejemplo, del uiState
     val progressTotalGastosActual: Double = dineroGastadoTotal!!.toDouble()
 
-    val progresoRelativo = MathUtils.calcularProgresoRelativo(progressMaximoTotal, progressTotalGastosActual)
+    val progresoRelativo =
+        MathUtils.calcularProgresoRelativo(progressMaximoTotal, progressTotalGastosActual)
     val porcentaje = MathUtils.formattedPorcentaje(progresoRelativo)
 
-    Row(
-        verticalAlignment = Alignment.CenterVertically,
-        modifier = Modifier
-            .fillMaxWidth()
-            .padding(horizontal = 16.dp, vertical = 20.dp)
-    ) {
-        // icono de la categoria
+    Card(colors = CardDefaults.cardColors(containerColor = tertiaryContainer)) {
         Box(
-            Modifier
-                .clip(shape = CircleShape)
-                .size(48.dp)
-                .background(color = MaterialTheme.colorScheme.secondaryContainer),
-            contentAlignment = Alignment.Center
+            modifier = Modifier
+                .fillMaxSize()
+                .clickable { expanded = !expanded }
+                .background(tertiaryContainer),
+            contentAlignment = Alignment.TopEnd
         ) {
-            Image(
-                painter = painterResource(id = uiState.icon!!.toInt()),
-                contentDescription = "",
-                alignment = Alignment.Center,
-                modifier = Modifier.size(24.dp),
-                colorFilter = ColorFilter.tint(MaterialTheme.colorScheme.primary)
-            )
-        }
+            Column(modifier = Modifier.fillMaxSize()) {
+                if (expanded) {
+                    Column {
+                        Box(
+                            Modifier.padding(top = 16.dp, start = 16.dp),
+                            contentAlignment = Alignment.Center, content = {
+                                AnimatedProgressBarRegistro(
+                                    progress = progresoRelativo,
+                                    cardColor = Color.Transparent,
+                                    onCardColor = MaterialTheme.colorScheme.primary,
+                                )
+                                Text(
+                                    text = "$porcentaje%",
+                                    style = MaterialTheme.typography.bodyMedium,
+                                )
+                            }
+                        )
 
-        Spacer(modifier = Modifier.width(16.dp))
-        //contenido principal
-        Column {
-            //nombre de la categoria
-            Text(
-                text = uiState.title ?: "",
-                fontSize = 16.sp
-            )
-            //cantidad gastado de la categoria
-            Row {
-
-                Text(
-                    text = totalGastado,
-                    style = MaterialTheme.typography.bodySmall
-                )
-                Text(
-                    text = "$porcentaje%",
-                    fontSize = 14.sp,
-                    textAlign = TextAlign.End,
-                    modifier = Modifier.fillMaxWidth()
+                        Text(
+                            text = uiState.title ?: "",
+                            style = MaterialTheme.typography.titleMedium,
+                            maxLines = if (expanded) Int.MAX_VALUE else 1,
+                            overflow = if (expanded) TextOverflow.Clip else TextOverflow.Ellipsis,
+                            modifier = Modifier.padding(start = 16.dp, top = 16.dp)
+                        )
+                        Text(
+                            text = totalGastado,
+                            style = MaterialTheme.typography.bodyLarge,
+                            modifier = Modifier.padding(start = 16.dp, bottom = 16.dp)
+                        )
+                    }
+                }
+            }
+            Row(
+                Modifier.fillMaxWidth(),
+                horizontalArrangement = Arrangement.SpaceBetween,
+                verticalAlignment = Alignment.CenterVertically
+            ) {
+                if (!expanded) {
+                    Text(
+                        text = uiState.title ?: "",
+                        style = MaterialTheme.typography.bodyMedium,
+                        maxLines = if (expanded) Int.MAX_VALUE else 1,
+                        overflow = if (expanded) TextOverflow.Clip else TextOverflow.Ellipsis,
+                        modifier = Modifier.padding(16.dp)
+                    )
+                }
+                Spacer(modifier = Modifier.weight(1f))
+                ProfileIcon(
+                    drawableResource = uiState.icon!!.toInt(),
+                    description = "",
+                    sizeBox = 40,
+                    colorCircle = tertiaryContainer,
+                    colorIcon = onTertiary,
+                    modifier = Modifier.padding(8.dp)
                 )
             }
-            AnimatedProgressBarRegistro(
-                progress = progresoRelativo,
-                modifier = Modifier.fillMaxWidth()
-            )
+
         }
     }
 }
@@ -111,7 +134,9 @@ fun ItemCategory(
 @Composable
 fun AnimatedProgressBarRegistro(
     progress: Float,
-    modifier: Modifier = Modifier
+    modifier: Modifier = Modifier,
+    cardColor: Color,
+    onCardColor: Color
 ) {
 
     val animatedProgress by animateFloatAsState(
@@ -119,8 +144,10 @@ fun AnimatedProgressBarRegistro(
         animationSpec = tween(durationMillis = 1000), label = ""
     )
 
-    LinearProgressIndicator(
+    CircularProgressIndicator(
         progress = { animatedProgress },
         modifier = modifier,
+        color = onCardColor,
+        // trackColor = cardColor
     )
 }
