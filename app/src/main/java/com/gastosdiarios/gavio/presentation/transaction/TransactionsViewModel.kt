@@ -1,16 +1,13 @@
 package com.gastosdiarios.gavio.presentation.transaction
 
 import android.util.Log
-import androidx.compose.runtime.getValue
-import androidx.compose.runtime.mutableStateOf
-import androidx.compose.runtime.remember
-import androidx.compose.runtime.setValue
 import androidx.lifecycle.ViewModel
 import androidx.lifecycle.viewModelScope
 import com.gastosdiarios.gavio.R
 import com.gastosdiarios.gavio.data.events_handlers.OnActionsMovimientos
 import com.gastosdiarios.gavio.data.ui_state.ListUiState
 import com.gastosdiarios.gavio.data.ui_state.TransactionsUiState
+import com.gastosdiarios.gavio.domain.model.RefreshDataModel
 import com.gastosdiarios.gavio.domain.model.modelFirebase.CurrentMoneyModel
 import com.gastosdiarios.gavio.domain.model.modelFirebase.TotalGastosModel
 import com.gastosdiarios.gavio.domain.model.modelFirebase.TotalIngresosModel
@@ -22,14 +19,18 @@ import com.gastosdiarios.gavio.domain.repository.repositoriesFirestrore.TotalGas
 import com.gastosdiarios.gavio.domain.repository.repositoriesFirestrore.TotalIngresosFirestore
 import com.gastosdiarios.gavio.domain.repository.repositoriesFirestrore.TransactionsFirestore
 import com.gastosdiarios.gavio.utils.MathUtils
+import com.gastosdiarios.gavio.utils.RefreshDataUtils
+import com.google.firebase.firestore.FirebaseFirestoreException
 import dagger.hilt.android.lifecycle.HiltViewModel
 import kotlinx.coroutines.Dispatchers
 import kotlinx.coroutines.flow.MutableStateFlow
+import kotlinx.coroutines.flow.SharingStarted
 import kotlinx.coroutines.flow.StateFlow
 import kotlinx.coroutines.flow.asStateFlow
+import kotlinx.coroutines.flow.onStart
+import kotlinx.coroutines.flow.stateIn
 import kotlinx.coroutines.flow.update
 import kotlinx.coroutines.launch
-import kotlinx.coroutines.withContext
 import javax.inject.Inject
 
 @HiltViewModel
@@ -43,9 +44,6 @@ class TransactionsViewModel @Inject constructor(
 ) : ViewModel() {
     private val tag = "transactionViewModel"
 
-//    private val _interactionState = MutableStateFlow(TransactionsUiState())
-//    val interactionUiState: StateFlow<TransactionsUiState> = _interactionState.asStateFlow()
-
     private val _transactionUiState = MutableStateFlow(ListUiState<TransactionModel>())
     val transactionUiState: StateFlow<ListUiState<TransactionModel>> =
         _transactionUiState.asStateFlow()
@@ -53,16 +51,43 @@ class TransactionsViewModel @Inject constructor(
     private val _snackbarMessage = MutableStateFlow<Int?>(null)
     val snackbarMessage: StateFlow<Int?> get() = _snackbarMessage
 
-    init { getAllTransactions() }
+    private val _interactionState = MutableStateFlow(TransactionsUiState())
+    val interactionState: StateFlow<TransactionsUiState> = _interactionState.asStateFlow()
 
-    fun getAllTransactions() {
+    private val _isRefreshing = MutableStateFlow(RefreshDataModel(isRefreshing = false))
+    val isRefreshing: StateFlow<RefreshDataModel> = _isRefreshing.asStateFlow()
+
+    private val _isLoading = MutableStateFlow(false)
+    val isLoading = _isLoading
+        .onStart {
+            getAllTransactions()
+        }.stateIn(viewModelScope,
+            SharingStarted.WhileSubscribed(5000L),
+            false
+        )
+
+    private fun getAllTransactions() {
         viewModelScope.launch(Dispatchers.IO) {
-            _transactionUiState.update { it.copy(isLoading = true) }
+           _isLoading.update { true }
             val data: List<TransactionModel> = dbm.getTransactions()
             _transactionUiState.update {
-                it.copy(items = data, isLoading = false)
+                it.copy(items = data)
             }
+            _isLoading.update { false }
         }
+    }
+
+    fun refreshData() {
+        RefreshDataUtils.refreshData(
+            viewModelScope,
+            isRefreshing = _isRefreshing,
+            dataLoading = {
+                val data: List<TransactionModel> = dbm.getTransactions()
+                _transactionUiState.update {
+                    it.copy(items = data)
+                }
+            }
+        )
     }
 
     fun onEventHandler(e: OnActionsMovimientos) {
@@ -71,7 +96,7 @@ class TransactionsViewModel @Inject constructor(
             is OnActionsMovimientos.EditItem -> updateItem(
                 e.title,
                 e.nuevoValor,
-                e.description,
+                e.nuevaDescription,
                 e.item
             )
         }
@@ -95,6 +120,8 @@ class TransactionsViewModel @Inject constructor(
             if (esUltimoItem || esPrimerItem) {
                 // Si es el último elemento, update el saldo a 0 y eliminar la transacción
                 dbm.deleteAllScreenTransactions()
+                cargandoListaActualizada()
+                return@launch
             } else {
                 //actualizando el gastos por categorias
                 deleteGastosPorCategoria(item.title.orEmpty())
@@ -107,18 +134,32 @@ class TransactionsViewModel @Inject constructor(
                     true -> {
                         updateCurrentMoneyList(
                             list,
-                            CurrentMoneyModel(money = -item.cash?.toDouble()!!, checked = false)
+                            CurrentMoneyModel(
+                                money = -item.cash?.toDouble()!!,
+                                checked = false
+                            )
                         )
-                        updateIngresosTotales(TotalIngresosModel(totalIngresos = item.cash.toDouble()))
+                        //    updateIngresosTotales(TotalIngresosModel(totalIngresos = item.cash.toDouble()))
+                        updateIngresosTotales(
+                            TotalIngresosModel(totalIngresos = item.cash.toDouble())
+                        )
                     }
                     //si la transaccion fue de gastos, se volvera a
                     // actualizar  el dinero total, sumandolo de nuevo
                     false -> {
                         updateCurrentMoneyList(
                             list,
-                            CurrentMoneyModel(money = item.cash?.toDouble()!!, checked = false)
+                            CurrentMoneyModel(
+                                money = item.cash?.toDouble()!!,
+                                checked = false
+                            )
                         )
-                        updateGastos(TotalGastosModel(totalGastos = item.cash.toDouble()))
+                        updateGastos(
+                            TotalGastosModel(
+                                userId = item.uid,
+                                totalGastos = item.cash.toDouble()
+                            )
+                        )
                     }
 
                     null -> {}
@@ -131,109 +172,141 @@ class TransactionsViewModel @Inject constructor(
     private fun updateItem(
         title: String,
         nuevoValor: String,
-        description: String,
-        valorViejo: TransactionModel
+        nuevaDescription: String,
+        item: TransactionModel
     ) {
         viewModelScope.launch {
-            try {
-                //obteniendo el total de ingresos y gastos
-                val dataTotalGastos = dbm.getTotalGastos()?.totalGastos ?: 0.0
-                val dataTotalIngresos = dbm.getTotalIngresos()?.totalIngresos ?: 0.0
+            //obteniendo el total de ingresos y gastos
+            val dataTotalGastos = dbm.getTotalGastos()?.totalGastos ?: 0.0
+            val dataTotalIngresos = dbm.getTotalIngresos()?.totalIngresos ?: 0.0
 
+            if (nuevoValor == item.cash) {
+                // El valor en efectivo no ha cambiado, solo actualizar la descripción ya sea de ingresos o gastos
+                updateItemList(item.copy(subTitle = nuevaDescription))
+                cargandoListaActualizada()
+                return@launch // Detener la ejecución aquí
+            }
+            if (item.select == false && nuevoValor.toDouble() > dataTotalIngresos) {
+                _snackbarMessage.value =
+                    R.string.error_el_gasto_no_puede_ser_superior_a_los_ingresos
 
-                if (valorViejo.select == false && nuevoValor.toDouble() > dataTotalIngresos) {
-                    _snackbarMessage.value =
-                        R.string.error_el_gasto_no_puede_ser_superior_a_los_ingresos
-
-                } else {
-                    // Actualiza el valor en la lista
-                    // si es un ingreso o si el nuevo valor no es superior al total de ingresos
-                    updateItemList(
-                        TransactionModel(
-                            uid = valorViejo.uid,
-                            title = title,
-                            subTitle = description,
-                            cash = nuevoValor,
-                            select = valorViejo.select,
-                            date = valorViejo.date,
-                            icon = valorViejo.icon,
-                            index = valorViejo.index
-                        )
+            } else {
+                //actualiza la lista independientemente de si es ingreso o gasto
+                //mas alla de cualquier edicion asi el usuario ve la lista actualizada con los cambio
+                updateItemList(
+                    TransactionModel(
+                        uid = item.uid,
+                        title = item.title,
+                        subTitle = nuevaDescription,
+                        cash = nuevoValor,
+                        select = item.select,
+                        date = item.date,
+                        icon = item.icon,
+                        index = item.index
                     )
-                    //actualizando el gastos por categorias
-                    updateGastosCategory(title, nuevoValor, valorViejo)
+                )
+                //actualizando el gastos por categorias
+                updateGastosCategory(title, nuevoValor, item)
 
-                    when (valorViejo.select) {
-                        //si es true estamos actualizando dinero de tipo ingresos
-                        true -> {
-                            // Ajustar el total de ingresos según si el nuevo valor es mayor o menor al anterior.
-                            if (nuevoValor > valorViejo.cash!!) {
-                                val diferencia =
-                                    nuevoValor.toDouble().minus(valorViejo.cash.toDouble())
-                                val nuevoTotalIngresos = dataTotalIngresos.plus(diferencia)
-                                val currentMoney = if (dataTotalGastos != 0.0) {
-                                    MathUtils.restarBigDecimal(
-                                        nuevoTotalIngresos,
-                                        dataTotalGastos
-                                    )
-                                } else {
-                                    MathUtils.sumarBigDecimal(dataTotalIngresos, diferencia)
-                                }
-                                val totalIngresos =
-                                    MathUtils.bigDecimalToDouble(nuevoTotalIngresos)
-                                updateCurrentMoney(currentMoney)
-                                updateTotalIngresos(totalIngresos)
+                when (item.select) {
+                    //si es true estamos actualizando dinero de tipo ingresos
+                    true -> {
+                        // Ajustar el total de ingresos según si el nuevo valor es mayor o menor al anterior.
+                        if (nuevoValor > item.cash!!) {
+                            Log.d(tag, "updateItem: INGRESOS")
+                            Log.d(tag, "updateItem: nuevoValor > valorViejo.cash!!")
+                            val diferencia = MathUtils.minus(nuevoValor, item.cash)
+
+                            val nuevoTotalIngresos = dataTotalIngresos.plus(diferencia)
+
+                            val currentMoney = if (dataTotalGastos != 0.0) {
+                                MathUtils.restarBigDecimal(
+                                    nuevoTotalIngresos,
+                                    dataTotalGastos
+                                )
                             } else {
-                                val diferencia =
-                                    valorViejo.cash.toDouble().minus(nuevoValor.toDouble())
-                                val nuevoTotalIngresos = dataTotalIngresos.minus(diferencia)
-                                val currentMoney = if (dataTotalGastos != 0.0) {
-                                    MathUtils.restarBigDecimal(
-                                        nuevoTotalIngresos,
-                                        dataTotalGastos
-                                    )
-                                } else {
-                                    MathUtils.restarBigDecimal(dataTotalIngresos, diferencia)
-                                }
-                                val totalIngresos =
-                                    MathUtils.bigDecimalToDouble(nuevoTotalIngresos)
-                                updateCurrentMoney(currentMoney)
-                                updateTotalIngresos(totalIngresos)
+                                MathUtils.sumarBigDecimal(dataTotalIngresos, diferencia)
                             }
-                        }
 
-                        false -> {
-                            //si es false estamos actualizando dinero de tipo gastos
-                            if (nuevoValor > valorViejo.cash!!) {
-                                val diferencia =
-                                    nuevoValor.toDouble().minus(valorViejo.cash.toDouble())
-                                val totalGastos =
-                                    MathUtils.sumarBigDecimal(dataTotalGastos, diferencia)
-                                val currentMoney =
-                                    MathUtils.restarBigDecimal(dataTotalIngresos, totalGastos)
-                                updateCurrentMoney(currentMoney)
-                                updateTotalGastos(totalGastos)
+                            val totalIngresos =
+                                MathUtils.bigDecimalToDouble(nuevoTotalIngresos)
+
+                            updateCurrentMoney(
+                                CurrentMoneyModel(money = currentMoney, checked = false)
+                            )
+
+                            updateTotalIngresos(
+                                TotalIngresosModel(totalIngresos = totalIngresos)
+                            )
+
+                        } else {
+                            Log.d(tag, "updateItem: INGRESOS")
+                            Log.d(tag, "updateItem: nuevoValor < valorViejo.cash")
+                            val diferencia = MathUtils.minus(item.cash, nuevoValor)
+                            val nuevoTotalIngresos = dataTotalIngresos.minus(diferencia)
+
+                            val currentMoney = if (dataTotalGastos != 0.0) {
+                                MathUtils.restarBigDecimal(nuevoTotalIngresos, dataTotalGastos)
                             } else {
-                                val diferencia =
-                                    valorViejo.cash.toDouble().minus(nuevoValor.toDouble())
-                                val totalGastos =
-                                    MathUtils.restarBigDecimal(dataTotalGastos, diferencia)
-                                val currentMoney =
-                                    MathUtils.restarBigDecimal(dataTotalIngresos, totalGastos)
-                                updateCurrentMoney(currentMoney)
-                                updateTotalGastos(totalGastos)
+                                MathUtils.restarBigDecimal(dataTotalIngresos, diferencia)
                             }
-                        }
+                            val totalIngresos =
+                                MathUtils.bigDecimalToDouble(nuevoTotalIngresos)
 
-                        null -> {
-                            Log.i(tag, "updateItem: null")
+                            updateCurrentMoney(
+                                CurrentMoneyModel(money = currentMoney, checked = false)
+                            )
+
+                            updateTotalIngresos(
+                                TotalIngresosModel(totalIngresos = totalIngresos)
+                            )
                         }
                     }
-                }
 
-            } catch (e: Exception) {
-                Log.d(tag, "Error en updateItem: ${e.message}")
+                    false -> {
+                        //si es false estamos actualizando dinero de tipo gastos
+                        if (nuevoValor > item.cash!!) {
+                            Log.d(tag, "updateItem: GASTOS")
+                            Log.d(tag, "updateItem: nuevoValor > valorViejo.cash")
+                            val diferencia = MathUtils.minus(nuevoValor, item.cash)
+                            val totalGastos =
+                                MathUtils.sumarBigDecimal(dataTotalGastos, diferencia)
+
+                            val currentMoney =
+                                MathUtils.restarBigDecimal(dataTotalIngresos, totalGastos)
+
+                            updateCurrentMoney(
+                                CurrentMoneyModel(money = currentMoney, checked = false)
+                            )
+
+                            updateTotalGastos(TotalGastosModel(totalGastos = totalGastos))
+
+                        } else {
+                            Log.d(tag, "updateItem: GASTOS")
+                            Log.d(tag, "updateItem: nuevoValor < valorViejo.cash")
+                            val diferencia = MathUtils.minus(item.cash, nuevoValor)
+
+                            val totalGastos =
+                                MathUtils.restarBigDecimal(dataTotalGastos, diferencia)
+                            val currentMoney =
+                                MathUtils.restarBigDecimal(dataTotalIngresos, totalGastos)
+                            // updateCurrentMoney(currentMoney)
+                            Log.d(tag, "updateItem: currentMoney: $currentMoney")
+                            Log.d(tag, "updateItem: item.cash: ${item.cash}")
+                            updateCurrentMoney(
+                                CurrentMoneyModel(money = currentMoney, checked = false)
+                            )
+
+                            updateTotalGastos(TotalGastosModel(totalGastos = totalGastos))
+                        }
+                    }
+
+                    null -> {
+                        Log.i(tag, "updateItem: null")
+                    }
+                }
             }
+            cargandoListaActualizada()
         }
     }
 
@@ -255,6 +328,8 @@ class TransactionsViewModel @Inject constructor(
                 val totalIngresos = dbm.getTotalIngresos()?.totalIngresos
                 val nuevoValor = totalIngresos?.minus(item.totalIngresos!!)
                 totalIngresosFirestore.createOrUpdate(TotalIngresosModel(totalIngresos = nuevoValor))
+            } catch (e: FirebaseFirestoreException) {
+                Log.e(tag, "Error de Firestore en funcion updateIngresosTotales: ${e.message}")
             } catch (e: Exception) {
                 Log.e(
                     tag,
@@ -271,6 +346,8 @@ class TransactionsViewModel @Inject constructor(
                 val totalGastos = dbm.getTotalGastos()?.totalGastos
                 val nuevoValor = totalGastos?.minus(item.totalGastos!!)
                 totalGastosFirestore.createOrUpdate(TotalGastosModel(totalGastos = nuevoValor))
+            } catch (e: FirebaseFirestoreException) {
+                Log.e(tag, "Error de Firestore en funcion updateGastos: ${e.message}")
             } catch (e: Exception) {
                 Log.e(
                     tag,
@@ -293,32 +370,25 @@ class TransactionsViewModel @Inject constructor(
                 Log.d(tag, "updateCurrentMoneyList listTransaction.size == 1: $item")
             } else {
                 val newValue: Double = dbm.getCurrentMoney()?.money!! + item.money!!
-                Log.d(tag, "updateCurrentMoneyList newValue =: $newValue")
-                currentMoneyFirestore.createOrUpdate(
-                    CurrentMoneyModel(money = maxOf(newValue, 0.0), checked = false)
-                )
+                currentMoneyFirestore.createOrUpdate(item.copy(money = maxOf(newValue, 0.0)))
             }
         }
     }
 
-    private fun updateCurrentMoney(nuevoDinero: Double) {
-        viewModelScope.launch {
+    private fun updateCurrentMoney(item: CurrentMoneyModel) {
+        viewModelScope.launch(Dispatchers.IO) {
             try {
-                currentMoneyFirestore.createOrUpdate(
-                    CurrentMoneyModel(money = nuevoDinero, checked = false)
-                )
-                cargandoListaActualizada()
+                currentMoneyFirestore.createOrUpdate(item)
             } catch (e: Exception) {
                 Log.e(tag, " Error en updateCurrentMoney: ${e.message}")
             }
         }
     }
 
-    private fun updateTotalIngresos(totalIngresos: Double) {
-        viewModelScope.launch {
+    private fun updateTotalIngresos(item: TotalIngresosModel) {
+        viewModelScope.launch(Dispatchers.IO) {
             try {
-                totalIngresosFirestore.createOrUpdate(TotalIngresosModel(totalIngresos = totalIngresos))
-                cargandoListaActualizada()
+                totalIngresosFirestore.createOrUpdate(item)
             } catch (e: Exception) {
                 Log.e(tag, " Error en updateTotalIngresos: ${e.message}")
             }
@@ -326,11 +396,10 @@ class TransactionsViewModel @Inject constructor(
     }
 
     //FUNCION QUE SE USA PARA ACTUALIZAR EL TOTAL GASTOS AL EDITAR UN GASTO
-    private fun updateTotalGastos(totalGastos: Double) {
-        viewModelScope.launch(Dispatchers.Main) {
+    private fun updateTotalGastos(item: TotalGastosModel) {
+        viewModelScope.launch(Dispatchers.IO) {
             try {
-                //si el usuario edita un gasto se actualiza el total de gastos
-                totalGastosFirestore.createOrUpdate(TotalGastosModel(totalGastos = totalGastos))
+                totalGastosFirestore.createOrUpdate(item)
             } catch (e: Exception) {
                 Log.e(tag, "Error en updateTotalGastos: ${e.message}")
             }
@@ -339,15 +408,10 @@ class TransactionsViewModel @Inject constructor(
 
     //FUNCION QUE SE USA PARA EDITAR UN ITEM DE LA LISTA
     private fun updateItemList(item: TransactionModel) {
-        viewModelScope.launch(Dispatchers.Main) {
+        Log.d(tag, "updateItemList: $item")
+        viewModelScope.launch(Dispatchers.IO) {
             try {
-                val data = withContext(Dispatchers.IO) { dbm.getTransactions() }
-
-                val itemExisting = data.find { it.uid == item.uid }
-
-                if (itemExisting != null) {
-                    transactionsFirestore.update(item)
-                }
+                transactionsFirestore.update(item)
             } catch (e: Exception) {
                 Log.e(tag, "Error en updateItemList: ${e.message}")
             }
@@ -389,16 +453,4 @@ class TransactionsViewModel @Inject constructor(
     fun resetSnackbarMessage() {
         _snackbarMessage.value = null
     }
-
-//    fun setShowBottomSheet(value: Boolean) {
-//        _interactionState.update { it.copy(showBottomSheet = value) }
-//    }
-//
-//    fun setShowDialogTransaction(value: Boolean) {
-//        _interactionState.update { it.copy(showConfirmationDialog = value) }
-//    }
-//
-//    fun setLongPressed(value: Boolean) {
-//        _interactionState.update { it.copy(isLongPressed = value) }
-//    }
 }

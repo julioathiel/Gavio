@@ -8,4 +8,3 @@ data class UserCreateCategoryModel(
     var categoryIcon: String? = null,
     val categoryType: CategoryTypeEnum? = null
 )
-// Int = System.currentTimeMillis().hashCode(),

@@ -5,6 +5,7 @@ import com.gastosdiarios.gavio.data.constants.Constants.COLLECTION_BAR_DATA
 import com.gastosdiarios.gavio.data.constants.Constants.COLLECTION_CURRENT_MONEY
 import com.gastosdiarios.gavio.data.constants.Constants.COLLECTION_DATE
 import com.gastosdiarios.gavio.data.constants.Constants.COLLECTION_GASTOS_POR_CATEGORIA
+import com.gastosdiarios.gavio.data.constants.Constants.COLLECTION_GASTOS_PROGRAMADOS
 import com.gastosdiarios.gavio.data.constants.Constants.COLLECTION_LIST
 import com.gastosdiarios.gavio.data.constants.Constants.COLLECTION_SHARE
 import com.gastosdiarios.gavio.data.constants.Constants.COLLECTION_TOTAL_GASTOS
@@ -22,11 +23,13 @@ import com.gastosdiarios.gavio.domain.model.modelFirebase.UserModel
 import com.gastosdiarios.gavio.utils.DateUtils
 import com.google.firebase.auth.FirebaseAuth
 import com.google.firebase.firestore.CollectionReference
+import com.google.firebase.firestore.DocumentSnapshot
 import com.google.firebase.firestore.FirebaseFirestore
 import com.google.firebase.firestore.FirebaseFirestoreException
 import kotlinx.coroutines.tasks.await
 import java.text.DateFormat
 import java.util.Date
+import java.util.UUID
 import javax.inject.Inject
 
 open class CloudFirestore @Inject constructor(
@@ -38,16 +41,18 @@ open class CloudFirestore @Inject constructor(
     suspend fun insertUserToFirestore(user: UserModel) {
         try {
             val userId = auth.currentUser?.uid
-            Log.d(tag, "userId: $userId")
-            val userRef = getUsersCollection().document(userId!!) // Usa userId directamente
-            val existingUserSnapshot = userRef.get().await()
-            initializeUserData(user)
-            if (existingUserSnapshot.exists()) {
-                Log.i(tag, "El usuario con correo electrónico ${user.email} ya existe")
-                initializeUserData(user)
+            val existingUser = getUsersCollection().document(userId!!).get().await()
+            Log.d(tag, "existingUser: $existingUser")
+
+            if (existingUser.exists()) {
+                Log.i(tag, "El usuario con correo electronico ${user.email} ya existe")
+                // No cargar nada, mantener la información actual
+                return
             } else {
-                // Insertar el nuevo documento de usuario
-                userRef.set(user).await()
+                Log.i(tag, "El usuario con correo electronico ${user.email} no existe")
+                initializeUserData(user)
+                Log.i(tag, "Usuario con correo electronico ${user.email} insertado correctamente")
+
             }
         } catch (e: FirebaseFirestoreException) {
             Log.e(tag, "Error en insertUserToFirestore: ${e.message}")
@@ -58,7 +63,7 @@ open class CloudFirestore @Inject constructor(
         //operacion creada para que funcione de forma atomicas las operaciones de escritura
         try {
             val mesActual = DateUtils.currentMonth()
-            val uidItem = System.currentTimeMillis().hashCode().toString()
+            val uidItem = UUID.randomUUID().toString()
 
             collections.runTransaction { transaction ->
                 val date = DateFormat.getDateInstance().format(Date())
@@ -116,29 +121,24 @@ open class CloudFirestore @Inject constructor(
 
     suspend fun deleteUserByEmail(email: String) {
         try {
+            Log.i(tag, "email: $email")
             // Busca el documento que tenga el correo electrónico proporcionado
-            val querySnapshot = getUsersCollection()
-                .whereEqualTo("email", email)
-                .limit(1) // Limita la búsqueda a un solo resultado
-                .get()
-                .await()
+            Log.i(tag, "Iniciando consulta...")
+            val userId = auth.currentUser?.uid
+            val userRef = getUsersCollection().document(userId!!) // Usa userId directamente
+            val existingUserSnapshot = userRef.get().await()
 
+            Log.i(tag, "existingUserSnapshot: $existingUserSnapshot")
             // Verifica si el documento existe
-            if (!querySnapshot.isEmpty) {
-                // Obtiene el documento que coincide con el correo
-                val userDocument = querySnapshot.documents[0]
-                val userId = userDocument.id // Obtiene el ID del usuario
-                // Elimina el documento de la colección
-                userDocument.reference.delete().await()
+            if (existingUserSnapshot.exists()) {
                 // Elimina documentos relacionados en otras colecciones
                 deleteUserDataDocument(userId)
-
+                Log.i(tag, "Usuario con correo electronico $email eliminado correctamente")
             } else {
-                Log.i(tag, "No se encontró un usuario con ese correo electrónico ")
+                Log.i(tag, "No se encontro un usuario con ese correo electrónico ")
             }
         } catch (e: FirebaseFirestoreException) {
             Log.e(tag, "Error al eliminar los documentos del usuario: ${e.message}")
-
         }
     }
 
@@ -171,8 +171,15 @@ open class CloudFirestore @Inject constructor(
             for (document in listaIngresosPorCategoriaSnapshot.documents) {
                 document.reference.delete().await()
             }
+            //eliminando lista gastos programados
+            val listaGastosProgramadosSnapshot = getAllGastosProgramadosCollection().document(userId).collection(
+                COLLECTION_LIST).get().await()
+            for(document in listaGastosProgramadosSnapshot.documents){
+                document.reference.delete().await()
+            }
 
             collections.runTransaction { transaction ->
+                transaction.delete(getUsersCollection().document(userId))
                 transaction.delete(getBarDataCollection().document(userId))
                 transaction.delete(getCurrentMoneyCollection().document(userId))
                 transaction.delete(getDateCollection().document(userId))
@@ -180,6 +187,7 @@ open class CloudFirestore @Inject constructor(
                 transaction.delete(getTotalGastosCollection().document(userId))
                 transaction.delete(getTotalIngresosCollection().document(userId))
                 transaction.delete(getAllTransactionsCollection().document(userId))
+                transaction.delete(getAllGastosProgramadosCollection().document(userId))
                 transaction.delete(getUserCategoryGastosCollection().document(userId))
                 transaction.delete(getUserCategoryIngresosCollection().document(userId))
             }.await()
@@ -211,6 +219,9 @@ open class CloudFirestore @Inject constructor(
 
     fun getAllTransactionsCollection(): CollectionReference =
         collections.collection(COLLECTION_TRANSACTIONS)
+
+    fun getAllGastosProgramadosCollection(): CollectionReference =
+        collections.collection(COLLECTION_GASTOS_PROGRAMADOS)
 
     fun getUserCategoryGastosCollection(): CollectionReference =
         collections.collection(COLLECTION_USER_CATEGORY_GASTOS)

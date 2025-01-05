@@ -8,6 +8,7 @@ import com.gastosdiarios.gavio.domain.repository.CloudFirestore
 import com.gastosdiarios.gavio.domain.repository.ListBaseRepository
 import com.google.firebase.firestore.FirebaseFirestoreException
 import kotlinx.coroutines.tasks.await
+import java.util.UUID
 import javax.inject.Inject
 
 class BarDataFirestore @Inject constructor(
@@ -39,7 +40,7 @@ class BarDataFirestore @Inject constructor(
     override suspend fun create(entity: BarDataModel) {
         try {
             val uidUser = authFirebaseImp.getCurrentUser()?.uid
-            val uidItem = System.currentTimeMillis().hashCode().toString()
+            val uidItem = UUID.randomUUID().toString()
 
             val item = BarDataModel(
                 uid = uidItem,
@@ -49,7 +50,7 @@ class BarDataFirestore @Inject constructor(
             )
             cloudFirestore.getBarDataCollection().document(uidUser!!)
                 .collection(COLLECTION_LIST).document(uidItem).set(item).await()
-        }catch (e: FirebaseFirestoreException) {
+        } catch (e: FirebaseFirestoreException) {
             Log.i(tag, "Error al crear item en lista de bardata: ${e.message}")
         }
     }

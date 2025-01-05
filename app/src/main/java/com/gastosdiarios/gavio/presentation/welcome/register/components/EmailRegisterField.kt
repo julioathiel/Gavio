@@ -25,14 +25,16 @@ import com.gastosdiarios.gavio.R
 fun EmailRegisterField(
     valueEmail: String,
     onNewValue: (String) -> Unit,
-    modifier: Modifier = Modifier
+    modifier: Modifier = Modifier,
+    keyboardOptions: KeyboardOptions,
+    onNext: () -> Unit
 ) {
     OutlinedTextField(
         singleLine = true,
         modifier = modifier,
         value = valueEmail,
         onValueChange = { onNewValue(it) },
-        keyboardOptions = KeyboardOptions(keyboardType = KeyboardType.Email),
+        keyboardOptions = keyboardOptions,
         colors = TextFieldDefaults.colors(focusedContainerColor = Color.White)
         //   isError = emailError,
     )

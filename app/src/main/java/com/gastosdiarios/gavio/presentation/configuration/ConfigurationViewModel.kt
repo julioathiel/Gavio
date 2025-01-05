@@ -10,6 +10,7 @@ import com.gastosdiarios.gavio.domain.model.ShareDataModel
 import com.gastosdiarios.gavio.domain.model.modelFirebase.BarDataModel
 import com.gastosdiarios.gavio.domain.repository.DataBaseManager
 import com.gastosdiarios.gavio.domain.repository.repositoriesFirestrore.BarDataFirestore
+import com.gastosdiarios.gavio.utils.DateUtils
 import dagger.hilt.android.lifecycle.HiltViewModel
 import kotlinx.coroutines.Dispatchers
 import kotlinx.coroutines.flow.MutableStateFlow
@@ -17,9 +18,6 @@ import kotlinx.coroutines.flow.StateFlow
 import kotlinx.coroutines.flow.asStateFlow
 import kotlinx.coroutines.flow.update
 import kotlinx.coroutines.launch
-import kotlinx.coroutines.withContext
-import java.util.Calendar
-import java.util.Locale
 import javax.inject.Inject
 
 
@@ -29,6 +27,7 @@ class ConfigurationViewModel @Inject constructor(
     private val dbm: DataBaseManager,
     private val dataBarDataFirestore: BarDataFirestore
 ) : ViewModel() {
+    private val tag = "ConfigurationViewModel"
 
     private val _configurationUiState = MutableStateFlow(ConfigurationUiState())
     val configurationUiState: StateFlow<ConfigurationUiState> = _configurationUiState.asStateFlow()
@@ -37,22 +36,24 @@ class ConfigurationViewModel @Inject constructor(
         getShareLink()
     }
 
+    private fun getShareLink() {
+        viewModelScope.launch(Dispatchers.IO) {
+            val data: ShareDataModel? = dbm.getSharedLink()
+            if (data?.shareUrl != null) {
+                _configurationUiState.update { it.copy(sharedLink = data.shareUrl) }
+            }
+        }
+    }
+
     // Método para reiniciar la aplicación
-    private fun deleteData() {
+    private fun resetData() {
         viewModelScope.launch {
             try {
                 // Restablecer la opción seleccionada en el DataStore
                 dataStorePreferences.setSelectedOption("31", true)
                 dataStorePreferences.setHoraMinuto(21, 0)
-
-                // Eliminar la lista de transacciones
-                dbm.deleteAllApp()
-
-                // Notificar a los observadores que la aplicación se reinició
-                // con el resetPending finalizara la animacion de reinicio
-                // con el resetComplete mostrara la pantalla de reinicio exitoso
-                _configurationUiState.update { it.copy(resetPending = true) }
-                _configurationUiState.update { it.copy(resetComplete = true) }
+                dbm.resetAllApp()
+                _configurationUiState.update { it.copy(resetPending = true, resetComplete = true) }
             } catch (e: Exception) {
                 Log.e("ErrorReinicioApp", "Error al reiniciar la aplicación: ${e.message}")
             }
@@ -60,25 +61,31 @@ class ConfigurationViewModel @Inject constructor(
     }
 
     private fun deleteGraphBar() {
-        viewModelScope.launch {
+        viewModelScope.launch(Dispatchers.IO) {
             dbm.deleteAllGraphBar()
-            val c = Calendar.getInstance()
-            val month = c.getDisplayName(Calendar.MONTH, Calendar.SHORT, Locale.getDefault())
+            val month = DateUtils.currentMonth()
             val entity = BarDataModel(value = 0f, month = month, money = "0")
             dataBarDataFirestore.create(entity)
         }
     }
 
     private fun deleteUserCreaCatIngresos() {
-        viewModelScope.launch {
+        viewModelScope.launch(Dispatchers.IO) {
             dbm.deleteAllUserCreaCatIngresos()
         }
     }
 
     private fun deleteUserCreaCatGastos() {
-        viewModelScope.launch {
+        viewModelScope.launch(Dispatchers.IO) {
             dbm.deleteAllUserCreaCatGastos()
         }
+    }
+
+    fun clearDatabase() = resetData()
+
+
+    fun setResetPending(boolean: Boolean) {
+        _configurationUiState.update { it.copy(resetPending = boolean) }
     }
 
     fun setShowShare(value: Boolean) {
@@ -91,23 +98,6 @@ class ConfigurationViewModel @Inject constructor(
 
     fun setShowBottomSheet(value: Boolean) {
         _configurationUiState.update { it.copy(showBottomSheet = value) }
-    }
-
-    fun clearDatabase() {
-        deleteData()
-    }
-
-    private fun getShareLink() {
-        viewModelScope.launch {
-            val data: ShareDataModel? = withContext(Dispatchers.IO) { dbm.getSharedLink() }
-            if (data?.shareUrl != null) {
-                _configurationUiState.update { it.copy(sharedLink = data.shareUrl) }
-            }
-        }
-    }
-
-    fun setResetPending(boolean: Boolean) {
-        _configurationUiState.update { it.copy(resetPending = boolean) }
     }
 
     // Opciones de eliminación adicionales que son opcionales para el usuario
@@ -126,5 +116,3 @@ class ConfigurationViewModel @Inject constructor(
         ),
     )
 }
-
-

@@ -60,6 +60,7 @@ class LoginViewModel @Inject constructor(
                 .addOnCompleteListener { task ->
                     if (task.isSuccessful) {
                         _loginSuccess.value = true
+                        uiState.value = uiState.value.copy(email = "", password = "")
                     } else {
                         _loginSuccess.value = false
                         val exception = task.exception

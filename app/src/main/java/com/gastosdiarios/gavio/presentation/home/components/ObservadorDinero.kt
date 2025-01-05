@@ -19,19 +19,22 @@ fun ObservadorDinero(temporal: CharSequence, decimalPart: String) {
             text = stringResource(id = R.string.tipo_moneda),
             fontSize = 24.sp,
             modifier = Modifier.align(Alignment.Bottom).offset(y = (-6).dp),
-            style = MaterialTheme.typography.headlineSmall
+            style = MaterialTheme.typography.headlineSmall,
+            color = MaterialTheme.colorScheme.onSurface
         )
 
         Text(
             text = temporal.toString(),
-            style = MaterialTheme.typography.displayMedium
+            style = MaterialTheme.typography.displayMedium,
+            color = MaterialTheme.colorScheme.onSurface
         )
 
         Text(
             text = decimalPart,
             //texto que modifica los decimales en la posicion hacia arriba y se ven pequeños
             modifier = Modifier.align(Alignment.Top).offset(y = (2).dp),
-            style = MaterialTheme.typography.headlineSmall
+            style = MaterialTheme.typography.headlineSmall,
+            color = MaterialTheme.colorScheme.onSurface
         )
     }
 }

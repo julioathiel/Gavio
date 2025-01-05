@@ -1,5 +1,6 @@
 package com.gastosdiarios.gavio.presentation.home.components
 
+import androidx.compose.foundation.BorderStroke
 import androidx.compose.foundation.layout.Arrangement
 import androidx.compose.foundation.layout.Column
 import androidx.compose.foundation.layout.Row
@@ -19,7 +20,7 @@ import com.gastosdiarios.gavio.R
 import com.gastosdiarios.gavio.data.commons.CommonsSpacer
 import com.gastosdiarios.gavio.utils.CurrencyUtils
 import com.gastosdiarios.gavio.utils.MathUtils
-
+//CARD DE REGISTRO TOTAL DE INGRESOS Y GASTOS
 @Composable
 fun CardBotonRegistro(mostrandoDineroTotalIngresos: Double?, mostrandoDineroTotalGastos: Double?) {
 
@@ -31,9 +32,10 @@ fun CardBotonRegistro(mostrandoDineroTotalIngresos: Double?, mostrandoDineroTota
         modifier = Modifier
             .padding(horizontal = 16.dp),
         colors = CardDefaults.cardColors(
-            MaterialTheme.colorScheme.surfaceContainerLow
+            MaterialTheme.colorScheme.surface
         ),
         shape = RoundedCornerShape(20.dp),
+        border = BorderStroke(1.dp, MaterialTheme.colorScheme.outlineVariant)
     ) {
         Column(
             modifier = Modifier
@@ -43,7 +45,8 @@ fun CardBotonRegistro(mostrandoDineroTotalIngresos: Double?, mostrandoDineroTota
             Text(
                 text = "$porcentaje%",
                 modifier = Modifier.padding(top = 8.dp),
-                fontSize = 12.sp
+                fontSize = 12.sp,
+                color = MaterialTheme.colorScheme.onSurface
             )
 
             AnimatedProgressBar(

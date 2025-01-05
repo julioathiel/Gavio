@@ -9,6 +9,7 @@ import androidx.credentials.GetCredentialRequest
 import androidx.credentials.exceptions.GetCredentialException
 import androidx.lifecycle.ViewModel
 import androidx.lifecycle.viewModelScope
+import com.gastosdiarios.gavio.App.ConnectivityStatus.credentialManager
 import com.gastosdiarios.gavio.R
 import com.gastosdiarios.gavio.data.constants.Constants.PROVIDER_GOOGLE
 import com.gastosdiarios.gavio.domain.model.modelFirebase.UserModel
@@ -21,11 +22,14 @@ import dagger.hilt.android.lifecycle.HiltViewModel
 import kotlinx.coroutines.flow.MutableStateFlow
 import kotlinx.coroutines.flow.StateFlow
 import kotlinx.coroutines.launch
+import java.text.DateFormat
+import java.util.Date
 import javax.inject.Inject
 
 @HiltViewModel
 class InitialViewModel @Inject constructor(
-    private val cloudFirestore: CloudFirestore
+    private val cloudFirestore: CloudFirestore,
+    private val firebaseAuth: FirebaseAuth
 ) : ViewModel() {
     private val _state = MutableStateFlow(false)
     val state: StateFlow<Boolean> = _state
@@ -34,8 +38,8 @@ class InitialViewModel @Inject constructor(
         when (e) {
             is EventHandlerlLogin.ContinuarConPhone -> iniciarConPhone()
             is EventHandlerlLogin.ContinuarConGoogle -> {}
-
             is EventHandlerlLogin.ContinuarConFacebok -> iniciarConFacebook()
+            else -> {}
         }
     }
 
@@ -52,10 +56,9 @@ class InitialViewModel @Inject constructor(
     //nueva funcion para iniciar sesion con google
     fun signInWithGoogle(
         context: Context,
-        credentialManager: CredentialManager,
-        auth: FirebaseAuth,
         onResult: (Boolean) -> Unit
     ) {
+
         viewModelScope.launch {
             val googleIdOption = GetGoogleIdOption.Builder()
                 .setFilterByAuthorizedAccounts(false)//permite seleccionar cualquier cuenta de google
@@ -73,7 +76,7 @@ class InitialViewModel @Inject constructor(
                 val googleIdToken = googleIdTokenCredential.idToken
                 val firebaseCredential = GoogleAuthProvider.getCredential(googleIdToken, null)
 
-                auth.signInWithCredential(firebaseCredential)
+                firebaseAuth.signInWithCredential(firebaseCredential)
                     .addOnCompleteListener { task ->
                         if (task.isSuccessful) {
                             insertUsersFirestore(
@@ -83,9 +86,11 @@ class InitialViewModel @Inject constructor(
                                     email = task.result.user!!.email!!,
                                     password = "",
                                     photoUrl = task.result.user!!.photoUrl.toString(),
+                                    date = DateFormat.getDateInstance().format(Date()),
                                     provider = PROVIDER_GOOGLE,
                                 )
                             )
+                            // Autenticación exitosa, puedes redirigir al usuario a la siguiente pantalla
                             onResult(true)
                         } else {
                             // Manejar el caso en que la autenticación falla

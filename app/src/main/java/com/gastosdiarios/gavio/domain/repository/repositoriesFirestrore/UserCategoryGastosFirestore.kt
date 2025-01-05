@@ -8,6 +8,7 @@ import com.gastosdiarios.gavio.domain.repository.CloudFirestore
 import com.gastosdiarios.gavio.domain.repository.ListBaseRepository
 import com.google.firebase.firestore.FirebaseFirestoreException
 import kotlinx.coroutines.tasks.await
+import java.util.UUID
 import javax.inject.Inject
 
 class UserCategoryGastosFirestore @Inject constructor(
@@ -36,7 +37,7 @@ class UserCategoryGastosFirestore @Inject constructor(
     override suspend fun create(entity: UserCreateCategoryModel) {
         try {
             val uidUser = authFirebaseImp.getCurrentUser()?.uid
-            val uidItem = System.currentTimeMillis().hashCode().toString()
+            val uidItem = UUID.randomUUID().toString()
 
             val item = UserCreateCategoryModel(
                 uid = uidItem,

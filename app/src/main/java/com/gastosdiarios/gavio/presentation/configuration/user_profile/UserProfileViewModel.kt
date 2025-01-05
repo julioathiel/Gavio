@@ -18,7 +18,7 @@ class UserProfileViewModel @Inject constructor(
     private val auth: FirebaseAuth
 ) :
     ViewModel() {
-    val tag = "userProfileViewModel"
+    private val tag = "userProfileViewModel"
 
     fun deleteUser() {
         //elimina la cuenta
@@ -39,12 +39,6 @@ class UserProfileViewModel @Inject constructor(
     fun signOut() {
         //cierra sesion
         repository.signOut()
-    }
-
-    fun signGoogle() {
-        viewModelScope.launch {
-            repository.signInWithGoogle("token")
-        }
     }
 
     fun getCurrenthUser(): FirebaseUser? {

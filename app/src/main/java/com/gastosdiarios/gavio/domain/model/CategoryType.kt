@@ -1,13 +1,15 @@
 package com.gastosdiarios.gavio.domain.model
 
 import com.gastosdiarios.gavio.domain.enums.CategoryTypeEnum
+import com.gastosdiarios.gavio.domain.model.modelFirebase.GastosProgramadosModel
 
 data class CategoryDefaultModel(
+    val uid: String = "",
+    val titleBottomSheet: String = "",
     val onDismiss: Boolean = false,
     val isActivated: Boolean = false,
     val isSelectedEditItem: Boolean = false,
-    val titleBottomSheet: String = "",
-    val uid: String = "",
+    val errorConectionInternet: Boolean = false,
     val categoryType: CategoryTypeEnum? = null,
-    val selectedCategory: CategoryCreate? = null
+    val selectedCategory: CategoryCreate? = null,
 )

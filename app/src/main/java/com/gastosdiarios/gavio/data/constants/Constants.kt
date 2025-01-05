@@ -1,29 +1,9 @@
 package com.gastosdiarios.gavio.data.constants
 
 object Constants {
-    const val LOGIN_INIT_SCREEN = "LoginInitScreen"
-    const val LOGIN_SCREEN = "LoginScreen"
-    const val REGISTER_SCREEN = "RegisterScreen"
-    const val HOME_SCREEN = "HomeScreen"
-    const val VIEWPAGER_SCREEN = "ViewPagerScreen"
-    const val FORGOT_PASSWORD_SCREEN = "ForgotPasswordScreen"
-    const val TRANSACTIONS_SCREEN = "TransactionsScreen"
-    const val CONFIGURATION_SCREEN = "ConfigurationScreen"
-    const val ANALISIS_GASTOS_SCREEN = "AnalisisGastosScreen"
-    const val RECORDATORIOS_SCREEN = "RecordatorioScreen"
-    const val CATEGORIA_GASTOS_SCREEN = "CategoriaGastosScreen"
-    const val CATEGORIA_INGRESOS_SCREEN = "CategoriaIngresosScreen"
-    const val ACTUALIZAR_MAXIMO_FECHA_SCREEN = "ActualizarMaximoFechaScreen"
-    const val LOADING_SCREEN = "LoadingScreen"
-    const val ACERCA_DE_SCREEN = "AcercaDe"
-    const val AJUSTES_SCREEN = "AjustesScreen"
-    const val CONGRATULATIONS_SCREEN = "CongratulationsScreen"
-    const val USER_PROFILE_SCREEN = "UserProfileScreen"
-
     const val PROVIDER_EMAIL = "email"
     const val PROVIDER_GOOGLE = "google"
     const val PROVIDER_FACEBOOK = "facebook"
-    const val PROVIDER_TELEFONO = "telefono"
 
     const val MY_CHANNEL_ID = "gastos_diarios"
     const val NAME_NOTIFICATION_CANAL = "gastos_diarios"
@@ -46,6 +26,7 @@ object Constants {
     const val COLLECTION_TOTAL_GASTOS = "total_gastos"
     const val COLLECTION_TOTAL_INGRESOS = "total_ingresos"
     const val COLLECTION_TRANSACTIONS = "transactions"
+    const val COLLECTION_GASTOS_PROGRAMADOS = "gastos_programados"
     const val COLLECTION_USER_CATEGORY_GASTOS = "user_category_gastos"
     const val COLLECTION_USER_CATEGORY_INGRESOS = "user_category_ingresos"
     const val COLLECTION_LIST= "list"

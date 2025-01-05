@@ -13,6 +13,8 @@ import androidx.compose.foundation.layout.height
 import androidx.compose.foundation.layout.padding
 import androidx.compose.foundation.layout.size
 import androidx.compose.foundation.shape.CircleShape
+import androidx.compose.material.icons.Icons
+import androidx.compose.material.icons.automirrored.filled.ArrowBack
 import androidx.compose.material3.AlertDialog
 import androidx.compose.material3.ExperimentalMaterial3Api
 import androidx.compose.material3.HorizontalDivider
@@ -38,27 +40,37 @@ import androidx.compose.ui.res.painterResource
 import androidx.compose.ui.res.stringResource
 import androidx.compose.ui.tooling.preview.Preview
 import androidx.compose.ui.unit.dp
+import androidx.hilt.navigation.compose.hiltViewModel
 import coil.compose.AsyncImage
 import coil.request.ImageRequest
 import com.gastosdiarios.gavio.R
 import com.gastosdiarios.gavio.data.commons.CommonsTextButton
+import com.gastosdiarios.gavio.data.commons.TopAppBarOnBack
 
-@OptIn(ExperimentalMaterial3Api::class)
 @Composable
-fun UserProfileScreen(viewModel: UserProfileViewModel, onLoginInitScreen: () -> Unit) {
+fun UserProfileScreen(
+    viewModel: UserProfileViewModel = hiltViewModel(), onToLoginInitScreen: () -> Unit,
+    onBack: () -> Unit
+) {
     val context = LocalContext.current
     var showDialog by remember { mutableStateOf(false) }
 
     Scaffold(
         topBar = {
-            TopAppBar(title = { Text("Mi Perfil") })
+            TopAppBarOnBack(
+                title = "Mi cuenta",
+                containerColor = MaterialTheme.colorScheme.surface,
+                onBack = { onBack() }
+            )
         }
+
     ) {
         val currentUser = viewModel.getCurrenthUser()
         Column(
             modifier = Modifier
                 .padding(it)
-                .fillMaxSize(),
+                .fillMaxSize()
+                .background(MaterialTheme.colorScheme.surface),
             horizontalAlignment = Alignment.CenterHorizontally
         ) {
             Spacer(modifier = Modifier.height(16.dp))
@@ -119,7 +131,6 @@ fun UserProfileScreen(viewModel: UserProfileViewModel, onLoginInitScreen: () -> 
             // Opciones del perfil
             Spacer(modifier = Modifier.height(8.dp))
 
-
             Spacer(modifier = Modifier.height(8.dp))
             HorizontalDivider()
             CommonsTextButton(modifier = Modifier
@@ -128,8 +139,9 @@ fun UserProfileScreen(viewModel: UserProfileViewModel, onLoginInitScreen: () -> 
                 title = stringResource(R.string.cerrar_sesion),
                 onClick = {
                     viewModel.signOut()
-                    onLoginInitScreen()
-                })
+                    onToLoginInitScreen()
+                }
+            )
             Spacer(modifier = Modifier.weight(1f))
             CommonsTextButton(
                 modifier = Modifier
@@ -154,7 +166,7 @@ fun UserProfileScreen(viewModel: UserProfileViewModel, onLoginInitScreen: () -> 
                     viewModel.deleteUser()
                     showDialog = false
                     // Navega a la pantalla de inicio de sesión o realiza otras acciones necesarias
-                    onLoginInitScreen()
+                    onBack()
                     Toast.makeText(
                         context,
                         context.getString(R.string.cuenta_eliminada),
@@ -177,17 +189,19 @@ fun UserProfileScreen(viewModel: UserProfileViewModel, onLoginInitScreen: () -> 
 @Preview(showBackground = true)
 @Composable
 fun UserProfileScreen() {
-    val context = LocalContext.current
+
     var showDialog by remember { mutableStateOf(false) }
 
     Scaffold(
         topBar = {
             TopAppBar(title = { Text("Mi Perfil") })
         }
-    ) { it ->
-        Box(modifier = Modifier
-            .padding(it)
-            .fillMaxSize()) {
+    ) { paddingValues ->
+        Box(
+            modifier = Modifier
+                .padding(paddingValues)
+                .fillMaxSize()
+        ) {
             Column(
                 horizontalAlignment = Alignment.CenterHorizontally
             ) {

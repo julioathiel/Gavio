@@ -1,7 +1,10 @@
 package com.gastosdiarios.gavio.presentation.home
 
+import android.content.Context
 import android.content.res.Resources
 import android.util.Log
+import android.widget.Toast
+import androidx.compose.runtime.mutableStateListOf
 import androidx.lifecycle.ViewModel
 import androidx.lifecycle.viewModelScope
 import com.gastosdiarios.gavio.R
@@ -10,8 +13,10 @@ import com.gastosdiarios.gavio.data.DataStorePreferences
 import com.gastosdiarios.gavio.data.constants.Constants.LIMIT_MONTH
 import com.gastosdiarios.gavio.data.ui_state.HomeUiState
 import com.gastosdiarios.gavio.data.ui_state.ListUiState
+import com.gastosdiarios.gavio.domain.model.CategoriesModel
 import com.gastosdiarios.gavio.domain.model.CategoryGastos
 import com.gastosdiarios.gavio.domain.model.CategoryIngresos
+import com.gastosdiarios.gavio.domain.model.RefreshDataModel
 import com.gastosdiarios.gavio.domain.model.UserCreateCategoriesModel
 import com.gastosdiarios.gavio.domain.model.defaultCategoriesGastosList
 import com.gastosdiarios.gavio.domain.model.defaultCategoriesIngresosList
@@ -19,12 +24,14 @@ import com.gastosdiarios.gavio.domain.model.modelFirebase.BarDataModel
 import com.gastosdiarios.gavio.domain.model.modelFirebase.CurrentMoneyModel
 import com.gastosdiarios.gavio.domain.model.modelFirebase.DateModel
 import com.gastosdiarios.gavio.domain.model.modelFirebase.GastosPorCategoriaModel
+import com.gastosdiarios.gavio.domain.model.modelFirebase.GastosProgramadosModel
 import com.gastosdiarios.gavio.domain.model.modelFirebase.TotalGastosModel
 import com.gastosdiarios.gavio.domain.model.modelFirebase.TotalIngresosModel
 import com.gastosdiarios.gavio.domain.model.modelFirebase.TransactionModel
 import com.gastosdiarios.gavio.domain.repository.AuthFirebaseImp
 import com.gastosdiarios.gavio.domain.repository.DataBaseManager
 import com.gastosdiarios.gavio.domain.repository.repositoriesFirestrore.BarDataFirestore
+import com.gastosdiarios.gavio.domain.repository.repositoriesFirestrore.CreateGastosProgramadosFireStore
 import com.gastosdiarios.gavio.domain.repository.repositoriesFirestrore.CurrentMoneyFirestore
 import com.gastosdiarios.gavio.domain.repository.repositoriesFirestrore.DateFirestore
 import com.gastosdiarios.gavio.domain.repository.repositoriesFirestrore.GastosPorCategoriaFirestore
@@ -39,6 +46,7 @@ import com.gastosdiarios.gavio.utils.DateUtils.converterFechaPersonalizada
 import com.gastosdiarios.gavio.utils.DateUtils.obtenerFechaActual
 import com.gastosdiarios.gavio.utils.DateUtils.parsearFechaALocalDate
 import com.gastosdiarios.gavio.utils.MathUtils
+import com.gastosdiarios.gavio.utils.RefreshDataUtils
 import com.google.firebase.auth.FirebaseUser
 import dagger.hilt.android.lifecycle.HiltViewModel
 import kotlinx.coroutines.Dispatchers
@@ -76,6 +84,7 @@ class HomeViewModel @Inject constructor(
     private val dateFirestore: DateFirestore,
     private val transactionsFirestore: TransactionsFirestore,
     private val gastosPorCategoriaFirestore: GastosPorCategoriaFirestore,
+    private val gastosProgramadosFirestore: CreateGastosProgramadosFireStore,
     barDataFirestore: BarDataFirestore
 ) : ViewModel() {
     private val tag = "homeViewModel"
@@ -83,12 +92,21 @@ class HomeViewModel @Inject constructor(
     private val _homeUiState = MutableStateFlow(HomeUiState())
     val homeUiState: StateFlow<HomeUiState> = _homeUiState.asStateFlow()
 
+    private val _isRefreshing = MutableStateFlow(RefreshDataModel(isRefreshing = false))
+    val isRefreshing: StateFlow<RefreshDataModel> = _isRefreshing.asStateFlow()
+
+    private val _listFilter = mutableStateListOf<GastosProgramadosModel>()
+    val listFilter: List<GastosProgramadosModel> = _listFilter
+
     private val _transactionUiState = MutableStateFlow(ListUiState<TransactionModel>())
 
     private val circularBuffer = CircularBuffer(capacity = LIMIT_MONTH, db = barDataFirestore)
 
+    init {
+        calculandoInit()
+    }
 
-    fun calculandoInit() {
+    private fun calculandoInit() {
         viewModelScope.launch {
             try {
                 val fechaActual = obtenerFechaActual()// muestra 2025-01-01
@@ -105,7 +123,7 @@ class HomeViewModel @Inject constructor(
 
                         // ej: 2023-12-12
                         //si la fecha actual es igual que la fecha guardada
-                        if (fechaActual == fechaParseadaAGuion) {
+                        if (fechaActual >= fechaParseadaAGuion) {
                             if (dataCurrentMoney == 0.0) {
                                 updateFechaUnMesMas(fechaActual, fechaParseadaAGuion)
                                 _homeUiState.update { it.copy(showNuevoMes = true) }
@@ -158,7 +176,7 @@ class HomeViewModel @Inject constructor(
                     null -> {
                         // Si fechaGuardada es nula y dias restantes tambien se asigna un valor predeterminado
                         initMostrandoAlUsuario()
-                     //  manejarFechayDiasRestantesNulos()
+                        //  manejarFechayDiasRestantesNulos()
                     }
                 }
             } catch (e: Exception) {
@@ -194,10 +212,9 @@ class HomeViewModel @Inject constructor(
         }
     }
 
-   private fun initMostrandoAlUsuario() {
+    private fun initMostrandoAlUsuario() {
         viewModelScope.launch {
-            try{
-
+            try {
                 _homeUiState.update { it.copy(isLoading = true) }
                 getMaxDate()
                 mostrarCurrentMoney()
@@ -206,8 +223,9 @@ class HomeViewModel @Inject constructor(
                 mostrarEstadoUsuario()
                 listCatGastosNueva()
                 listCatIngresosNueva()
+                getGastosProgramados()
                 _homeUiState.update { _homeUiState.value.copy(isLoading = false) }
-            }catch (e:Exception){
+            } catch (e: Exception) {
                 _homeUiState.update { it.copy(isError = true) }
                 Log.e(tag, "initMostrandoAlUsuario no hay internet: ${e.message}")
             }
@@ -313,12 +331,9 @@ class HomeViewModel @Inject constructor(
     private fun getMaxDate() {
         viewModelScope.launch {
             //obteniendo fecha guardada maxima por el usuario
-            Log.d("getMax","getMaxDate")
             dataStorePreferences.getFechaMaximoMes().collect { maxDate ->
-                Log.d(tag, "getMaxDate: ${maxDate.numeroGuardado}")
                 _homeUiState.update { it.copy(selectedOptionFechaMaxima = maxDate.numeroGuardado.toInt()) }
             }
-            Log.d(tag, "getMaxDate: ${_homeUiState.value.selectedOptionFechaMaxima}")
         }
     }
 
@@ -554,13 +569,10 @@ class HomeViewModel @Inject constructor(
         categoryIcon: Int,
         isChecked: Boolean
     ) {
-        val day = SimpleDateFormat("dd", Locale.getDefault()).format(Date()).toInt()
-        val formattedDay = String.format(Locale.getDefault(), "%02d", day)
-        val dateFormat = SimpleDateFormat("$formattedDay MMM yyyy", Locale.getDefault())
-
         viewModelScope.launch {
             val list = withContext(Dispatchers.IO) { dbm.getTransactions() }
             val newIndex = list.maxOfOrNull { it.index ?: 0 }?.plus(1) ?: 0
+            val currentDate = obtenerFechaActual().toString()
 
             transactionsFirestore.create(
                 TransactionModel(
@@ -568,7 +580,7 @@ class HomeViewModel @Inject constructor(
                     subTitle = description,
                     cash = cantidad,
                     select = isChecked,
-                    date = dateFormat.format(Date()),
+                    date = currentDate,
                     icon = categoryIcon.toString(),
                     index = newIndex
                 )
@@ -632,7 +644,7 @@ class HomeViewModel @Inject constructor(
     //metodo que devuelve un true para que abra el dialogo de transaccion
     fun onShowDialogClickTransaction() {
         viewModelScope.launch {
-            _homeUiState.update { _homeUiState.value.copy(showDialogTransaction = true) }
+            _homeUiState.update { _homeUiState.value.copy(agregar = true) }
             if (_homeUiState.value.dineroActual == 0.0 || _homeUiState.value.dineroActual == null) {
                 _homeUiState.update {
                     _homeUiState.value.copy(
@@ -656,9 +668,18 @@ class HomeViewModel @Inject constructor(
     fun onDialogClose() {
         _homeUiState.update {
             _homeUiState.value.copy(
-                showDialogTransaction = false,
+                agregar = false,
                 cantidadIngresada = "",
                 description = ""
+            )
+        }
+    }
+
+    fun onDismiss() {
+        _homeUiState.update {
+            _homeUiState.value.copy(
+                editar = false,
+                cantidadIngresada = ""
             )
         }
     }
@@ -678,6 +699,101 @@ class HomeViewModel @Inject constructor(
     fun getCurrentUser(): FirebaseUser? = authFirebaseImp.getCurrentUser()
 
     fun resetErrorState() {
-       _homeUiState.update { it.copy(isError = false) }
+        _homeUiState.update { it.copy(isError = false) }
     }
+
+    fun refreshData(context: Context) {
+        RefreshDataUtils.refreshData(
+            viewModelScope,
+            isRefreshing = _isRefreshing,
+            dataLoading = {
+                initMostrandoAlUsuario()
+                Toast.makeText(context, "actualizado", Toast.LENGTH_SHORT).show()
+            }
+        )
+    }
+
+    //--------------para manejar la lista filttrada de gastos programados------//
+    private fun getGastosProgramados() {
+        viewModelScope.launch {
+            val currentDate = DateUtils.obtenerFechaActual().toString()
+            val data: List<GastosProgramadosModel> = gastosProgramadosFirestore.get()
+
+            val listFilter = data
+                .filter { item -> item.date == currentDate || item.date!! < currentDate }
+
+            if (listFilter.isNotEmpty()) {
+                _listFilter.addAll(listFilter)
+            } else {
+                _listFilter.addAll(emptyList())
+            }
+        }
+    }
+
+    fun pagarItem(item: GastosProgramadosModel) {
+        viewModelScope.launch {
+            try {
+                removeItem(item)
+                //despues de remover el item para una mejor experiencia de usuario
+                // que se le elimine rapido de la pantalla,
+                // se resuelve lo demas
+                val list = withContext(Dispatchers.IO) { dbm.getTransactions() }
+                val newIndex = list.maxOfOrNull { it.index ?: 0 }?.plus(1) ?: 0
+                val currentDate = obtenerFechaActual().toString()
+
+                transactionsFirestore.create(
+                    TransactionModel(
+                        title = item.title,
+                        subTitle = item.subTitle,
+                        cash = item.cash,
+                        select = false, //significa gastos
+                        date = currentDate,
+                        icon = item.icon.toString(),
+                        index = newIndex
+                    )
+                )
+
+                crearNuevaCategoriaDeGastos(
+                    item.title ?: "",
+                    item.icon?.toInt() ?: 0,
+                    item.cash ?: ""
+                )
+
+                updateDate(item)
+            } catch (e: Exception) {
+                Log.e("Error al pagar item", e.message.toString())
+            }
+        }
+    }
+
+    fun clearItem(item: GastosProgramadosModel) {
+        viewModelScope.launch {
+            try {
+                removeItem(item)
+                updateDate(item)
+
+            } catch (e: DateTimeParseException) {
+                Log.e("ClearItem", "Error parsing date: ${e.message}")
+            } catch (e: Exception) {
+                Log.e("ClearItem", "Error updating database: ${e.message}")
+            }
+        }
+    }
+
+    private fun updateDate(item: GastosProgramadosModel) {
+        viewModelScope.launch {
+            val itemDate = LocalDate.parse(item.date)
+            val updatedItem = item.copy(
+                date = itemDate.plusMonths(1).toString()
+            )
+            gastosProgramadosFirestore.update(updatedItem)
+        }
+    }
+
+    private fun removeItem(item: GastosProgramadosModel) {
+        val uidEncontrado = _listFilter.find { it.uid == item.uid }
+        _listFilter.remove(uidEncontrado)
+    }
+
+    //--------------fin la lista filttrada de gastos programados------//
 }

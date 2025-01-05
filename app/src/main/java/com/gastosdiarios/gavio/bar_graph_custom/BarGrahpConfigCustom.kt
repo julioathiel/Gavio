@@ -17,11 +17,13 @@ fun BarGraphConfigCustom(viewModel: AnalisisGastosViewModel,calendar: Calendar =
     val listBarGraph by viewModel.listBarDataModel.collectAsState()
      listBarGraph.items.map { BarDataModel(it.uid,it.value, it.month,it.money) }
     val mesActual = calendar.getDisplayName(Calendar.MONTH, Calendar.SHORT, Locale.getDefault())
+
+
     //Configuración del gráfico de barras
     val config = BarGraphConfig<BarDataModel>()
-        .data(listBarGraph.items)
+        .data(listBarGraph.items.reversed())
         .dataBar(
-            selectedBarColor = MaterialTheme.colorScheme.onSecondaryContainer,
+            selectedBarColor = MaterialTheme.colorScheme.primary,
             unSelectedBarColor = MaterialTheme.colorScheme.secondaryContainer,
             width = 60.dp,
             espacioEntreBarras = 8.dp
@@ -36,9 +38,9 @@ fun BarGraphConfigCustom(viewModel: AnalisisGastosViewModel,calendar: Calendar =
         .etiquetaTranslateY(y = -5f)
         .roundType(roundType = BarType.TOP_CURVED)
         .viewBarText(
-            textSize = 20.sp,
+            textSize = 30.sp,
             textColor = MaterialTheme.colorScheme.onSurfaceVariant,
-            containerColor = MaterialTheme.colorScheme.surfaceContainerLow,
+            containerColor = MaterialTheme.colorScheme.secondaryContainer,
             cornerRadius = 100f,
             paddingBottom = 16.dp,
             heigth = 80.dp
