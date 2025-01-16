@@ -10,7 +10,7 @@ data class HomeUiState(
     val cantidadIngresada: String? = "",
     val categoryName: String? = "",
     val description: String? = "",
-    val fechaElegidaBarra: String? = "",
+    val fechaElegida: String? = "",
     val selectedOptionFechaMaxima: Int = 0,
     val buttonIngresosActivated: Int = 0,
     val diasRestantes:Int = 0,

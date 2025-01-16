@@ -172,7 +172,7 @@ fun onClick(
     selectedCategory: CategoriesModel,
     navController: NavController
 ) {
-    if (homeUiState.fechaElegidaBarra == null) {
+    if (homeUiState.fechaElegida == null) {
         homeViewModel.onDialogClose()
         navController.navigateUp()
     } else {

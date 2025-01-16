@@ -44,6 +44,7 @@ import com.gastosdiarios.gavio.domain.model.modelFirebase.TransactionModel
 import com.gastosdiarios.gavio.presentation.transaction.components.ItemTransactions
 import com.gastosdiarios.gavio.utils.DateUtils
 import java.time.LocalDate
+import java.time.format.DateTimeFormatter
 
 @OptIn(ExperimentalMaterial3Api::class)
 @Composable
@@ -150,16 +151,14 @@ fun ContentList(
                 stickyHeader {
                     Log.d("fecha actual", "date: $date") //2025-01-08
                     val fechaActual: LocalDate = DateUtils.obtenerFechaActual() //2025-01-09
+                    val fechaDataDate = DateUtils.toLocalDate(date?: "")
 
-                    val fechaABarra = DateUtils.converterFechaABarra(date?: "") //2025-01-09
-                    val dateCurrent: String = DateUtils.converterFechaABarra(fechaActual.toString()) //09/01/2025
+                    val datePersonalizada = DateUtils.converterFechaPersonalizada(date?: "") //30 Ene. 2025
 
-                    val datePersonalizada = DateUtils.converterFechaPersonalizada(fechaABarra) //30 Ene. 2025
-                    Log.d("fecha actual", "datePersonalizada : $datePersonalizada")
-                    val textDate = when (fechaABarra) {
-                        dateCurrent -> "hoy"
-                        DateUtils.obtenerFechaAyer() -> "ayer"
-                        else -> datePersonalizada
+                    val textDate = when {
+                        fechaDataDate.isEqual(fechaActual) -> "hoy" // Compare fechaDataDate with fechaActual
+                        fechaDataDate.isEqual(DateUtils.obtenerFechaAyer()) -> "ayer" // Compare fechaDataDate with yesterday's date
+                        else-> datePersonalizada
                     }
 
 

@@ -1,21 +1,24 @@
 package com.gastosdiarios.gavio.presentation.configuration.create_gastos_programados
 
 import android.content.Context
+import android.util.Log
 import android.widget.Toast
-import androidx.compose.runtime.MutableState
 import androidx.compose.runtime.getValue
 import androidx.compose.runtime.mutableStateOf
+import androidx.compose.runtime.remember
 import androidx.compose.runtime.setValue
 import androidx.lifecycle.ViewModel
 import androidx.lifecycle.viewModelScope
 import com.gastosdiarios.gavio.data.ui_state.ListUiState
 import com.gastosdiarios.gavio.domain.enums.CategoryTypeEnum
+import com.gastosdiarios.gavio.domain.enums.Modo
 import com.gastosdiarios.gavio.domain.model.CategoryCreate
 import com.gastosdiarios.gavio.domain.model.CategoryDefaultModel
 import com.gastosdiarios.gavio.domain.model.RefreshDataModel
 import com.gastosdiarios.gavio.domain.model.UserCreateCategoryModel
 import com.gastosdiarios.gavio.domain.model.modelFirebase.GastosProgramadosModel
 import com.gastosdiarios.gavio.domain.repository.repositoriesFirestrore.CreateGastosProgramadosFireStore
+import com.gastosdiarios.gavio.utils.DateUtils.obtenerFechaActual
 import com.gastosdiarios.gavio.utils.RefreshDataUtils
 import dagger.hilt.android.lifecycle.HiltViewModel
 import kotlinx.coroutines.Dispatchers
@@ -30,6 +33,8 @@ import kotlinx.coroutines.launch
 import kotlinx.coroutines.withContext
 import java.time.Instant
 import java.time.ZoneId
+import java.time.ZoneOffset
+import java.util.concurrent.TimeUnit
 import javax.inject.Inject
 
 @HiltViewModel
@@ -39,8 +44,6 @@ class CreateGastosDefaultViewModel @Inject constructor(
     private val _uiStateDefault = MutableStateFlow(CategoryDefaultModel())
     var uiStateDefault: StateFlow<CategoryDefaultModel> = _uiStateDefault.asStateFlow()
 
-//    val _selectedIndices = mutableStateOf<Set<Int>>(emptySet())
-//    val selectedIndices: MutableState<Set<Int>> = _selectedIndices
     private val _selectedIndices = MutableStateFlow<Set<Int>>(emptySet())
     val selectedIndices: StateFlow<Set<Int>> = _selectedIndices.asStateFlow()
 
@@ -53,6 +56,9 @@ class CreateGastosDefaultViewModel @Inject constructor(
 
     private val _isRefreshing = MutableStateFlow(RefreshDataModel(isRefreshing = false))
     val isRefreshing: StateFlow<RefreshDataModel> = _isRefreshing.asStateFlow()
+
+    private val _currentMode = MutableStateFlow<Modo?>(null)
+    val currentMode: StateFlow<Modo?> = _currentMode.asStateFlow()
 
     private val _isLoading = MutableStateFlow(false)
     val isLoading = _isLoading
@@ -160,9 +166,6 @@ class CreateGastosDefaultViewModel @Inject constructor(
         _uiStateDefault.update { it.copy(selectedCategory = selectedIcon) }
     }
 
-    fun actualizandoItem(userCreateCategoryModel: UserCreateCategoryModel) {
-
-    }
 
     fun createNewCategory(item: GastosProgramadosModel) {
         viewModelScope.launch {
@@ -179,18 +182,12 @@ class CreateGastosDefaultViewModel @Inject constructor(
         limpiandoCampoBottomSheet()
     }
 
-    fun formatSelectedDate(it: Long?): String {
-        return it?.let {
-            val zonaHoraria = ZoneId.systemDefault()
-            val localDate = Instant.ofEpochMilli(it).atZone(zonaHoraria).toLocalDate()
-            val day = localDate.dayOfMonth.plus(1).toString().padStart(2, '0')
-            val month = localDate.monthValue.toString().padStart(2, '0')
-            "${localDate.year}-$month-${day}"
-        } ?: ""
-    }
-
-    fun editItem(gastosProgramadosModel: GastosProgramadosModel) {
-
+    fun updateItem(item: GastosProgramadosModel) {
+        viewModelScope.launch {
+            repository.update(item)
+            isActivatedFalse()
+            cargandoListaActualizada(item.categoryType!!)
+        }
     }
 
     fun deleteItem(item: GastosProgramadosModel) {
@@ -198,8 +195,10 @@ class CreateGastosDefaultViewModel @Inject constructor(
             repository.delete(item)
             isActivatedFalse()
             cargandoListaActualizada(item.categoryType!!)
-
         }
     }
 
+    fun setCurrentMode(mode: Modo?) {
+        _currentMode.value = mode
+    }
 }

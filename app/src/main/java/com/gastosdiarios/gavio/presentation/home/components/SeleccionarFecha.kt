@@ -1,5 +1,6 @@
 package com.gastosdiarios.gavio.presentation.home.components
 
+import android.content.Context
 import androidx.compose.foundation.BorderStroke
 import androidx.compose.foundation.background
 import androidx.compose.foundation.layout.Arrangement
@@ -18,6 +19,7 @@ import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.graphics.Color
 import androidx.compose.ui.graphics.luminance
+import androidx.compose.ui.platform.LocalContext
 import androidx.compose.ui.res.stringResource
 import androidx.compose.ui.text.style.TextAlign
 import androidx.compose.ui.unit.dp
@@ -27,7 +29,7 @@ import com.gastosdiarios.gavio.presentation.home.HomeViewModel
 
 //CARD SELECCIONAR FECHA Y MOSTRAR DIAS RESTANTES
 @Composable
-fun CountDate(modifier: Modifier, viewModel: HomeViewModel, fechaElegida: String?) {
+fun CountDate(context: Context, modifier: Modifier, viewModel: HomeViewModel, fechaElegida: String?) {
     val homeUiState by viewModel.homeUiState.collectAsState()
 
     val textDia =
@@ -80,7 +82,7 @@ fun CountDate(modifier: Modifier, viewModel: HomeViewModel, fechaElegida: String
                 )
             }
 
-            MyDatePickerDialog(homeViewModel = viewModel)
+            MyDatePickerDialog(context = context,homeViewModel = viewModel)
         }
     }
 }

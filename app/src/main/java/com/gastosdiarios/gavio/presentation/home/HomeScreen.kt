@@ -1,5 +1,6 @@
 package com.gastosdiarios.gavio.presentation.home
 
+import android.content.Context
 import androidx.activity.compose.BackHandler
 import androidx.compose.foundation.background
 import androidx.compose.foundation.layout.Arrangement
@@ -62,6 +63,7 @@ fun HomeScreen(
         onRefresh = { viewModel.refreshData(context) },
     ) {
         ContentHomeScreen(
+            context,
             modifier,
             uiState,
             viewModel,
@@ -74,6 +76,7 @@ fun HomeScreen(
 
 @Composable
 fun ContentHomeScreen(
+    context: Context,
     modifier: Modifier,
     uiState: HomeUiState,
     viewModel: HomeViewModel,
@@ -115,7 +118,7 @@ fun ContentHomeScreen(
                     style = MaterialTheme.typography.titleMedium,
                     modifier = Modifier.padding(bottom = paddingMedium, start = paddingMedium)
                 )
-                CountDate(Modifier.fillMaxWidth(), viewModel, uiState.fechaElegidaBarra)
+                CountDate(context, Modifier.fillMaxWidth(), viewModel, uiState.fechaElegida)
                 CommonsSpacer(height = 4.dp, width = 0.dp)
                 NuevoMes(viewModel, uiState.showNuevoMes)
                 Text(
@@ -132,8 +135,7 @@ fun ContentHomeScreen(
                     showAgregar = uiState.agregar,
                     onDismiss = { viewModel.onDialogClose() },
                     viewModel,
-                    navController
-                )
+                    navController)
 
                 Spacer(modifier = Modifier.padding(vertical = 20.dp))
                 HorizontalDivider()

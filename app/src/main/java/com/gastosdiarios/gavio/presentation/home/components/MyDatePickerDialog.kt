@@ -1,7 +1,9 @@
 package com.gastosdiarios.gavio.presentation.home.components
 
+import android.content.Context
 import androidx.compose.material3.DatePicker
 import androidx.compose.material3.DatePickerDialog
+import androidx.compose.material3.DatePickerState
 import androidx.compose.material3.ExperimentalMaterial3Api
 import androidx.compose.material3.MaterialTheme
 import androidx.compose.material3.SelectableDates
@@ -17,9 +19,10 @@ import androidx.compose.runtime.setValue
 import androidx.compose.ui.res.stringResource
 import com.gastosdiarios.gavio.R
 import com.gastosdiarios.gavio.presentation.home.HomeViewModel
+import com.gastosdiarios.gavio.utils.DateUtils
 
 @Composable
-fun MyDatePickerDialog(homeViewModel: HomeViewModel) {
+fun MyDatePickerDialog(context: Context, homeViewModel: HomeViewModel) {
     var selectedDate: String? by remember { mutableStateOf(null) }
     var showDatePicker by remember { mutableStateOf(false) }
 
@@ -37,7 +40,7 @@ fun MyDatePickerDialog(homeViewModel: HomeViewModel) {
         )
     }
     //selectedDate get la fecha ··/··/····
-    selectedDate?.let { homeViewModel.sendDateElegida(it) }
+    selectedDate?.let { homeViewModel.sendDateElegida(context,it) }
 }
 
 @OptIn(ExperimentalMaterial3Api::class)
@@ -49,13 +52,13 @@ fun DatePickerView(
 ) {
     val homeUiState by viewModel.homeUiState.collectAsState()
 
-    val state = rememberDatePickerState(selectableDates = object : SelectableDates {
+    val state: DatePickerState = rememberDatePickerState(selectableDates = object : SelectableDates {
         override fun isSelectableDate(utcTimeMillis: Long): Boolean {
-            return viewModel.isDateSelectable(utcTimeMillis, homeUiState.selectedOptionFechaMaxima)
+            return DateUtils.isDateSelectableRestrictMinMax(utcTimeMillis, homeUiState.selectedOptionFechaMaxima)
         }
     })
 
-   val selectedDate = viewModel.formatSelectedDate(state.selectedDateMillis)
+   val selectedDate:String = DateUtils.formatSelectedDateGuion(state.selectedDateMillis)
 
     DatePickerDialog(onDismissRequest = { onDismiss() },
         confirmButton = {

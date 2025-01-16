@@ -13,7 +13,6 @@ import com.gastosdiarios.gavio.data.DataStorePreferences
 import com.gastosdiarios.gavio.data.constants.Constants.LIMIT_MONTH
 import com.gastosdiarios.gavio.data.ui_state.HomeUiState
 import com.gastosdiarios.gavio.data.ui_state.ListUiState
-import com.gastosdiarios.gavio.domain.model.CategoriesModel
 import com.gastosdiarios.gavio.domain.model.CategoryGastos
 import com.gastosdiarios.gavio.domain.model.CategoryIngresos
 import com.gastosdiarios.gavio.domain.model.RefreshDataModel
@@ -40,8 +39,6 @@ import com.gastosdiarios.gavio.domain.repository.repositoriesFirestrore.TotalIng
 import com.gastosdiarios.gavio.domain.repository.repositoriesFirestrore.TransactionsFirestore
 import com.gastosdiarios.gavio.utils.DateUtils
 import com.gastosdiarios.gavio.utils.DateUtils.agregandoUnMes
-import com.gastosdiarios.gavio.utils.DateUtils.converterFechaABarra
-import com.gastosdiarios.gavio.utils.DateUtils.converterFechaAGuion
 import com.gastosdiarios.gavio.utils.DateUtils.converterFechaPersonalizada
 import com.gastosdiarios.gavio.utils.DateUtils.obtenerFechaActual
 import com.gastosdiarios.gavio.utils.DateUtils.parsearFechaALocalDate
@@ -61,15 +58,11 @@ import java.math.BigDecimal
 import java.math.RoundingMode
 import java.text.ParseException
 import java.text.SimpleDateFormat
-import java.time.Instant
 import java.time.LocalDate
-import java.time.ZoneId
-import java.time.ZoneOffset
 import java.time.format.DateTimeParseException
 import java.time.temporal.ChronoUnit
 import java.util.Date
 import java.util.Locale
-import java.util.concurrent.TimeUnit
 import javax.inject.Inject
 
 @HiltViewModel
@@ -111,25 +104,24 @@ class HomeViewModel @Inject constructor(
             try {
                 val fechaActual = obtenerFechaActual()// muestra 2025-01-01
                 val dataCurrentMoney = dbm.getCurrentMoney()?.money
-                val dataDate = dbm.getDate()?.date
+                val dataDate: String? = dbm.getDate()?.date //muestra 2025-01-01
 
                 // Verificar si fechaGuardada es nula o esta vacia antes de intentar analizarla
                 when (dataDate?.isNotEmpty()) {
                     true -> {
                         //  parseando fecha a LocalDate
-                        val dateDataString = converterFechaAGuion(dataDate)
-                        val fechaParseadaAGuion =
-                            parsearFechaALocalDate(dateDataString) // muestra 2024-04-30
+                        val fechaLocalDate: LocalDate =
+                            DateUtils.toLocalDate(dataDate) // muestra 2024-04-30
 
                         // ej: 2023-12-12
                         //si la fecha actual es igual que la fecha guardada
-                        if (fechaActual >= fechaParseadaAGuion) {
+                        if (fechaActual >= fechaLocalDate) {
                             if (dataCurrentMoney == 0.0) {
-                                updateFechaUnMesMas(fechaActual, fechaParseadaAGuion)
+                                updateFechaUnMesMas(fechaActual, fechaLocalDate)
                                 _homeUiState.update { it.copy(showNuevoMes = true) }
                             } else if (dataCurrentMoney != 0.0) {
                                 //si aun tiene dinero el usuario al finalizar la fecha elegida
-                                updateFechaUnMesMas(fechaActual, fechaParseadaAGuion)
+                                updateFechaUnMesMas(fechaActual, fechaLocalDate)
                                 updateTotalIngresos(TotalIngresosModel(totalIngresos = dataCurrentMoney))
                                 // Insertar un nuevo elemento
                                 circularBuffer.adjustBufferCapacityIfNeeded()
@@ -200,13 +192,12 @@ class HomeViewModel @Inject constructor(
     private fun updateFechaUnMesMas(fechaActual: LocalDate, fechaParseada: LocalDate) {
         viewModelScope.launch {
             //se agrega un mes a la fecha guardada
-            val nuevoMes: String = agregandoUnMes(fechaActual, fechaParseada)// muestra 2025-02-01
-            val nuevoMesLocalDate = parsearFechaALocalDate(nuevoMes)
-            val fechaConBarra = converterFechaABarra(nuevoMes) // muestra 01/02/2025
+            val nuevaFecha: LocalDate =
+                agregandoUnMes(fechaActual, fechaParseada)// muestra 2025-02-01
             //se actualiza en la base de datos la nueva fecha
-            updateDate(DateModel(date = fechaConBarra, isSelected = false))
+            updateDate(DateModel(date = nuevaFecha.toString(), isSelected = false))
             // Eliminar la lista solo si no estamos en el último día del mes actual
-            if (nuevoMesLocalDate!! > fechaActual) {
+            if (nuevaFecha > fechaActual) {
                 gastosPorCategoriaFirestore.deleteAll()
             }
         }
@@ -232,9 +223,9 @@ class HomeViewModel @Inject constructor(
         }
     }
 
-    private fun mostrandoAlUsuario(fechaConBarra: String) {
-        mostrarFecha(fechaConBarra)
-        mostrarDiasRestantes(fechaConBarra)
+    private fun mostrandoAlUsuario(fecha: String) {
+        mostrarFecha(fecha)
+        mostrarDiasRestantes(fecha)
     }
 
     private fun mostrarEstadoUsuario() {
@@ -247,7 +238,7 @@ class HomeViewModel @Inject constructor(
                 } else {
                     _homeUiState.update {
                         _homeUiState.value.copy(
-                            fechaElegidaBarra = "",
+                            fechaElegida = "",
                             diasRestantes = 0,
                             limitePorDia = 0.0
                         )
@@ -266,22 +257,15 @@ class HomeViewModel @Inject constructor(
         }
     }
 
-    private fun mostrarFecha(fechaConBarra: String) {
-        //fechaConBarra tiene el formato 05/07/2024
-        _homeUiState.update {
-            _homeUiState.value.copy(
-                fechaElegidaBarra = converterFechaPersonalizada(
-                    fechaConBarra
-                )
-            )
-        }
-        //muestra 05 Jul 2024
+    private fun mostrarFecha(fecha: String) {
+        //fechaConBarra tiene el formato 2024-01-05
+        _homeUiState.update { it.copy(fechaElegida = converterFechaPersonalizada(fecha)) }
+        //muestra 05 Ene 2024
     }
 
-    private fun mostrarDiasRestantes(fechaConBarra: String) {
-        val fechaConGuion = converterFechaAGuion(fechaConBarra)
+    private fun mostrarDiasRestantes(fecha: String) {
         //se manejan con dias con guion por eso hay que parsearlo antes de enviar
-        val diasRestantes = getDiasRestantes(fechaConGuion)
+        val diasRestantes = getDiasRestantes(fecha)
         _homeUiState.update { _homeUiState.value.copy(diasRestantes = diasRestantes) }
     }
 
@@ -319,9 +303,8 @@ class HomeViewModel @Inject constructor(
         viewModelScope.launch {
             val data = dbm.getCurrentMoney()?.money
             val date = dbm.getDate()?.date
-            val fechaConGuion = date?.let { converterFechaAGuion(it) }
-            //se manejan con dias con guion por eso hay que parsearlo antes de enviar
-            val diasRestantes = getDiasRestantes(fechaConGuion)
+
+            val diasRestantes = getDiasRestantes(date)
             val limitePorDia = MathUtils.getLimitePorDia(data ?: 0.0, diasRestantes = diasRestantes)
             _homeUiState.update { _homeUiState.value.copy(limitePorDia = limitePorDia) }
         }
@@ -393,31 +376,28 @@ class HomeViewModel @Inject constructor(
         }
     }
 
-    private fun insertUpdateFecha(fechaConBarra: String) {
+    private fun insertUpdateFecha(fecha: String) {
         viewModelScope.launch {
             try {
                 val date = withContext(Dispatchers.IO) { dbm.getDate() }
                 if (date == null) {
                     //si es true se ingresa por primera vez
-                    insertDate(
-                        DateModel(date = fechaConBarra, isSelected = false),
-                        fechaConBarra
-                    )
+                    insertDate(DateModel(date = fecha, isSelected = false), fecha)
                 } else {
                     //si es false se actualiza en la base de datos y por las dudas se sigue manteniendo que es false
-                    updateDate(DateModel(date = fechaConBarra, isSelected = false))
+                    updateDate(DateModel(date = fecha, isSelected = false))
                 }
             } catch (e: DateTimeParseException) {
-                Log.e(tag, "Error al analizar la fecha: $fechaConBarra", e)
+                Log.e(tag, "Error al analizar la fecha: $fecha", e)
             }
         }
     }
 
-    private fun insertDate(item: DateModel, fechaConBarra: String) {
+    private fun insertDate(item: DateModel, fecha: String) {
         viewModelScope.launch {
             dateFirestore.createOrUpdate(item) //insertando en la base de datos
-            _homeUiState.update { _homeUiState.value.copy(fechaElegidaBarra = item.date!!) }
-            mostrandoAlUsuario(fechaConBarra)
+            _homeUiState.update { it.copy(fechaElegida = item.date!!) }
+            mostrandoAlUsuario(fecha)
             mostrarDiasRestantes(item.date!!)
             mostrarLimitePorDia()
         }
@@ -500,17 +480,21 @@ class HomeViewModel @Inject constructor(
 
     private fun manejarFechayDiasRestantesNulos() {
         // Si fechaGuardada es nula, maneja ese caso aquí
-        _homeUiState.update { _homeUiState.value.copy(fechaElegidaBarra = "", diasRestantes = 0) }
+        _homeUiState.update { _homeUiState.value.copy(fechaElegida = "", diasRestantes = 0) }
     }
 
-    fun sendDateElegida(date: String) {
-        // date me pasa ej 17/7/2024 pasarla a 17/07/2024
-        val sdf = SimpleDateFormat("dd/MM/yyyy", Locale.getDefault())
+    fun sendDateElegida(context: Context, date: String) {
+        val sdf = SimpleDateFormat("yyyy-MM-dd", Locale.getDefault())
         try {
             val dateFormat: Date? = sdf.parse(date)
             val formattedDate: String = sdf.format(dateFormat!!)
-            insertUpdateFecha(fechaConBarra = formattedDate)
+            insertUpdateFecha(fecha = formattedDate)
         } catch (e: ParseException) {
+            Toast.makeText(
+                context,
+                "Error al formatear la fecha en sendDateElegida",
+                Toast.LENGTH_SHORT
+            ).show()
             Log.e(tag, "Error al formatear la fecha: ${e.message}")
         }
     }
@@ -544,22 +528,6 @@ class HomeViewModel @Inject constructor(
                 )
             }
         }
-    }
-
-    fun isDateSelectable(utcTimeMillis: Long, maxDates: Int): Boolean {
-        val now = obtenerFechaActual()
-        val diasMaximos = TimeUnit.DAYS.toMillis(maxDates.toLong())
-        val minDate = now.atTime(0, 0, 0, 0).toEpochSecond(ZoneOffset.UTC) * 1000
-        val maxDate = minDate + diasMaximos
-        return utcTimeMillis in minDate..maxDate
-    }
-
-    fun formatSelectedDate(selectedDateMillis: Long?): String {
-        return selectedDateMillis?.let {
-            val zonaHoraria = ZoneId.systemDefault()
-            val localDate = Instant.ofEpochMilli(it).atZone(zonaHoraria).toLocalDate()
-            "${localDate.dayOfMonth + 1}/${localDate.monthValue}/${localDate.year}"
-        } ?: ""
     }
 
     fun crearTransaction(
