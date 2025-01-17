@@ -1,7 +1,5 @@
 package com.gastosdiarios.gavio.presentation.home.components
 
-import android.content.Context
-import androidx.compose.foundation.BorderStroke
 import androidx.compose.foundation.background
 import androidx.compose.foundation.layout.Arrangement
 import androidx.compose.foundation.layout.Column
@@ -17,9 +15,6 @@ import androidx.compose.runtime.collectAsState
 import androidx.compose.runtime.getValue
 import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
-import androidx.compose.ui.graphics.Color
-import androidx.compose.ui.graphics.luminance
-import androidx.compose.ui.platform.LocalContext
 import androidx.compose.ui.res.stringResource
 import androidx.compose.ui.text.style.TextAlign
 import androidx.compose.ui.unit.dp
@@ -27,18 +22,17 @@ import androidx.compose.ui.unit.sp
 import com.gastosdiarios.gavio.R
 import com.gastosdiarios.gavio.presentation.home.HomeViewModel
 
-//CARD SELECCIONAR FECHA Y MOSTRAR DIAS RESTANTES
 @Composable
-fun CountDate(context: Context, modifier: Modifier, viewModel: HomeViewModel, fechaElegida: String?) {
+fun CountDate(modifier: Modifier, viewModel: HomeViewModel,fechaElegida: String?) {
     val homeUiState by viewModel.homeUiState.collectAsState()
 
-    val textDia =
-        if (homeUiState.diasRestantes == 1) stringResource(id = R.string.dia) else stringResource(R.string.dias)
+    val textDia = if (homeUiState.diasRestantes == 1) stringResource(id = R.string.dia) else stringResource(R.string.dias)
     Card(
         modifier = modifier
             .padding(horizontal = 16.dp),
-        colors = CardDefaults.cardColors(containerColor = MaterialTheme.colorScheme.surface),
-        border = BorderStroke(1.dp, Color.Transparent)
+        colors = CardDefaults.cardColors(
+            containerColor = MaterialTheme.colorScheme.surfaceContainerLow
+        )
     ) {
         Row(
             modifier = Modifier
@@ -50,7 +44,7 @@ fun CountDate(context: Context, modifier: Modifier, viewModel: HomeViewModel, fe
                 Column(
                     Modifier
                         .width(50.dp)
-                        .background(MaterialTheme.colorScheme.surfaceContainer)
+                        .background(MaterialTheme.colorScheme.background)
                         .padding(8.dp),
                     verticalArrangement = Arrangement.Center,
                     horizontalAlignment = Alignment.CenterHorizontally
@@ -60,13 +54,13 @@ fun CountDate(context: Context, modifier: Modifier, viewModel: HomeViewModel, fe
                         text = homeUiState.diasRestantes.toString(),
                         textAlign = TextAlign.Center,
                         style = MaterialTheme.typography.headlineMedium,
-                        color = MaterialTheme.colorScheme.onSurface
+                        color = MaterialTheme.colorScheme.onSurfaceVariant
                     )
                     Text(
                         text = textDia,
                         textAlign = TextAlign.Center,
                         style = MaterialTheme.typography.labelMedium,
-                        color = MaterialTheme.colorScheme.onSurface
+                        color = MaterialTheme.colorScheme.onSurfaceVariant
                     )
                 }
 
@@ -77,12 +71,11 @@ fun CountDate(context: Context, modifier: Modifier, viewModel: HomeViewModel, fe
                     fontSize = 14.sp,
                     modifier = Modifier
                         .padding(horizontal = 10.dp)
-                        .weight(1f),
-                    color = MaterialTheme.colorScheme.onSurface
+                        .weight(1f)
                 )
             }
 
-            MyDatePickerDialog(context = context,homeViewModel = viewModel)
+            MyDatePickerDialog(homeViewModel = viewModel)
         }
     }
 }

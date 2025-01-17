@@ -35,13 +35,11 @@
     <string name="saldo_restante">Saldo restante</string>
 
     <!--TOOLBAR-->
-    <string name="toolbar_home">Gavio</string>
-    <string name="toolbar_all_expenses">All expenses</string>
     <string name="toolbar_configuration">Configuración</string>
     <string name="toolbar_cambio_fecha">Cambio de fechas</string>
+    <string name="toolbar_registro_gastos">All expenses</string>
     <string name="toolbar_analisis_de_gastos">Análisis de gastos</string>
     <string name="toolbar_ajustes">Ajustes</string>
-    <string name="toolbar_gastos_programados">Gastos programados</string>
 
 
     <string name="ir_a_movimientos">Ir a movimientos</string>
@@ -93,9 +91,6 @@
     <string name="create_category_title">Crear categoría</string>
     <string name="create_category_description">Permite crear nuevas categorías</string>
 
-    <string name="create_gastos_programados_title">Crear Gastos Programados</string>
-    <string name="create_gastos_programados_description">Permite crear nuevos gastos programados</string>
-
     <string name="update_date_title">Actualizar fecha</string>
     <string name="update_date_description">Límite máximo de fecha</string>
 
@@ -123,14 +118,12 @@
     <!-- ///////////////////////////////////////////////////////////////////////////////////// -->
     <!-- PANTALLA DE ELEGIR FECHA MAXIMA -->
     <string name="elige_una_opcion">Elige una opción</string>
-    <string name="quincena">15 días</string>
     <string name="primer_mes">31 días</string>
     <string name="dos_meses">60 días</string>
     <string name="tres_meses">90 días</string>
-    <string name="_15_dias_para_cobros_por_quincena">15 días para cobros por quincena.\n</string>
-    <string name="_31_dias_para_cobros_mensuales">31 días para cobros mensuales.\n</string>
-    <string name="_60_dias_para_cobros_cada_dos_meses">60 días para cobros cada dos meses.\n</string>
-    <string name="_90_dias_para_cobros_cada_3_meses">90 días para cobros cada 3 meses.</string>
+    <string name="_31_d_as_para_cobros_mensuales">31 días para cobros mensuales.\n</string>
+    <string name="_60_d_as_para_cobros_cada_dos_meses">60 días para cobros cada dos meses.\n</string>
+    <string name="_90_d_as_para_cobros_cada_3_meses">90 días para cobros cada 3 meses.</string>
     <!-- ///////////////////////////////////////////////////////////////////////////////////// -->
     <!--modelBottomSheet -->
     <string name="selecciona_un_icono">Selecciona un ícono</string>
@@ -148,13 +141,6 @@
     <string name="ir_a_inicio">Ir a inicio</string>
     <string name="authentication_failed">Error de autenticacion</string>
     <string name="title_reiniciar">Reiniciar</string>
-    <string name="seguridad_title">Huella Digital</string>
-    <string name="seguridad_description">Abrir con la huella o patron</string>
     <!-- ///////////////////////////////////////////////////////////////////////////////////// -->
-    <string name="empty_screen_title">Pantalla en construcción</string>
-    <string name="empty_screen_subtitle">Esta pantalla aún está en construcción.</string>
-    <string name="pagar">Pagar</string>
-    <string name="dias_que_restan">Dias que restan</string>
-
 
 </resources>

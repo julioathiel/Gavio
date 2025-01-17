@@ -1,22 +1,30 @@
 package com.gastosdiarios.gavio.presentation.home.components
 
+import android.graphics.drawable.Icon
+import android.util.Log
 import androidx.compose.foundation.Image
 import androidx.compose.foundation.layout.Box
 import androidx.compose.foundation.layout.fillMaxWidth
 import androidx.compose.foundation.layout.height
+import androidx.compose.foundation.layout.heightIn
 import androidx.compose.foundation.layout.size
+import androidx.compose.foundation.layout.width
+import androidx.compose.foundation.layout.widthIn
+import androidx.compose.foundation.lazy.LazyColumn
+import androidx.compose.foundation.lazy.items
 import androidx.compose.material.icons.Icons
 import androidx.compose.material.icons.filled.ArrowDropDown
 import androidx.compose.material3.DropdownMenuItem
 import androidx.compose.material3.ExperimentalMaterial3Api
 import androidx.compose.material3.ExposedDropdownMenuBox
+import androidx.compose.material3.ExposedDropdownMenuDefaults
 import androidx.compose.material3.Icon
 import androidx.compose.material3.IconButton
 import androidx.compose.material3.MaterialTheme
 import androidx.compose.material3.MenuAnchorType
 import androidx.compose.material3.OutlinedTextField
-import androidx.compose.material3.OutlinedTextFieldDefaults
 import androidx.compose.material3.Text
+import androidx.compose.material3.TextField
 import androidx.compose.material3.TextFieldDefaults
 import androidx.compose.runtime.Composable
 import androidx.compose.runtime.getValue
@@ -28,10 +36,13 @@ import androidx.compose.ui.Modifier
 import androidx.compose.ui.draw.rotate
 import androidx.compose.ui.graphics.Color
 import androidx.compose.ui.graphics.ColorFilter
+import androidx.compose.ui.graphics.painter.Painter
 import androidx.compose.ui.res.painterResource
 import androidx.compose.ui.semantics.contentDescription
 import androidx.compose.ui.semantics.semantics
 import androidx.compose.ui.unit.dp
+import coil.compose.AsyncImagePainter.State.Empty.painter
+import com.gastosdiarios.gavio.R
 import com.gastosdiarios.gavio.data.ui_state.HomeUiState
 import com.gastosdiarios.gavio.domain.model.CategoriesModel
 import com.gastosdiarios.gavio.domain.model.categoriaDefault
@@ -39,6 +50,7 @@ import com.gastosdiarios.gavio.domain.model.defaultCategoriesGastosList
 import com.gastosdiarios.gavio.domain.model.defaultCategoriesIngresosList
 import com.gastosdiarios.gavio.domain.model.userCategoriesGastosList
 import com.gastosdiarios.gavio.domain.model.userCategoriesIngresosList
+import java.util.Vector
 
 @OptIn(ExperimentalMaterial3Api::class)
 @Composable
@@ -110,9 +122,10 @@ fun menuDesplegable(homeUiState: HomeUiState, modifier: Modifier): CategoriesMod
                         )
                     }
                 },
-                colors = OutlinedTextFieldDefaults.colors(
-                    unfocusedBorderColor = Color.LightGray
-
+                colors = TextFieldDefaults.colors(
+                    unfocusedIndicatorColor = Color.Transparent,
+                    unfocusedContainerColor = MaterialTheme.colorScheme.surfaceContainer,
+                    focusedContainerColor = MaterialTheme.colorScheme.surfaceContainer,
                 ),
                 modifier = Modifier
                     .fillMaxWidth()
@@ -126,7 +139,7 @@ fun menuDesplegable(homeUiState: HomeUiState, modifier: Modifier): CategoriesMod
                 categories.forEach { itemCategory ->
 
                     colorIcon = if (itemCategory == categories.first()) Color.Transparent
-                    else MaterialTheme.colorScheme.onSurfaceVariant
+                                else MaterialTheme.colorScheme.onSurfaceVariant
 
                     DropdownMenuItem(
                         text = { Text(text = itemCategory.name) },
@@ -150,3 +163,40 @@ fun menuDesplegable(homeUiState: HomeUiState, modifier: Modifier): CategoriesMod
     }
     return selectedItem
 }
+
+//    @Composable
+//    fun ItemMenuDesplegable(
+//        categories: List<CategoriesModel>,
+//        onSelectedItem: (CategoriesModel) -> Unit,
+//        onExpanded: (Boolean) -> Unit
+//    ) {
+//
+//        LazyColumn(
+//            modifier = Modifier
+//                .height(300.dp)
+//                .width(400.dp) // Limit the maximum height
+//        ) {
+//            items(categories) { itemCategory ->
+//                val colorIcon =
+//                    if (itemCategory == categories.first()) Color.Transparent // Verifica si es el primer elemento
+//                    else MaterialTheme.colorScheme.onSurfaceVariant
+//
+//                DropdownMenuItem(
+//                    text = { Text(text = itemCategory.name) },
+//                    onClick = {
+//                        onSelectedItem(itemCategory)
+//                        onExpanded(false)
+//                    },
+//                    leadingIcon = {
+//                        Icon(
+//                            painter = painterResource(id = itemCategory.icon),
+//                            contentDescription = null,
+//                            modifier = Modifier.size(24.dp),
+//                            tint = colorIcon
+//                        )
+//
+//                    }
+//                )
+//            }
+//        }
+//    }

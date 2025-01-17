@@ -26,7 +26,6 @@ import androidx.compose.runtime.remember
 import androidx.compose.runtime.setValue
 import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
-import androidx.compose.ui.focus.FocusRequester
 import androidx.compose.ui.graphics.Color
 import androidx.compose.ui.input.pointer.pointerInput
 import androidx.compose.ui.res.colorResource
@@ -36,7 +35,6 @@ import androidx.compose.ui.text.style.TextOverflow
 import androidx.compose.ui.unit.dp
 import com.gastosdiarios.gavio.R
 import com.gastosdiarios.gavio.data.commons.EditDeleteAlertDialog
-import com.gastosdiarios.gavio.data.commons.ProfileIcon
 import com.gastosdiarios.gavio.data.commons.TextFieldDescription
 import com.gastosdiarios.gavio.data.events_handlers.OnActionsMovimientos
 import com.gastosdiarios.gavio.domain.model.modelFirebase.TransactionModel
@@ -56,7 +54,7 @@ fun ItemTransactions(
     var isClicked by remember { mutableStateOf(false) }
     var isLongPressed by remember { mutableStateOf(false) }
     var isExpanded by remember { mutableStateOf(false) }
-    val focusRequester = remember { FocusRequester() }
+
     val textColor = if (item.select == true) {
         //si el usuario eligio ingreso, el color de los numeros sera verde
         colorResource(id = R.color.verdeDinero)
@@ -74,7 +72,7 @@ fun ItemTransactions(
                 when {
                     isLongPressed -> Color.LightGray // Color de fondo cuando se produce un clic prolongado
                     isClicked -> Color.Gray // Color de fondo cuando se produce un clic normal
-                    else -> MaterialTheme.colorScheme.surface
+                    else -> MaterialTheme.colorScheme.background
                 }
             )
             .pointerInput(Unit) {
@@ -93,14 +91,23 @@ fun ItemTransactions(
         Spacer(modifier = Modifier.padding(start = 16.dp))
 
         //contenedor de icono
-        ProfileIcon(
-            drawableResource = item.icon.orEmpty().toInt(),
-            description = "",
-            sizeBox = 48,
-            shape = CircleShape,
-            colorCircle = MaterialTheme.colorScheme.surfaceContainer,
-            colorIcon = MaterialTheme.colorScheme.primary
-        )
+        Box(
+            modifier = Modifier
+                .size(48.dp)
+                .background(
+                    color = MaterialTheme.colorScheme.secondaryContainer,
+                    shape = CircleShape
+                ),
+            contentAlignment = Alignment.Center
+        ) {
+            // Icono dentro del círculo
+            Icon(
+                painter = painterResource(id = item.icon.orEmpty().toInt()),
+                contentDescription = null,
+                modifier = Modifier.align(Alignment.Center),
+                tint = MaterialTheme.colorScheme.primary
+                )
+        }
 
         Spacer(modifier = Modifier.padding(start = 16.dp))
         //contenedor de titulo y subtitulo
@@ -108,7 +115,7 @@ fun ItemTransactions(
             Column(modifier = Modifier.weight(1f)) {
                 Text(
                     text = item.title.toString(),
-                    style = MaterialTheme.typography.titleSmall,
+                    style = MaterialTheme.typography.titleMedium,
                     maxLines = if (isExpanded) Int.MAX_VALUE else 1,
                     // Mostrar "..." si el texto excede una línea
                     overflow = if (isExpanded) TextOverflow.Clip else TextOverflow.Ellipsis,
@@ -116,11 +123,10 @@ fun ItemTransactions(
                 if (item.subTitle?.isNotEmpty() == true) {
                     Text(
                         text = item.subTitle,
-                        color = MaterialTheme.colorScheme.outline,
+                        style = MaterialTheme.typography.bodyLarge,
                         maxLines = if (isExpanded) Int.MAX_VALUE else 1,
                         // Mostrar "..." si el texto excede una línea
                         overflow = if (isExpanded) TextOverflow.Clip else TextOverflow.Ellipsis,
-                        style = MaterialTheme.typography.bodyLarge,
                     )
                 }
             }
@@ -174,7 +180,7 @@ fun ItemTransactions(
                     ) {
                         Spacer(modifier = Modifier.padding(spaciness))
 
-                        TextFieldDinero(cantidadIngresada, Modifier.fillMaxWidth(), focusRequester = focusRequester) { nuevoValor ->
+                        TextFieldDinero(cantidadIngresada, Modifier.fillMaxWidth()) { nuevoValor ->
                             cantidadIngresada = nuevoValor
                         }
                         Spacer(modifier = Modifier.padding(spaciness))
@@ -195,7 +201,7 @@ fun ItemTransactions(
                                     OnActionsMovimientos.EditItem(
                                         title = item.title.orEmpty(),
                                         nuevoValor = cantidadIngresada,
-                                        nuevaDescription = description,
+                                        description = description,
                                         item = item
                                     )
                                 )

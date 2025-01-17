@@ -1,7 +1,6 @@
 package com.gastosdiarios.gavio.presentation.configuration.categorias_creadas
 
 import android.util.Log
-import androidx.compose.foundation.background
 import androidx.compose.foundation.layout.Box
 import androidx.compose.foundation.layout.PaddingValues
 import androidx.compose.foundation.layout.fillMaxSize
@@ -27,7 +26,6 @@ import androidx.compose.runtime.remember
 import androidx.compose.runtime.setValue
 import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
-import androidx.compose.ui.graphics.Color
 import androidx.compose.ui.unit.dp
 import androidx.compose.ui.zIndex
 import androidx.hilt.navigation.compose.hiltViewModel
@@ -41,7 +39,6 @@ import com.gastosdiarios.gavio.presentation.configuration.categorias_creadas.com
 import com.gastosdiarios.gavio.presentation.configuration.categorias_creadas.components.ContentBottomSheet
 import com.gastosdiarios.gavio.presentation.configuration.categorias_creadas.components.ToolbarGastos
 import com.gastosdiarios.gavio.presentation.configuration.categorias_creadas.components.ItemCategory
-import com.gastosdiarios.gavio.presentation.configuration.create_gastos_programados.CreateGastosProgramadosEmpty
 
 @OptIn(ExperimentalMaterial3Api::class)
 @Composable
@@ -97,7 +94,6 @@ fun CategoryScreen(
                         viewModel = viewModel,
                         ingresosActions = ingresosActions,
                         modifier = Modifier
-                            .fillMaxSize()
                             .padding(it)
                     )
                 }
@@ -120,7 +116,6 @@ fun CategoryScreen(
                         viewModel = viewModel,
                         gastosActions = gastosActions,
                         modifier = Modifier
-                            .fillMaxSize()
                             .padding(it)
                     )
                 }
@@ -138,7 +133,6 @@ fun StateContentCategoryIngresos(
     val uiStateIngresos by viewModel.uiStateIngresos.collectAsState()
     Log.d("StateContentCategoryIngresos", "uiStateIngresos: $uiStateIngresos")
     when {
-        uiStateIngresos.isLoading -> CommonsLoadingScreen(Modifier.fillMaxSize())
         uiStateIngresos.items.isEmpty() -> {
             // Si la lista está vacía, mostrar
             viewModel.isActivatedFalse()
@@ -158,7 +152,6 @@ fun StateContentCategoryIngresos(
 
         else -> {
             ListContentTypeCategory(
-                uiStateList = uiStateIngresos.items,
                 viewModel = viewModel,
                 ingresosActions,
                 modifier = modifier
@@ -188,7 +181,6 @@ fun StateContentCategoryGastos(
         uiStateGastos.isUpdateItem -> {
             CommonsLoadingData()
             ListContentTypeCategory(
-                uiStateList = uiStateGastos.items,
                 viewModel,
                 gastosActions,
                 modifier
@@ -253,7 +245,6 @@ fun PantallaDeCategoriasCreadas(
 
 @Composable
 fun ListContentTypeCategory(
-    uiStateList: List<UserCreateCategoryModel>,
     viewModel: CategoryViewModel,
     categoryActions: CategoryActions,
     modifier: Modifier,
@@ -265,8 +256,6 @@ fun ListContentTypeCategory(
             .padding(top = 56.dp)
     ) {
         LazyColumn(horizontalAlignment = Alignment.CenterHorizontally) {
-            items(uiStateList.size) { nuevoItem ->
-                val item = uiStateList[nuevoItem]
                 ItemCategory(item = item, categoryActions = categoryActions)
             }
         }
@@ -287,6 +276,5 @@ fun ContentCategoryEmpty(viewModel: CategoryViewModel, modifier: Modifier) {
     CommonsEmptyFloating(
         onClick = {
             viewModel.onDismissSet(true)
-        }, modifier = modifier
     )
 }

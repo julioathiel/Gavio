@@ -35,7 +35,6 @@ fun TopAppBarOnBack(
         navigationIcon = {
             IconButton(onClick = { onBack() }) {
                 Icon(
-                    imageVector = Icons.AutoMirrored.Filled.ArrowBack,
                     contentDescription = "Back"
                 )
             }
