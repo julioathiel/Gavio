@@ -4,6 +4,8 @@ import androidx.compose.foundation.layout.fillMaxSize
 import androidx.compose.foundation.layout.padding
 import androidx.compose.foundation.pager.HorizontalPager
 import androidx.compose.foundation.pager.rememberPagerState
+import androidx.compose.material3.BottomAppBarDefaults
+import androidx.compose.material3.FabPosition
 import androidx.compose.material3.Icon
 import androidx.compose.material3.MaterialTheme
 import androidx.compose.material3.NavigationBar
@@ -96,13 +98,14 @@ fun MainScaffold(navController: NavHostController) {
                 )
             }
         },
-
+        floatingActionButtonPosition = FabPosition.End,
         snackbarHost = { SnackbarHost(hostState = isShowSnackbar) }
     ) { innerPadding ->
         HorizontalPager(
             state = pagerState,
             modifier = Modifier
-                .padding(innerPadding).fillMaxSize()
+                .padding(innerPadding)
+                .fillMaxSize()
         ) { page ->
             screens[page].content(innerPadding) // Mostrar contenido dinámico
         }
