@@ -14,12 +14,15 @@ import com.gastosdiarios.gavio.data.constants.Constants.COLLECTION_TRANSACTIONS
 import com.gastosdiarios.gavio.data.constants.Constants.COLLECTION_USERS
 import com.gastosdiarios.gavio.data.constants.Constants.COLLECTION_USER_CATEGORY_GASTOS
 import com.gastosdiarios.gavio.data.constants.Constants.COLLECTION_USER_CATEGORY_INGRESOS
+import com.gastosdiarios.gavio.data.constants.Constants.COLLECTION_USER_PREFERENCES
+import com.gastosdiarios.gavio.domain.enums.ModeDarkThemeEnum
 import com.gastosdiarios.gavio.domain.model.modelFirebase.BarDataModel
 import com.gastosdiarios.gavio.domain.model.modelFirebase.CurrentMoneyModel
 import com.gastosdiarios.gavio.domain.model.modelFirebase.DateModel
 import com.gastosdiarios.gavio.domain.model.modelFirebase.TotalGastosModel
 import com.gastosdiarios.gavio.domain.model.modelFirebase.TotalIngresosModel
 import com.gastosdiarios.gavio.domain.model.modelFirebase.UserModel
+import com.gastosdiarios.gavio.domain.model.modelFirebase.UserPreferences
 import com.gastosdiarios.gavio.utils.DateUtils
 import com.google.firebase.auth.FirebaseAuth
 import com.google.firebase.firestore.CollectionReference
@@ -112,6 +115,19 @@ open class CloudFirestore @Inject constructor(
                     BarDataModel(uid = uidItem, value = 0f, month = mesActual, money = "0")
                 )
 
+                val userPreferencesRef = getUserPreferences().document(user.userId)
+                transaction.set(
+                    userPreferencesRef,
+                    UserPreferences(
+                        securityBiometric = false,
+                        darkMode = ModeDarkThemeEnum.MODE_AUTO,
+                        fechaMaximaNumero = "31",
+                        fechaMaximaSwitch = true,
+                        selectedHour = 21,
+                        selectedMinute = 0
+                        )
+                )
+
                 null
             }.await()
         } catch (e: FirebaseFirestoreException) {
@@ -172,9 +188,11 @@ open class CloudFirestore @Inject constructor(
                 document.reference.delete().await()
             }
             //eliminando lista gastos programados
-            val listaGastosProgramadosSnapshot = getAllGastosProgramadosCollection().document(userId).collection(
-                COLLECTION_LIST).get().await()
-            for(document in listaGastosProgramadosSnapshot.documents){
+            val listaGastosProgramadosSnapshot =
+                getAllGastosProgramadosCollection().document(userId).collection(
+                    COLLECTION_LIST
+                ).get().await()
+            for (document in listaGastosProgramadosSnapshot.documents) {
                 document.reference.delete().await()
             }
 
@@ -186,6 +204,7 @@ open class CloudFirestore @Inject constructor(
                 transaction.delete(getGastosPorCategoriaCollection().document(userId))
                 transaction.delete(getTotalGastosCollection().document(userId))
                 transaction.delete(getTotalIngresosCollection().document(userId))
+                transaction.delete(getUserPreferences().document(userId))
                 transaction.delete(getAllTransactionsCollection().document(userId))
                 transaction.delete(getAllGastosProgramadosCollection().document(userId))
                 transaction.delete(getUserCategoryGastosCollection().document(userId))
@@ -196,18 +215,12 @@ open class CloudFirestore @Inject constructor(
         }
     }
 
-    private fun getUsersCollection(): CollectionReference =
-        collections.collection(COLLECTION_USERS)
-
-    fun getBarDataCollection(): CollectionReference =
-        collections.collection(COLLECTION_BAR_DATA)
-
+    private fun getUsersCollection(): CollectionReference = collections.collection(COLLECTION_USERS)
+    fun getBarDataCollection(): CollectionReference = collections.collection(COLLECTION_BAR_DATA)
     fun getCurrentMoneyCollection(): CollectionReference =
         collections.collection(COLLECTION_CURRENT_MONEY)
 
-    fun getDateCollection(): CollectionReference =
-        collections.collection(COLLECTION_DATE)
-
+    fun getDateCollection(): CollectionReference = collections.collection(COLLECTION_DATE)
     fun getGastosPorCategoriaCollection(): CollectionReference =
         collections.collection(COLLECTION_GASTOS_POR_CATEGORIA)
 
@@ -229,6 +242,7 @@ open class CloudFirestore @Inject constructor(
     fun getUserCategoryIngresosCollection(): CollectionReference =
         collections.collection(COLLECTION_USER_CATEGORY_INGRESOS)
 
-    fun getShareCollection(): CollectionReference =
-        collections.collection(COLLECTION_SHARE)
+    fun getShareCollection(): CollectionReference = collections.collection(COLLECTION_SHARE)
+    fun getUserPreferences(): CollectionReference =
+        collections.collection(COLLECTION_USER_PREFERENCES)
 }

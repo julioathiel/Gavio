@@ -18,8 +18,10 @@ fun ProfileIcon(
     drawableResource: Int,
     description: String,
     modifier: Modifier = Modifier,
-    sizeBox:Int,
+    sizeBox:Int = 40,
+    sizeIcon:Int = 24,
     colorCircle:Color,
+    colorIcon:Color
 ) {
     Box(
         modifier = modifier
@@ -31,6 +33,7 @@ fun ProfileIcon(
         Image(
             painter = painterResource(id = drawableResource),
             contentDescription = description,
+            modifier = Modifier.size(sizeIcon.dp),
             alignment = Alignment.Center,
             colorFilter = ColorFilter.tint(colorIcon)
         )

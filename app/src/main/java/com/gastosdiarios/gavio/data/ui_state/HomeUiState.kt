@@ -16,6 +16,7 @@ data class HomeUiState(
     val diasRestantes:Int = 0,
     val limitePorDia:Double = 0.0,
     val enabledButtonGastos: Boolean = false,
+    val showTransaction:Boolean = false,
     val isChecked: Boolean = false,
     val agregar: Boolean = false,
     val editar: Boolean = false,

@@ -23,9 +23,10 @@
     <string name="sin_resultados">Sin resultados</string>
 
     <!--globales-->
-    <string name="eliminar">Eliminar</string>
     <string name="editar">Editar</string>
+    <string name="eliminar">Eliminar</string>
     <string name="guardar">Guardar</string>
+    <string name="pagar">Pagar</string>
     <string name="elige_una_categoria">Elige una categoría</string>
     <string name="confirmar">Confirmar</string>
     <string name="eliminar_todo">Eliminar todo</string>
@@ -35,11 +36,13 @@
     <string name="saldo_restante">Saldo restante</string>
 
     <!--TOOLBAR-->
+    <string name="toolbar_home">Gavio</string>
     <string name="toolbar_configuration">Configuración</string>
     <string name="toolbar_cambio_fecha">Cambio de fechas</string>
     <string name="toolbar_registro_gastos">All expenses</string>
     <string name="toolbar_analisis_de_gastos">Análisis de gastos</string>
     <string name="toolbar_ajustes">Ajustes</string>
+    <string name="toolbar_gastos_programados">Gastos programados</string>
 
 
     <string name="ir_a_movimientos">Ir a movimientos</string>
@@ -54,6 +57,8 @@
     <string name="analisis">Análisis</string>
     <string name="menu">Menú</string>
     <string name="por_dia">por día</string>
+    <string name="dia">día</string>
+    <string name="dias">días</string>
     <string name="buenos_dias" tools:keep="@string/buenos_dias">Buenos días</string>
     <string name="buenas_tardes" tools:keep="@string/buenas_tardes">Buenas tardes</string>
     <string name="buenas_noches" tools:keep="@string/buenas_noches">Buenas noches</string>
@@ -63,8 +68,6 @@
     <string name="usuario_eliminado_correctamente" tools:keep="@string/usuario_eliminado_correctamente">Usuario eliminado correctamente</string>
     <string name="error_al_eliminar_usuario" tools:keep="@string/error_al_eliminar_usuario">Error al eliminar el usuario</string>
     <string name="tipo_moneda">$</string>
-    <string name="dia">día</string>
-    <string name="dias">días</string>
     <string name="cargando_espere_por_favor">Cargando…espere por favor</string>
     <string name="error_al_cargar_los_datos" tools:keep="@string/error_al_cargar_los_datos">Error al cargar los datos</string>
     <string name="error_el_gasto_no_puede_ser_superior_a_los_ingresos">El gasto no puede ser superior a los ingresos.</string>
@@ -90,6 +93,9 @@
 
     <string name="create_category_title">Crear categoría</string>
     <string name="create_category_description">Permite crear nuevas categorías</string>
+
+    <string name="create_gastos_programados_title">Crear gastos programados</string>
+    <string name="create_gastos_programados_description">Permite crear nuevos gastos</string>
 
     <string name="update_date_title">Actualizar fecha</string>
     <string name="update_date_description">Límite máximo de fecha</string>
@@ -118,12 +124,14 @@
     <!-- ///////////////////////////////////////////////////////////////////////////////////// -->
     <!-- PANTALLA DE ELEGIR FECHA MAXIMA -->
     <string name="elige_una_opcion">Elige una opción</string>
+    <string name="quincena">15 días</string>
     <string name="primer_mes">31 días</string>
     <string name="dos_meses">60 días</string>
     <string name="tres_meses">90 días</string>
-    <string name="_31_d_as_para_cobros_mensuales">31 días para cobros mensuales.\n</string>
-    <string name="_60_d_as_para_cobros_cada_dos_meses">60 días para cobros cada dos meses.\n</string>
-    <string name="_90_d_as_para_cobros_cada_3_meses">90 días para cobros cada 3 meses.</string>
+    <string name="_15_dias_para_cobros_quinccenales">15 días para cobros quincenales.\n</string>
+    <string name="_31_dias_para_cobros_mensuales">31 días para cobros mensuales.\n</string>
+    <string name="_60_dias_para_cobros_cada_dos_meses">60 días para cobros cada dos meses.\n</string>
+    <string name="_90_dias_para_cobros_cada_3_meses">90 días para cobros cada 3 meses.</string>
     <!-- ///////////////////////////////////////////////////////////////////////////////////// -->
     <!--modelBottomSheet -->
     <string name="selecciona_un_icono">Selecciona un ícono</string>
@@ -142,5 +150,8 @@
     <string name="authentication_failed">Error de autenticacion</string>
     <string name="title_reiniciar">Reiniciar</string>
     <!-- ///////////////////////////////////////////////////////////////////////////////////// -->
-
+    <string name="empty_screen_title">Pantalla en construcción</string>
+    <string name="empty_screen_subtitle">Esta pantalla aún está en construcción.</string>
+    <string name="seguridad_title">Bloqueo</string>
+    <string name="seguridad_description">Abrir con la huella o patron</string>
 </resources>

@@ -6,7 +6,6 @@ import androidx.compose.foundation.layout.Spacer
 import androidx.compose.foundation.layout.fillMaxWidth
 import androidx.compose.foundation.layout.height
 import androidx.compose.foundation.layout.padding
-import androidx.compose.material3.HorizontalDivider
 import androidx.compose.material3.MaterialTheme
 import androidx.compose.material3.Text
 import androidx.compose.runtime.Composable
@@ -18,7 +17,7 @@ import androidx.compose.ui.unit.dp
 fun ItemFecha(fecha: String) {
     Row(
         Modifier
-            .fillMaxWidth().background(MaterialTheme.colorScheme.surface)
+            .fillMaxWidth().background(MaterialTheme.colorScheme.surfaceBright)
             .padding(horizontal = 16.dp)
             .height(40.dp), verticalAlignment = Alignment.CenterVertically
     ) {
@@ -28,6 +27,5 @@ fun ItemFecha(fecha: String) {
             style = MaterialTheme.typography.labelMedium
         )
         Spacer(modifier = Modifier.padding(end = 16.dp))
-        HorizontalDivider()
     }
 }

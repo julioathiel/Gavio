@@ -1,16 +1,12 @@
 package com.gastosdiarios.gavio.presentation.transaction
 
 import android.util.Log
-import androidx.compose.runtime.getValue
-import androidx.compose.runtime.mutableStateOf
-import androidx.compose.runtime.remember
-import androidx.compose.runtime.setValue
 import androidx.lifecycle.ViewModel
 import androidx.lifecycle.viewModelScope
 import com.gastosdiarios.gavio.R
-import com.gastosdiarios.gavio.data.events_handlers.OnActionsMovimientos
 import com.gastosdiarios.gavio.data.ui_state.ListUiState
 import com.gastosdiarios.gavio.data.ui_state.TransactionsUiState
+import com.gastosdiarios.gavio.domain.model.RefreshDataModel
 import com.gastosdiarios.gavio.domain.model.modelFirebase.CurrentMoneyModel
 import com.gastosdiarios.gavio.domain.model.modelFirebase.TotalGastosModel
 import com.gastosdiarios.gavio.domain.model.modelFirebase.TotalIngresosModel
@@ -22,11 +18,15 @@ import com.gastosdiarios.gavio.domain.repository.repositoriesFirestrore.TotalGas
 import com.gastosdiarios.gavio.domain.repository.repositoriesFirestrore.TotalIngresosFirestore
 import com.gastosdiarios.gavio.domain.repository.repositoriesFirestrore.TransactionsFirestore
 import com.gastosdiarios.gavio.utils.MathUtils
+import com.gastosdiarios.gavio.utils.RefreshDataUtils
 import dagger.hilt.android.lifecycle.HiltViewModel
 import kotlinx.coroutines.Dispatchers
 import kotlinx.coroutines.flow.MutableStateFlow
+import kotlinx.coroutines.flow.SharingStarted
 import kotlinx.coroutines.flow.StateFlow
 import kotlinx.coroutines.flow.asStateFlow
+import kotlinx.coroutines.flow.onStart
+import kotlinx.coroutines.flow.stateIn
 import kotlinx.coroutines.flow.update
 import kotlinx.coroutines.launch
 import kotlinx.coroutines.withContext
@@ -43,9 +43,6 @@ class TransactionsViewModel @Inject constructor(
 ) : ViewModel() {
     private val tag = "transactionViewModel"
 
-//    private val _interactionState = MutableStateFlow(TransactionsUiState())
-//    val interactionUiState: StateFlow<TransactionsUiState> = _interactionState.asStateFlow()
-
     private val _transactionUiState = MutableStateFlow(ListUiState<TransactionModel>())
     val transactionUiState: StateFlow<ListUiState<TransactionModel>> =
         _transactionUiState.asStateFlow()
@@ -53,32 +50,45 @@ class TransactionsViewModel @Inject constructor(
     private val _snackbarMessage = MutableStateFlow<Int?>(null)
     val snackbarMessage: StateFlow<Int?> get() = _snackbarMessage
 
-    init { getAllTransactions() }
+    private val _interactionState = MutableStateFlow(TransactionsUiState())
+    val interactionState: StateFlow<TransactionsUiState> = _interactionState.asStateFlow()
 
-    fun getAllTransactions() {
+    private val _isRefreshing = MutableStateFlow(RefreshDataModel(isRefreshing = false))
+    val isRefreshing: StateFlow<RefreshDataModel> = _isRefreshing.asStateFlow()
+
+
+    private val _isLoading = MutableStateFlow(false)
+    val isLoading = _isLoading.onStart {
+        getAllTransactions()
+    }.stateIn(viewModelScope, SharingStarted.WhileSubscribed(5000L), false)
+
+    private fun getAllTransactions() {
         viewModelScope.launch(Dispatchers.IO) {
+            _isLoading.value = true
             _transactionUiState.update { it.copy(isLoading = true) }
             val data: List<TransactionModel> = dbm.getTransactions()
             _transactionUiState.update {
                 it.copy(items = data, isLoading = false)
             }
+            _isLoading.value = false
         }
     }
 
-    fun onEventHandler(e: OnActionsMovimientos) {
-        when (e) {
-            is OnActionsMovimientos.DeleteItem -> onItemRemoveMov(e.lisTransactions, e.item)
-            is OnActionsMovimientos.EditItem -> updateItem(
-                e.title,
-                e.nuevoValor,
-                e.description,
-                e.item
-            )
-        }
+    fun refreshData() {
+        RefreshDataUtils.refreshData(
+            viewModelScope,
+            isRefreshing = _isRefreshing,
+            dataLoading = {
+                val data: List<TransactionModel> = dbm.getTransactions()
+                _transactionUiState.update {
+                    it.copy(items = data)
+                }
+            }
+        )
     }
 
 
-    private fun onItemRemoveMov(
+     fun onItemRemoveMov(
         list: List<TransactionModel>,
         item: TransactionModel
     ) {
@@ -128,7 +138,7 @@ class TransactionsViewModel @Inject constructor(
         }
     }
 
-    private fun updateItem(
+     fun updateItem(
         title: String,
         nuevoValor: String,
         description: String,
@@ -371,10 +381,6 @@ class TransactionsViewModel @Inject constructor(
         }
     }
 
-//    fun updateInteractionState(newState: TransactionsUiState) {
-//        _interactionState.value = newState
-//    }
-
     private fun deleteGastosPorCategoria(title: String) {
         viewModelScope.launch(Dispatchers.IO) {
             val data = dbm.getGastosPorCategoria()
@@ -389,16 +395,4 @@ class TransactionsViewModel @Inject constructor(
     fun resetSnackbarMessage() {
         _snackbarMessage.value = null
     }
-
-//    fun setShowBottomSheet(value: Boolean) {
-//        _interactionState.update { it.copy(showBottomSheet = value) }
-//    }
-//
-//    fun setShowDialogTransaction(value: Boolean) {
-//        _interactionState.update { it.copy(showConfirmationDialog = value) }
-//    }
-//
-//    fun setLongPressed(value: Boolean) {
-//        _interactionState.update { it.copy(isLongPressed = value) }
-//    }
 }

@@ -57,7 +57,7 @@ fun ContentBottomSheetGastosProgramados(
         onSubTitleProgramado = { subTitleProgramado = it },
         onSelectedCategory = { selectedCategory = it },
         onEnabledButtonChanged = { enabledButton = it },
-        selectedDate = { selectedDate = DateUtils.formatSelectedDateGuion(it) },
+        selectedDate = { selectedDate = DateUtils.formatSelectedDate(it) },
         focusRequester = focusRequester
     )
 
@@ -94,7 +94,7 @@ fun ContentBottomSheetGastosProgramados(
                         },
                         modifier = Modifier
                             .align(Alignment.BottomEnd)
-                            .height(dimensionResource(id = R.dimen.padding_altura_bottom))
+                            .height(dimensionResource(id = R.dimen.padding_altura_boton))
                             .fillMaxWidth(),
                         enabled = enabledButton
                     ) {
@@ -120,7 +120,7 @@ fun ContentBottomSheetGastosProgramados(
                                     state.scrollToPage(nextPage)
                                 }
                             },
-                            modifier = Modifier.height(dimensionResource(id = R.dimen.padding_altura_bottom)),
+                            modifier = Modifier.height(dimensionResource(id = R.dimen.padding_altura_boton)),
                         ) {
                             Text("Atras")
                         }
@@ -154,7 +154,7 @@ fun RealizarAccion(
         Modo.AGREGAR -> {
             Log.d("TAGG", "RealizarAccion: $modo")
             Button(
-                modifier = Modifier.height(dimensionResource(id = R.dimen.padding_altura_bottom)),
+                modifier = Modifier.height(dimensionResource(id = R.dimen.padding_altura_boton)),
                 onClick = {
                     viewModel.createNewCategory(item)
                     onDismiss()
@@ -168,7 +168,7 @@ fun RealizarAccion(
         Modo.EDITAR -> {
             Log.d("TAGG", "RealizarAccion: $modo")
             Button(
-                modifier = Modifier.height(dimensionResource(id = R.dimen.padding_altura_bottom)),
+                modifier = Modifier.height(dimensionResource(id = R.dimen.padding_altura_boton)),
                 onClick = {
                     viewModel.updateItem(item)
                     onDismiss()

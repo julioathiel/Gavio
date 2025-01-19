@@ -17,14 +17,17 @@ import androidx.compose.material3.SnackbarHost
 import androidx.compose.material3.SnackbarHostState
 import androidx.compose.material3.Text
 import androidx.compose.runtime.Composable
+import androidx.compose.runtime.LaunchedEffect
+import androidx.compose.runtime.collectAsState
 import androidx.compose.runtime.getValue
-import androidx.compose.runtime.livedata.observeAsState
+import androidx.compose.runtime.mutableIntStateOf
 import androidx.compose.runtime.mutableStateOf
 import androidx.compose.runtime.remember
 import androidx.compose.runtime.rememberCoroutineScope
 import androidx.compose.runtime.setValue
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.res.colorResource
+import androidx.compose.ui.res.dimensionResource
 import androidx.compose.ui.res.stringResource
 import androidx.compose.ui.text.SpanStyle
 import androidx.compose.ui.text.buildAnnotatedString
@@ -32,23 +35,26 @@ import androidx.compose.ui.text.font.FontFamily
 import androidx.compose.ui.text.withStyle
 import androidx.compose.ui.unit.dp
 import androidx.compose.ui.unit.sp
+import androidx.hilt.navigation.compose.hiltViewModel
 import com.gastosdiarios.gavio.R
-import com.gastosdiarios.gavio.data.commons.CommonsToolbar
+import com.gastosdiarios.gavio.data.commons.TopAppBarOnBack
 import com.gastosdiarios.gavio.presentation.configuration.actualizarMaximoFecha.components.SwitchWithText
 import kotlinx.coroutines.launch
 
 @Composable
 fun ActualizarMaximoFechaScreen(
-    viewModel: ActualizarMaximoFechaViewModel
+    viewModel: ActualizarMaximoFechaViewModel = hiltViewModel(),
+    onBack: () -> Unit
 ) {
 
     val isShowSnackbar = remember { SnackbarHostState() }
 
     Scaffold(
         topBar = {
-            CommonsToolbar(
+            TopAppBarOnBack(
                 title = stringResource(id = R.string.toolbar_cambio_fecha),
-                colors = MaterialTheme.colorScheme.background
+                containerColor = MaterialTheme.colorScheme.surface,
+                onBack = { onBack() },
             )
         },
         snackbarHost = {
@@ -68,18 +74,24 @@ fun Content(
     isShowSnackbar: SnackbarHostState,
 
     ) {
-    val selectedOptionState by viewModel.selectedOption.observeAsState()
-    val selectedSwitchOption = viewModel.selectedSwitchOption.value
     val scope = rememberCoroutineScope()
+    val uiState by viewModel.uiState.collectAsState()
+
+    var isPrueba by remember { mutableStateOf(false) }
+    var selectedSwitchNumber by remember { mutableIntStateOf(0) }
+
+    LaunchedEffect(uiState.selectedOption) {
+        selectedSwitchNumber = uiState.selectedOption
+    }
 
     Column(
         Modifier
             .fillMaxSize()
-            .background(MaterialTheme.colorScheme.background)
+            .background(MaterialTheme.colorScheme.surface)
             .padding(paddingValues)
-            .padding(horizontal = 16.dp)
+            .padding(horizontal = dimensionResource(id = R.dimen.padding_medium))
     ) {
-        Spacer(modifier = Modifier.padding(30.dp))
+        Spacer(modifier = Modifier.padding(10.dp))
         Text(
             text = stringResource(R.string.elige_una_opcion),
             style = MaterialTheme.typography.headlineMedium
@@ -100,9 +112,10 @@ fun Content(
                         color = colorResource(id = R.color.grayCuatro)
                     )
                 ) {
-                    append(stringResource(R.string._31_d_as_para_cobros_mensuales))
-                    append(stringResource(R.string._60_d_as_para_cobros_cada_dos_meses))
-                    append(stringResource(R.string._90_d_as_para_cobros_cada_3_meses))
+                    append(stringResource(R.string._15_dias_para_cobros_quinccenales))
+                    append(stringResource(R.string._31_dias_para_cobros_mensuales))
+                    append(stringResource(R.string._60_dias_para_cobros_cada_dos_meses))
+                    append(stringResource(R.string._90_dias_para_cobros_cada_3_meses))
                 }
             }
         )
@@ -110,8 +123,17 @@ fun Content(
         HorizontalDivider()
         Spacer(modifier = Modifier.size(20.dp))
 
-        var isPrueba by remember { mutableStateOf(false) }
-        var selectedSwitchNumber by remember { mutableStateOf(selectedOptionState) }
+        SwitchWithText(
+            stringResource(id = R.string.quincena),
+            numberSwitch = 15,
+            selectedSwitchNumber
+        ) { isActivated ->
+            if (isActivated) {
+                //usando el nuevo valor para guardarlo al presaionar un boton
+                selectedSwitchNumber = 15
+                isPrueba = true
+            }
+        }
         SwitchWithText(
             stringResource(R.string.primer_mes),
             numberSwitch = 31,
@@ -150,10 +172,11 @@ fun Content(
                 .size(30.dp)
                 .weight(1f)
         )
+
         Button(
             onClick = {
                 if (isPrueba) {
-                    viewModel.setSelectedOption(selectedSwitchNumber!!, selectedSwitchOption)
+                    viewModel.setSelectedOption(selectedSwitchNumber, uiState.switchActivado)
                     scope.launch {
                         isShowSnackbar.showSnackbar("Opción guardada correctamente")
                     }

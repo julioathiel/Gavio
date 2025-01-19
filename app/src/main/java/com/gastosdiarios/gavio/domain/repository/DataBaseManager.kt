@@ -6,6 +6,7 @@ import com.gastosdiarios.gavio.domain.model.modelFirebase.BarDataModel
 import com.gastosdiarios.gavio.domain.model.modelFirebase.CurrentMoneyModel
 import com.gastosdiarios.gavio.domain.model.modelFirebase.DateModel
 import com.gastosdiarios.gavio.domain.model.modelFirebase.GastosPorCategoriaModel
+import com.gastosdiarios.gavio.domain.model.modelFirebase.GastosProgramadosModel
 import com.gastosdiarios.gavio.domain.model.modelFirebase.TotalGastosModel
 import com.gastosdiarios.gavio.domain.model.modelFirebase.TotalIngresosModel
 import com.gastosdiarios.gavio.domain.model.modelFirebase.TransactionModel
@@ -13,6 +14,7 @@ import com.gastosdiarios.gavio.domain.repository.repositoriesFirestrore.BarDataF
 import com.gastosdiarios.gavio.domain.repository.repositoriesFirestrore.CurrentMoneyFirestore
 import com.gastosdiarios.gavio.domain.repository.repositoriesFirestrore.DateFirestore
 import com.gastosdiarios.gavio.domain.repository.repositoriesFirestrore.GastosPorCategoriaFirestore
+import com.gastosdiarios.gavio.domain.repository.repositoriesFirestrore.GastosProgramadosFirestore
 import com.gastosdiarios.gavio.domain.repository.repositoriesFirestrore.SharedLinkFirestore
 import com.gastosdiarios.gavio.domain.repository.repositoriesFirestrore.TotalGastosFirestore
 import com.gastosdiarios.gavio.domain.repository.repositoriesFirestrore.TotalIngresosFirestore
@@ -32,12 +34,13 @@ class DataBaseManager @Inject constructor(
     private val gastosPorCategoriaFirestore: GastosPorCategoriaFirestore,
     private val userCategoryIngresosFirestore: UserCategoryIngresosFirestore,
     private val userCategoryGastosFirestore: UserCategoryGastosFirestore,
+    private val gastosProgramadosFirestore: GastosProgramadosFirestore,
     private val sharedLinkFirestore: SharedLinkFirestore
 ) {
     //----------------------------------------------//
 
     suspend fun getDate(): DateModel? = dateFirestore.get()
-    suspend fun getSharedLink():ShareDataModel? = sharedLinkFirestore.get()
+    suspend fun getSharedLink(): ShareDataModel? = sharedLinkFirestore.get()
     suspend fun getTotalGastos(): TotalGastosModel? = totalGastosFirestore.get()
     suspend fun getCurrentMoney(): CurrentMoneyModel? = currentMoneyFirestore.get()
     suspend fun getTotalIngresos(): TotalIngresosModel? = totalIngresosFirestore.get()
@@ -46,8 +49,8 @@ class DataBaseManager @Inject constructor(
     suspend fun getGastosPorCategoria(): List<GastosPorCategoriaModel> = gastosPorCategoriaFirestore.get()
     suspend fun getUserCategoryGastos(): List<UserCreateCategoryModel> = userCategoryGastosFirestore.get()
     suspend fun getUserCategoryIngresos(): List<UserCreateCategoryModel> = userCategoryIngresosFirestore.get()
-
-   //----------------------------------------------//
+    suspend fun getGastosProgramados(): List<GastosProgramadosModel> = gastosProgramadosFirestore.get()
+    //----------------------------------------------//
 
     //FUNCION PARA LA PANTALLA DE TRANSACTIONS
     suspend fun deleteAllScreenTransactions() {
@@ -72,6 +75,7 @@ class DataBaseManager @Inject constructor(
     suspend fun deleteCurrentMoney() = currentMoneyFirestore.delete()
     private suspend fun deleteAllTransactions() = transactionsFirestore.deleteAll()
     private suspend fun deleteAllGastosPorCategory() = gastosPorCategoriaFirestore.deleteAll()
+
 
     suspend fun deleteTransaction(item: TransactionModel) {
         transactionsFirestore.delete(item)

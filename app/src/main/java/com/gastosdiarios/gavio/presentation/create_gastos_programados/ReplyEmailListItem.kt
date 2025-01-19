@@ -1,5 +1,6 @@
-package com.gastosdiarios.gavio.presentation.create_gastos_default
+package com.gastosdiarios.gavio.presentation.create_gastos_programados
 
+import android.util.Log
 import androidx.compose.foundation.clickable
 import androidx.compose.foundation.layout.Arrangement
 import androidx.compose.foundation.layout.Column
@@ -25,12 +26,14 @@ import androidx.compose.ui.text.style.TextOverflow
 import androidx.compose.ui.unit.dp
 import com.gastosdiarios.gavio.R
 import com.gastosdiarios.gavio.ReplyProfileImage
+import com.gastosdiarios.gavio.domain.model.modelFirebase.GastosProgramadosModel
 import com.gastosdiarios.gavio.domain.model.modelFirebase.TransactionModel
 
 
 @Composable
-fun ReplyEmailListItem(item: TransactionModel) {
+fun ReplyEmailListItem(item: GastosProgramadosModel) {
     var isSelected by remember { mutableStateOf(false) }
+    Log.d("TAGG", "ReplyEmailListItem: $item")
     Card(
         modifier = Modifier
             .padding(horizontal = 16.dp, vertical = 4.dp)
@@ -59,7 +62,7 @@ fun ReplyEmailListItem(item: TransactionModel) {
                         text = item.title ?: "",
                     )
                     Text(
-                        text = "No se que es",
+                        text = item.cash ?: "",
                     )
                 }
                 IconButton(
@@ -80,7 +83,7 @@ fun ReplyEmailListItem(item: TransactionModel) {
             }
 
             Text(
-                text = "email.subject",
+                text = item.date ?: "",
                 modifier = Modifier.padding(top = 12.dp, bottom = 8.dp),
             )
             Text(

@@ -12,7 +12,6 @@ object Constants {
     const val HORAS_PREDEFINIDAS = 21
     const val MINUTOS_PREDEFINIDOS = 0
     const val LIMIT_MONTH = 12
-    const val DARK_MODE = "dark_mode"
     const val MIN_PASS_LENGTH = 6
     const val PASS_PATTERN = "^(?=.*[0-9])(?=.*[a-z])(?=.*[A-Z])(?=\\S+$).{4,}$"
 
@@ -31,5 +30,6 @@ object Constants {
     const val COLLECTION_USER_CATEGORY_INGRESOS = "user_category_ingresos"
     const val COLLECTION_LIST= "list"
     const val COLLECTION_SHARE = "share_app"
+    const val COLLECTION_USER_PREFERENCES = "user_preferences"
     const val SHARE_LINK = "share_link"
 }

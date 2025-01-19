@@ -1,6 +1,7 @@
 package com.gastosdiarios.gavio.presentation.configuration.categorias_creadas
 
 import android.util.Log
+import androidx.activity.compose.BackHandler
 import androidx.compose.foundation.layout.Box
 import androidx.compose.foundation.layout.PaddingValues
 import androidx.compose.foundation.layout.fillMaxSize
@@ -49,7 +50,7 @@ fun CategoryScreen(
 ) {
     // ... (Lógica común para ambas pantallas) ...
     //al presion el boton fisico de retoceso, se dirige a la pantalla de configuracion
- //   BackHandler { onBack() }
+    BackHandler { onBack() }
     var categoryTypes by remember { mutableStateOf(categoryType) }
     val uiStateDefault by viewModel.uiStateDefault.collectAsState()
     val sheetState = rememberModalBottomSheetState(skipPartiallyExpanded = true)
@@ -115,8 +116,7 @@ fun CategoryScreen(
                     StateContentCategoryGastos(
                         viewModel = viewModel,
                         gastosActions = gastosActions,
-                        modifier = Modifier
-                            .padding(it)
+                        modifier = Modifier.padding(it)
                     )
                 }
             }
@@ -152,6 +152,7 @@ fun StateContentCategoryIngresos(
 
         else -> {
             ListContentTypeCategory(
+                uiState = uiStateIngresos.items,
                 viewModel = viewModel,
                 ingresosActions,
                 modifier = modifier
@@ -181,6 +182,7 @@ fun StateContentCategoryGastos(
         uiStateGastos.isUpdateItem -> {
             CommonsLoadingData()
             ListContentTypeCategory(
+                uiStateGastos.items,
                 viewModel,
                 gastosActions,
                 modifier
@@ -242,9 +244,9 @@ fun PantallaDeCategoriasCreadas(
         }
     )
 }
-
 @Composable
 fun ListContentTypeCategory(
+    uiState: List<UserCreateCategoryModel>,
     viewModel: CategoryViewModel,
     categoryActions: CategoryActions,
     modifier: Modifier,
@@ -256,6 +258,8 @@ fun ListContentTypeCategory(
             .padding(top = 56.dp)
     ) {
         LazyColumn(horizontalAlignment = Alignment.CenterHorizontally) {
+            items(uiState.size) { nuevoItem ->
+                val item = uiState[nuevoItem]
                 ItemCategory(item = item, categoryActions = categoryActions)
             }
         }
@@ -276,5 +280,6 @@ fun ContentCategoryEmpty(viewModel: CategoryViewModel, modifier: Modifier) {
     CommonsEmptyFloating(
         onClick = {
             viewModel.onDismissSet(true)
+        }, modifier = modifier.padding(top = 56.dp)
     )
 }

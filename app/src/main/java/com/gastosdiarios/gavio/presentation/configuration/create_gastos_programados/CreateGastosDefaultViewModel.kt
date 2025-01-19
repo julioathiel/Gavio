@@ -1,12 +1,7 @@
 package com.gastosdiarios.gavio.presentation.configuration.create_gastos_programados
 
 import android.content.Context
-import android.util.Log
 import android.widget.Toast
-import androidx.compose.runtime.getValue
-import androidx.compose.runtime.mutableStateOf
-import androidx.compose.runtime.remember
-import androidx.compose.runtime.setValue
 import androidx.lifecycle.ViewModel
 import androidx.lifecycle.viewModelScope
 import com.gastosdiarios.gavio.data.ui_state.ListUiState
@@ -15,10 +10,8 @@ import com.gastosdiarios.gavio.domain.enums.Modo
 import com.gastosdiarios.gavio.domain.model.CategoryCreate
 import com.gastosdiarios.gavio.domain.model.CategoryDefaultModel
 import com.gastosdiarios.gavio.domain.model.RefreshDataModel
-import com.gastosdiarios.gavio.domain.model.UserCreateCategoryModel
 import com.gastosdiarios.gavio.domain.model.modelFirebase.GastosProgramadosModel
-import com.gastosdiarios.gavio.domain.repository.repositoriesFirestrore.CreateGastosProgramadosFireStore
-import com.gastosdiarios.gavio.utils.DateUtils.obtenerFechaActual
+import com.gastosdiarios.gavio.domain.repository.repositoriesFirestrore.GastosProgramadosFirestore
 import com.gastosdiarios.gavio.utils.RefreshDataUtils
 import dagger.hilt.android.lifecycle.HiltViewModel
 import kotlinx.coroutines.Dispatchers
@@ -31,15 +24,11 @@ import kotlinx.coroutines.flow.stateIn
 import kotlinx.coroutines.flow.update
 import kotlinx.coroutines.launch
 import kotlinx.coroutines.withContext
-import java.time.Instant
-import java.time.ZoneId
-import java.time.ZoneOffset
-import java.util.concurrent.TimeUnit
 import javax.inject.Inject
 
 @HiltViewModel
 class CreateGastosDefaultViewModel @Inject constructor(
-    private val repository: CreateGastosProgramadosFireStore,
+    private val repository: GastosProgramadosFirestore,
 ) : ViewModel() {
     private val _uiStateDefault = MutableStateFlow(CategoryDefaultModel())
     var uiStateDefault: StateFlow<CategoryDefaultModel> = _uiStateDefault.asStateFlow()

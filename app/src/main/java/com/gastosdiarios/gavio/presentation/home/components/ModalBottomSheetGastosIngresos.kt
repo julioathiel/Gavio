@@ -1,6 +1,7 @@
 package com.gastosdiarios.gavio.presentation.home.components
 
 import androidx.compose.foundation.layout.Arrangement
+import androidx.compose.foundation.layout.Box
 import androidx.compose.foundation.layout.Column
 import androidx.compose.foundation.layout.Row
 import androidx.compose.foundation.layout.fillMaxHeight
@@ -55,7 +56,7 @@ import kotlinx.coroutines.launch
 @Composable
 fun AddTransactionDialog(
     modifier: Modifier,
-    showAgregar: Boolean,
+    showTransaction: Boolean,
     onDismiss: () -> Unit,
     homeViewModel: HomeViewModel,
     navController: NavController
@@ -69,7 +70,7 @@ fun AddTransactionDialog(
     val sheetState = rememberModalBottomSheetState(skipPartiallyExpanded = true)
     val scope = rememberCoroutineScope()
 
-    if (showAgregar) {
+    if (showTransaction) {
         ModalBottomSheet(onDismissRequest = { onDismiss() }, sheetState = sheetState,
             modifier = Modifier.fillMaxHeight(),
             content = {
@@ -156,8 +157,8 @@ fun AddTransactionDialog(
         )
     }
 
-    LaunchedEffect(showAgregar) {
-        if (showAgregar) {
+    LaunchedEffect(showTransaction) {
+        if (showTransaction) {
             focusRequester.requestFocus() // Solicitar el foco en el TextFieldDinero
         }
     }

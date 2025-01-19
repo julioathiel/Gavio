@@ -8,11 +8,13 @@ import androidx.compose.animation.core.infiniteRepeatable
 import androidx.compose.animation.core.rememberInfiniteTransition
 import androidx.compose.animation.core.tween
 import androidx.compose.foundation.Image
+import androidx.compose.foundation.background
 import androidx.compose.foundation.clickable
 import androidx.compose.foundation.layout.Arrangement
 import androidx.compose.foundation.layout.Column
 import androidx.compose.foundation.layout.Row
 import androidx.compose.foundation.layout.Spacer
+import androidx.compose.foundation.layout.fillMaxSize
 import androidx.compose.foundation.layout.fillMaxWidth
 import androidx.compose.foundation.layout.height
 import androidx.compose.foundation.layout.padding
@@ -23,7 +25,6 @@ import androidx.compose.material3.ExperimentalMaterial3Api
 import androidx.compose.material3.HorizontalDivider
 import androidx.compose.material3.MaterialTheme
 import androidx.compose.material3.ModalBottomSheet
-import androidx.compose.material3.Scaffold
 import androidx.compose.material3.Text
 import androidx.compose.material3.TextButton
 import androidx.compose.material3.rememberModalBottomSheetState
@@ -38,11 +39,12 @@ import androidx.compose.runtime.setValue
 import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.draw.rotate
+import androidx.compose.ui.graphics.Color
 import androidx.compose.ui.res.painterResource
 import androidx.compose.ui.res.stringResource
 import androidx.compose.ui.unit.dp
+import androidx.hilt.navigation.compose.hiltViewModel
 import com.gastosdiarios.gavio.R
-import com.gastosdiarios.gavio.data.commons.CommonsToolbar
 import com.gastosdiarios.gavio.domain.enums.ItemConfigurationEnum
 import com.gastosdiarios.gavio.domain.model.OpcionEliminarModel
 import com.gastosdiarios.gavio.presentation.configuration.components.ListConf
@@ -52,94 +54,85 @@ import kotlinx.coroutines.launch
 @OptIn(ExperimentalMaterial3Api::class)
 @Composable
 fun ConfigurationScreen(
-    viewModel: ConfigurationViewModel,
+    modifier: Modifier = Modifier,
+    viewModel: ConfigurationViewModel = hiltViewModel(),
     onToHomeScreen: () -> Unit,
     onToUserProfileScreen: () -> Unit,
     onToCategoriasGastosScreen: () -> Unit,
+    onToCreateGastosProgramadosScreen : () -> Unit,
     onToActualizarMaximoFechaScreen: () -> Unit,
     onToRecordatorioScreen: () -> Unit,
     onToAcercaDeScreen: () -> Unit,
     onToAjustesScreen: () -> Unit,
-    onToCongratulationsScreen: () -> Unit,
-    bottomBar: @Composable () -> Unit
+    onToExportarDatosScreen: () -> Unit,
+    onToCongratulationsScreen: () -> Unit
 ) {
     // Manejar el evento de retroceso
-    BackHandler { onToHomeScreen() }
+     BackHandler { onToHomeScreen() }
 
     // Estado para controlar si se está mostrando el diálogo
     val uiState by viewModel.configurationUiState.collectAsState()
-
-
     val sheetState = rememberModalBottomSheetState(skipPartiallyExpanded = true)
     val scope = rememberCoroutineScope()
 
 
-    Scaffold(
-        topBar = {
-            CommonsToolbar(
-                title = stringResource(id = R.string.toolbar_configuration),
-                colors = MaterialTheme.colorScheme.background
-            )
-        },
-        bottomBar = { bottomBar() },
-        content = {
-            Column {
-                ListConf(modifier = Modifier.padding(it),
-                    items = ItemConfigurationEnum.entries,
-                    onItemClick = { item ->
-                        when (item) {
-                            ItemConfigurationEnum.ELIMINAR_EDITAR_PERFIL -> onToUserProfileScreen()
-                            ItemConfigurationEnum.CATEGORIASNUEVAS -> onToCategoriasGastosScreen()
-                            ItemConfigurationEnum.UPDATEDATE -> onToActualizarMaximoFechaScreen()
-                            ItemConfigurationEnum.RECORDATORIOS -> onToRecordatorioScreen()
-                            ItemConfigurationEnum.RESET -> viewModel.setShowBottomSheet(true)
-                            ItemConfigurationEnum.COMPARTIR -> viewModel.setShowShare(true)
-                            ItemConfigurationEnum.ACERCADE -> onToAcercaDeScreen()
-                            ItemConfigurationEnum.AJUSTES_AVANZADOS -> onToAjustesScreen()
-                            else -> {}
+    Column(Modifier.background(Color.Red)) {
+        ListConf(modifier = Modifier.fillMaxSize(),
+            items = ItemConfigurationEnum.entries,
+            onItemClick = { item ->
+                when (item) {
+                    ItemConfigurationEnum.ELIMINAR_EDITAR_PERFIL -> onToUserProfileScreen()
+                    ItemConfigurationEnum.CATEGORIASNUEVAS -> onToCategoriasGastosScreen()
+                    ItemConfigurationEnum.CREATE_GASTOS_PROGRAMADOS -> onToCreateGastosProgramadosScreen()
+                    ItemConfigurationEnum.UPDATEDATE -> onToActualizarMaximoFechaScreen()
+                    ItemConfigurationEnum.RECORDATORIOS -> onToRecordatorioScreen()
+                    ItemConfigurationEnum.RESET -> viewModel.setShowBottomSheet(true)
+                    ItemConfigurationEnum.COMPARTIR -> viewModel.setShowShare(true)
+                    ItemConfigurationEnum.ACERCADE -> onToAcercaDeScreen()
+                    ItemConfigurationEnum.AJUSTES_AVANZADOS -> onToAjustesScreen()
+                    ItemConfigurationEnum.EXPORTAR_DATOS -> onToExportarDatosScreen()
+                    else -> {}
+                }
+            }
+        )
+
+    }
+
+
+    if (uiState.showBottomSheet) {
+        ModalBottomSheet(
+            onDismissRequest = { viewModel.setShowBottomSheet(false) },
+            sheetState = sheetState,
+            content = {
+                ContentBottomSheetReset(
+                    viewModel = viewModel,
+                    modifier = Modifier.fillMaxWidth(),
+                    onToCongratulationsScreen,
+                    onDismiss = {
+                        scope.launch { sheetState.hide() }.invokeOnCompletion {
+                            if (!sheetState.isVisible) {
+                                viewModel.setShowBottomSheet(false)
+                            }
+                        }
+                    },
+                    onAccept = { viewModel.clearDatabase() },
+                    opcionesEliminar = viewModel.opcionesEliminar,
+                    onConfirm = {
+                        //opciones que el usuario eligio a eliminar
+                            selectedOptions ->
+                        selectedOptions.forEach { option ->
+                            option.action()
                         }
                     }
                 )
-
             }
+        )
+    }
 
-
-            if (uiState.showBottomSheet) {
-                ModalBottomSheet(
-                    onDismissRequest = { viewModel.setShowBottomSheet(false) },
-                    sheetState = sheetState,
-                    content = {
-                        ContentBottomSheetReset(
-                            viewModel = viewModel,
-                            modifier = Modifier.fillMaxWidth(),
-                            onToCongratulationsScreen,
-                            onDismiss = {
-                                scope.launch { sheetState.hide() }.invokeOnCompletion {
-                                    if (!sheetState.isVisible) {
-                                        viewModel.setShowBottomSheet(false)
-                                    }
-                                }
-                            },
-                            onAccept = { viewModel.clearDatabase() },
-                            opcionesEliminar = viewModel.opcionesEliminar,
-                            onConfirm = {
-                                //opciones que el usuario eligio a eliminar
-                                    selectedOptions ->
-                                selectedOptions.forEach { option ->
-                                    option.action()
-                                }
-                            }
-                        )
-                    }
-                )
-            }
-
-            // Mostrar el diálogo de compartir app cuando sea necesario
-            if (uiState.showShareApp) {
-                ShareSheetButton(uiState.sharedLink, onDissmiss = { viewModel.setShowShare(false) })
-            }
-        }
-    )
+    // Mostrar el diálogo de compartir app cuando sea necesario
+    if (uiState.showShareApp) {
+        ShareSheetButton(uiState.sharedLink, onDissmiss = { viewModel.setShowShare(false) })
+    }
 }
 
 @Composable

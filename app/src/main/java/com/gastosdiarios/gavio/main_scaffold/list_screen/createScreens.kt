@@ -32,7 +32,7 @@ fun createScreens(navController: NavHostController): List<Screen> {
                 HomeScreen(
                     modifier = Modifier.padding(innerPadding),
                     navController = navController,
-                    navigateToMovimientos = { navController.navigate(TransactionsScreen) }
+                    navigateToMovimientosScreen = { navController.navigate(TransactionsScreen) }
                 )
             }
         ),

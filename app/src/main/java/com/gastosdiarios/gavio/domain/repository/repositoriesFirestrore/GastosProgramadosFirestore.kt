@@ -11,7 +11,7 @@ import kotlinx.coroutines.tasks.await
 import java.util.UUID
 import javax.inject.Inject
 
-class CreateGastosProgramadosFireStore @Inject constructor(
+class GastosProgramadosFirestore @Inject constructor(
     private val cloudFirestore: CloudFirestore,
     private val authFirebaseImp: AuthFirebaseImp
 ): ListBaseRepository<GastosProgramadosModel> {

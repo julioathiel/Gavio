@@ -28,12 +28,12 @@ fun MyFAB(
                     )
                 }
             } else { onDismiss() }
-        }
+        },
+        containerColor = MaterialTheme.colorScheme.primary,
     ) {
         Icon(
             imageVector = Icons.Filled.Add,
-            contentDescription = "add",
-            tint = MaterialTheme.colorScheme.onSurfaceVariant
+            contentDescription = "add"
         )
     }
 }

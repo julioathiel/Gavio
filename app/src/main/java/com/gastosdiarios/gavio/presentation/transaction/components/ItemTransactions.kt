@@ -26,6 +26,7 @@ import androidx.compose.runtime.remember
 import androidx.compose.runtime.setValue
 import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
+import androidx.compose.ui.focus.FocusRequester
 import androidx.compose.ui.graphics.Color
 import androidx.compose.ui.input.pointer.pointerInput
 import androidx.compose.ui.res.colorResource
@@ -36,7 +37,6 @@ import androidx.compose.ui.unit.dp
 import com.gastosdiarios.gavio.R
 import com.gastosdiarios.gavio.data.commons.EditDeleteAlertDialog
 import com.gastosdiarios.gavio.data.commons.TextFieldDescription
-import com.gastosdiarios.gavio.data.events_handlers.OnActionsMovimientos
 import com.gastosdiarios.gavio.domain.model.modelFirebase.TransactionModel
 import com.gastosdiarios.gavio.presentation.home.components.TextFieldDinero
 import com.gastosdiarios.gavio.presentation.transaction.TransactionsViewModel
@@ -54,6 +54,7 @@ fun ItemTransactions(
     var isClicked by remember { mutableStateOf(false) }
     var isLongPressed by remember { mutableStateOf(false) }
     var isExpanded by remember { mutableStateOf(false) }
+    val focusRequester = remember { FocusRequester() }
 
     val textColor = if (item.select == true) {
         //si el usuario eligio ingreso, el color de los numeros sera verde
@@ -72,7 +73,7 @@ fun ItemTransactions(
                 when {
                     isLongPressed -> Color.LightGray // Color de fondo cuando se produce un clic prolongado
                     isClicked -> Color.Gray // Color de fondo cuando se produce un clic normal
-                    else -> MaterialTheme.colorScheme.background
+                    else -> MaterialTheme.colorScheme.surface
                 }
             )
             .pointerInput(Unit) {
@@ -106,7 +107,7 @@ fun ItemTransactions(
                 contentDescription = null,
                 modifier = Modifier.align(Alignment.Center),
                 tint = MaterialTheme.colorScheme.primary
-                )
+            )
         }
 
         Spacer(modifier = Modifier.padding(start = 16.dp))
@@ -148,9 +149,7 @@ fun ItemTransactions(
                     showConfirmationEditar = true
 
                 },
-                onDeleteClick = {
-                    viewModel.onEventHandler(OnActionsMovimientos.DeleteItem(itemList, item))
-                },
+                onDeleteClick = { viewModel.onItemRemoveMov(itemList, item) },
                 onDismiss = {
                     isLongPressed = false
                     showConfirmationDialog = false
@@ -180,7 +179,11 @@ fun ItemTransactions(
                     ) {
                         Spacer(modifier = Modifier.padding(spaciness))
 
-                        TextFieldDinero(cantidadIngresada, Modifier.fillMaxWidth()) { nuevoValor ->
+                        TextFieldDinero(
+                            cantidadIngresada,
+                            Modifier.fillMaxWidth(),
+                            focusRequester = focusRequester
+                        ) { nuevoValor ->
                             cantidadIngresada = nuevoValor
                         }
                         Spacer(modifier = Modifier.padding(spaciness))
@@ -197,13 +200,11 @@ fun ItemTransactions(
                         Button(
                             onClick = {
                                 // Actualizar dinero y descripción
-                                viewModel.onEventHandler(
-                                    OnActionsMovimientos.EditItem(
-                                        title = item.title.orEmpty(),
-                                        nuevoValor = cantidadIngresada,
-                                        description = description,
-                                        item = item
-                                    )
+                                viewModel.updateItem(
+                                    title = item.title.orEmpty(),
+                                    nuevoValor = cantidadIngresada,
+                                    description = description,
+                                    valorViejo = item
                                 )
                                 showConfirmationEditar = false
                                 cantidadIngresada = ""

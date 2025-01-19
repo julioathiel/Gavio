@@ -58,7 +58,7 @@ fun DatePickerView(
         }
     })
 
-   val selectedDate:String = DateUtils.formatSelectedDateGuion(state.selectedDateMillis)
+   val selectedDate:String = DateUtils.formatSelectedDate(state.selectedDateMillis)
 
     DatePickerDialog(onDismissRequest = { onDismiss() },
         confirmButton = {

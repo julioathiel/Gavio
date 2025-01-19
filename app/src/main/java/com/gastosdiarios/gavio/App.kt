@@ -14,7 +14,6 @@ class App: Application() {
     @Inject
     lateinit var firebaseAuth: FirebaseAuth
 
-
     companion object ConnectivityStatus {
         var isConnected = mutableStateOf(true)
        lateinit var auth: FirebaseAuth
