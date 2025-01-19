@@ -28,6 +28,12 @@ class CreateGastosProgramadosViewModel @Inject constructor(
     val gastosProgramadosUiState: StateFlow<ListUiState<GastosProgramadosModel>> =
         _gastosProgramadosUiState.asStateFlow()
 
+    private val _selectionMode = MutableStateFlow<Boolean>(false)
+    val selectionMode: StateFlow<Boolean> = _selectionMode
+
+    private val _selectedItems = MutableStateFlow<List<GastosProgramadosModel>>(emptyList())
+    val selectedItems: StateFlow<List<GastosProgramadosModel>> = _selectedItems
+
     private val _isLoading = MutableStateFlow(false)
     val isLoading = _isLoading.onStart {
         getAllGastosProgramados()
@@ -59,13 +65,60 @@ class CreateGastosProgramadosViewModel @Inject constructor(
 
     fun delete(item: GastosProgramadosModel) {
         viewModelScope.launch(Dispatchers.IO) {
-            gastosProgramadosFirestore.delete(item)
+            Log.d("delete", item.toString())
+            try {
+                gastosProgramadosFirestore.delete(item)
+                cargandoListaActualizada()
+            }catch (e:Exception){
+                Log.e("Error", e.message.toString())
+            }
+
         }
     }
 
     fun deleteAll() {
         viewModelScope.launch(Dispatchers.IO) {
             gastosProgramadosFirestore.deleteAll()
+        }
+    }
+
+    fun onClickGastosProgramados(item: GastosProgramadosModel) {
+        if (_selectionMode.value) {
+            _selectedItems.update { currentList ->
+                val newList = currentList.toMutableList()
+                if (newList.any { it.uid == item.uid }) {
+                    newList.removeAll { it.uid == item.uid }
+                } else {
+                    newList.add(item)
+                }
+                newList.toList() // Convertir de nuevo a List<GastosProgramadosModel>
+            }
+            if (_selectedItems.value.isEmpty()) {
+                _selectionMode.value = false
+            }
+        }
+    }
+
+    fun onLongClickGastosProgramados(item: GastosProgramadosModel) {
+        _selectionMode.update { true }
+        _selectedItems.update { currentList ->
+            val newList = currentList.toMutableList()
+            if (newList.any { it.uid == item.uid }) {
+                newList.removeAll { it.uid == item.uid }
+            } else {
+                newList.add(item)
+            }
+            newList.toList() // Convertir de nuevo a List<GastosProgramadosModel>
+        }
+    }
+
+    private fun cargandoListaActualizada() {
+        viewModelScope.launch(Dispatchers.IO) {
+            _gastosProgramadosUiState .update { it.copy(isUpdateItem = true) }
+            val data = gastosProgramadosFirestore.get()
+            _gastosProgramadosUiState.update {
+                it.copy(items = data, isUpdateItem = false)
+            }
         }
     }
 }
