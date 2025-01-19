@@ -1,8 +1,11 @@
 package com.gastosdiarios.gavio.main_scaffold.list_screen
 
+import androidx.compose.foundation.background
 import androidx.compose.foundation.layout.padding
+import androidx.compose.material3.MaterialTheme
 import androidx.compose.runtime.Composable
 import androidx.compose.ui.Modifier
+import androidx.compose.ui.graphics.Color
 import androidx.navigation.NavHostController
 import com.gastosdiarios.gavio.R
 import com.gastosdiarios.gavio.main_scaffold.data_class.Screen
@@ -30,7 +33,7 @@ fun createScreens(navController: NavHostController): List<Screen> {
             icon = R.drawable.ic_home_filled,
             content = { innerPadding ->
                 HomeScreen(
-                    modifier = Modifier.padding(innerPadding),
+                    modifier = Modifier.padding(innerPadding).background(MaterialTheme.colorScheme.surface),
                     navController = navController,
                     navigateToMovimientosScreen = { navController.navigate(TransactionsScreen) }
                 )
@@ -43,7 +46,7 @@ fun createScreens(navController: NavHostController): List<Screen> {
             route = "AnalisisGastosScreen",
             icon = R.drawable.ic_barra_filled,
             content = { innerPadding ->
-                AnalisisGastosScreen(modifier = Modifier.padding(innerPadding))
+                AnalisisGastosScreen(modifier = Modifier.padding(innerPadding).background(MaterialTheme.colorScheme.surface))
             }
         ),
         Screen(
@@ -53,7 +56,7 @@ fun createScreens(navController: NavHostController): List<Screen> {
             icon = R.drawable.ic_menu,
             content = { innerPadding ->
                 ConfigurationScreen(
-                    modifier = Modifier.padding(innerPadding),
+                    modifier = Modifier.padding(innerPadding).background(MaterialTheme.colorScheme.surface),
                     onToHomeScreen = { navController.navigate(com.gastosdiarios.gavio.navigation.HomeScreen) },
                     onToUserProfileScreen = { navController.navigate(UserProfileScreen) },
                     onToCategoriasGastosScreen = { navController.navigate(CategoryScreen) },

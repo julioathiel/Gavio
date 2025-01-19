@@ -1,7 +1,9 @@
 package com.gastosdiarios.gavio.presentation.analisis_gastos
 
+import android.content.Context
 import android.content.res.Configuration
 import android.util.Log
+import android.widget.Toast
 import androidx.compose.foundation.isSystemInDarkTheme
 import androidx.compose.runtime.Composable
 import androidx.compose.ui.graphics.Color
@@ -16,6 +18,7 @@ import com.gastosdiarios.gavio.data.DataStorePreferences
 import com.gastosdiarios.gavio.data.constants.Constants.LIMIT_MONTH
 import com.gastosdiarios.gavio.data.ui_state.ListUiState
 import com.gastosdiarios.gavio.domain.enums.ModeDarkThemeEnum
+import com.gastosdiarios.gavio.domain.model.RefreshDataModel
 import com.gastosdiarios.gavio.domain.model.modelFirebase.BarDataModel
 import com.gastosdiarios.gavio.domain.model.modelFirebase.GastosPorCategoriaModel
 import com.gastosdiarios.gavio.domain.repository.DataBaseManager
@@ -25,6 +28,7 @@ import com.gastosdiarios.gavio.ui.theme.md_theme_dark_primary
 import com.gastosdiarios.gavio.ui.theme.md_theme_dark_surfaceContainer
 import com.gastosdiarios.gavio.utils.DateUtils
 import com.gastosdiarios.gavio.utils.MathUtils
+import com.gastosdiarios.gavio.utils.RefreshDataUtils
 import dagger.hilt.android.lifecycle.HiltViewModel
 import kotlinx.coroutines.Dispatchers
 import kotlinx.coroutines.delay
@@ -45,11 +49,15 @@ class AnalisisGastosViewModel @Inject constructor(
     private val barDataFirestore: BarDataFirestore,
     private val dataStorePreferences: DataStorePreferences,
 ) : ViewModel() {
+
     private val tag = "analisisGastosViewModel"
     private val circularBuffer = CircularBuffer(capacity = LIMIT_MONTH, db = barDataFirestore)
 
     private val _listBarDataModel = MutableStateFlow(ListUiState<BarDataModel>())
     val listBarDataModel = _listBarDataModel.asStateFlow()
+
+    private val _isRefreshing = MutableStateFlow(RefreshDataModel(isRefreshing = false))
+    val isRefreshing: StateFlow<RefreshDataModel> = _isRefreshing.asStateFlow()
 
     private val _uiState = MutableStateFlow<ListUiState<GastosPorCategoriaModel>>(ListUiState())
     var uiState = _uiState.stateIn(viewModelScope, SharingStarted.Lazily, ListUiState())
@@ -237,6 +245,19 @@ class AnalisisGastosViewModel @Inject constructor(
         val hsl = FloatArray(3)
         colorToHSL(this.toArgb(), hsl)
         return hsl
+    }
+
+    fun refreshData(context: Context) {
+        RefreshDataUtils.refreshData(
+            viewModelScope,
+            isRefreshing = _isRefreshing,
+            dataLoading = {
+                getAllListGastos()
+                getDatosGastos()
+                getDarkTheme()
+                Toast.makeText(context, "actualizado", Toast.LENGTH_SHORT).show()
+            }
+        )
     }
 
 

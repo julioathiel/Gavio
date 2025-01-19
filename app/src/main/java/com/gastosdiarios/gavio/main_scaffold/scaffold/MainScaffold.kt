@@ -65,7 +65,6 @@ fun MainScaffold(navController: NavHostController) {
         bottomBar = {
 
             NavigationBar {
-
                 screens.forEachIndexed { index, screen ->
                     selected = pagerState.currentPage == index
 
@@ -103,9 +102,7 @@ fun MainScaffold(navController: NavHostController) {
     ) { innerPadding ->
         HorizontalPager(
             state = pagerState,
-            modifier = Modifier
-                .padding(innerPadding)
-                .fillMaxSize()
+            modifier = Modifier.fillMaxSize()
         ) { page ->
             screens[page].content(innerPadding) // Mostrar contenido dinámico
         }

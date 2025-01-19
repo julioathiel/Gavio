@@ -17,7 +17,7 @@ fun HorizontalPagerWithCards(viewModel: HomeViewModel, modifier: Modifier) {
         HorizontalPager(
             state = pagerState,
             modifier = modifier,
-            contentPadding = PaddingValues(16.dp),
+            contentPadding = PaddingValues(horizontal = 30.dp),
             pageSpacing = 10.dp,
             pageContent = { pageIndex ->
 
