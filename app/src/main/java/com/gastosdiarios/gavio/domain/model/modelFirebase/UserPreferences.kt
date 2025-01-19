@@ -3,6 +3,7 @@ package com.gastosdiarios.gavio.domain.model.modelFirebase
 import com.gastosdiarios.gavio.domain.enums.ModeDarkThemeEnum
 
 data class UserPreferences(
+    val userId: String? = null,
     val securityBiometric: Boolean? = null,
     val darkMode: ModeDarkThemeEnum? = null,
     val fechaMaximaNumero: String? = null,

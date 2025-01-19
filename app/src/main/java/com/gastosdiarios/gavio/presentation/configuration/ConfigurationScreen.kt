@@ -19,6 +19,8 @@ import androidx.compose.foundation.layout.fillMaxWidth
 import androidx.compose.foundation.layout.height
 import androidx.compose.foundation.layout.padding
 import androidx.compose.foundation.layout.size
+import androidx.compose.foundation.rememberScrollState
+import androidx.compose.foundation.verticalScroll
 import androidx.compose.material3.Button
 import androidx.compose.material3.Checkbox
 import androidx.compose.material3.ExperimentalMaterial3Api
@@ -59,7 +61,7 @@ fun ConfigurationScreen(
     onToHomeScreen: () -> Unit,
     onToUserProfileScreen: () -> Unit,
     onToCategoriasGastosScreen: () -> Unit,
-    onToCreateGastosProgramadosScreen : () -> Unit,
+    onToCreateGastosProgramadosScreen: () -> Unit,
     onToActualizarMaximoFechaScreen: () -> Unit,
     onToRecordatorioScreen: () -> Unit,
     onToAcercaDeScreen: () -> Unit,
@@ -68,7 +70,7 @@ fun ConfigurationScreen(
     onToCongratulationsScreen: () -> Unit
 ) {
     // Manejar el evento de retroceso
-     BackHandler { onToHomeScreen() }
+    BackHandler { onToHomeScreen() }
 
     // Estado para controlar si se está mostrando el diálogo
     val uiState by viewModel.configurationUiState.collectAsState()
@@ -76,27 +78,24 @@ fun ConfigurationScreen(
     val scope = rememberCoroutineScope()
 
 
-    Column(Modifier.background(Color.Red)) {
-        ListConf(modifier = Modifier.fillMaxSize(),
-            items = ItemConfigurationEnum.entries,
-            onItemClick = { item ->
-                when (item) {
-                    ItemConfigurationEnum.ELIMINAR_EDITAR_PERFIL -> onToUserProfileScreen()
-                    ItemConfigurationEnum.CATEGORIASNUEVAS -> onToCategoriasGastosScreen()
-                    ItemConfigurationEnum.CREATE_GASTOS_PROGRAMADOS -> onToCreateGastosProgramadosScreen()
-                    ItemConfigurationEnum.UPDATEDATE -> onToActualizarMaximoFechaScreen()
-                    ItemConfigurationEnum.RECORDATORIOS -> onToRecordatorioScreen()
-                    ItemConfigurationEnum.RESET -> viewModel.setShowBottomSheet(true)
-                    ItemConfigurationEnum.COMPARTIR -> viewModel.setShowShare(true)
-                    ItemConfigurationEnum.ACERCADE -> onToAcercaDeScreen()
-                    ItemConfigurationEnum.AJUSTES_AVANZADOS -> onToAjustesScreen()
-                    ItemConfigurationEnum.EXPORTAR_DATOS -> onToExportarDatosScreen()
-                    else -> {}
-                }
+    ListConf(modifier = modifier.fillMaxSize(),
+        items = ItemConfigurationEnum.entries,
+        onItemClick = { item ->
+            when (item) {
+                ItemConfigurationEnum.ELIMINAR_EDITAR_PERFIL -> onToUserProfileScreen()
+                ItemConfigurationEnum.CATEGORIASNUEVAS -> onToCategoriasGastosScreen()
+                ItemConfigurationEnum.CREATE_GASTOS_PROGRAMADOS -> onToCreateGastosProgramadosScreen()
+                ItemConfigurationEnum.UPDATEDATE -> onToActualizarMaximoFechaScreen()
+                ItemConfigurationEnum.RECORDATORIOS -> onToRecordatorioScreen()
+                ItemConfigurationEnum.RESET -> viewModel.setShowBottomSheet(true)
+                ItemConfigurationEnum.COMPARTIR -> viewModel.setShowShare(true)
+                ItemConfigurationEnum.ACERCADE -> onToAcercaDeScreen()
+                ItemConfigurationEnum.AJUSTES_AVANZADOS -> onToAjustesScreen()
+                ItemConfigurationEnum.EXPORTAR_DATOS -> onToExportarDatosScreen()
             }
-        )
+        }
+    )
 
-    }
 
 
     if (uiState.showBottomSheet) {

@@ -33,9 +33,7 @@ fun ListConf(
     Column(
         modifier = modifier
             .background(color = MaterialTheme.colorScheme.surface)
-            .verticalScroll(
-                rememberScrollState()
-            )
+            .verticalScroll(rememberScrollState())
     ) {
         var lastCategory: String? = null
         items.forEach {
