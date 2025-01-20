@@ -6,4 +6,3 @@ data class GastosPorCategoriaModel(
     val icon: String? = null,
     val totalGastado: Double? = null
 )
-// Int = System.currentTimeMillis().hashCode()

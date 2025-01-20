@@ -13,6 +13,7 @@ import com.gastosdiarios.gavio.data.DataStorePreferences
 import com.gastosdiarios.gavio.data.constants.Constants.LIMIT_MONTH
 import com.gastosdiarios.gavio.data.ui_state.HomeUiState
 import com.gastosdiarios.gavio.data.ui_state.ListUiState
+import com.gastosdiarios.gavio.domain.enums.ModeDarkThemeEnum
 import com.gastosdiarios.gavio.domain.model.CategoryGastos
 import com.gastosdiarios.gavio.domain.model.CategoryIngresos
 import com.gastosdiarios.gavio.domain.model.RefreshDataModel
@@ -27,6 +28,8 @@ import com.gastosdiarios.gavio.domain.model.modelFirebase.GastosProgramadosModel
 import com.gastosdiarios.gavio.domain.model.modelFirebase.TotalGastosModel
 import com.gastosdiarios.gavio.domain.model.modelFirebase.TotalIngresosModel
 import com.gastosdiarios.gavio.domain.model.modelFirebase.TransactionModel
+import com.gastosdiarios.gavio.domain.model.modelFirebase.UserData
+import com.gastosdiarios.gavio.domain.model.modelFirebase.UserPreferences
 import com.gastosdiarios.gavio.domain.repository.AuthFirebaseImp
 import com.gastosdiarios.gavio.domain.repository.DataBaseManager
 import com.gastosdiarios.gavio.domain.repository.repositoriesFirestrore.BarDataFirestore
@@ -37,6 +40,8 @@ import com.gastosdiarios.gavio.domain.repository.repositoriesFirestrore.GastosPr
 import com.gastosdiarios.gavio.domain.repository.repositoriesFirestrore.TotalGastosFirestore
 import com.gastosdiarios.gavio.domain.repository.repositoriesFirestrore.TotalIngresosFirestore
 import com.gastosdiarios.gavio.domain.repository.repositoriesFirestrore.TransactionsFirestore
+import com.gastosdiarios.gavio.domain.repository.repositoriesFirestrore.UserDataFirestore
+import com.gastosdiarios.gavio.domain.repository.repositoriesFirestrore.UserPreferencesFirestore
 import com.gastosdiarios.gavio.utils.DateUtils
 import com.gastosdiarios.gavio.utils.DateUtils.agregandoUnMes
 import com.gastosdiarios.gavio.utils.DateUtils.converterFechaABarra
@@ -79,8 +84,11 @@ class HomeViewModel @Inject constructor(
     private val transactionsFirestore: TransactionsFirestore,
     private val gastosPorCategoriaFirestore: GastosPorCategoriaFirestore,
     private val gastosProgramadosFirestore: GastosProgramadosFirestore,
+    private val up: UserPreferencesFirestore,
+    private val udb: UserDataFirestore,
     barDataFirestore: BarDataFirestore
 ) : ViewModel() {
+
     private val tag = "homeViewModel"
 
     private val _homeUiState = MutableStateFlow(HomeUiState())
@@ -218,6 +226,8 @@ class HomeViewModel @Inject constructor(
                 mostrarEstadoUsuario()
                 listCatGastosNueva()
                 listCatIngresosNueva()
+                getPreferences()
+                getUserData()
                 _homeUiState.update { _homeUiState.value.copy(isLoading = false) }
             } catch (e: Exception) {
                 _homeUiState.update { it.copy(isError = true) }
@@ -738,4 +748,104 @@ class HomeViewModel @Inject constructor(
     }
 
     //--------------Gastos programados
+    private val _userPreferences = MutableStateFlow(UserPreferences())
+    val userPreferences: StateFlow<UserPreferences> = _userPreferences.asStateFlow()
+
+    fun createPrueba(item: UserPreferences) {
+        viewModelScope.launch {
+            up.createOrUpdate(item)
+        }
+    }
+
+    fun getPreferences() {
+        viewModelScope.launch {
+            try {
+                val data = withContext(Dispatchers.IO) { up.get() }
+                _userPreferences.update {
+                    it.copy(
+                        dateMax = data?.dateMax,
+                        hour = data?.hour,
+                        minute = data?.minute,
+                        biometricSecurity = data?.biometricSecurity,
+                        themeMode = data?.themeMode
+                    )
+                }
+            } catch (e: Exception) {
+                Log.e(tag, "getPreferences: error", e)
+            }
+        }
+    }
+
+    fun updateBiometricSecurity(value: Boolean) {
+        viewModelScope.launch {
+            try {
+                up.updateBiometricSecurity(value)
+            } catch (e: Exception) {
+                Log.e(tag, "updateBiometricSecurity: error", e)
+            }
+        }
+    }
+
+    fun updateDateMax(value: Int) {
+        viewModelScope.launch {
+            try {
+                up.updateDateMax(value)
+            } catch (e: Exception) {
+                Log.e(tag, "updateDateMax: error", e)
+            }
+        }
+    }
+
+    fun updateHourMinute(valueHour: Int, valueMinute: Int) {
+        viewModelScope.launch {
+            try {
+                up.updateHourMinute(valueHour, valueMinute)
+            } catch (e: Exception) {
+                Log.e(tag, "updateHourMinute: error", e)
+            }
+        }
+    }
+
+    fun updateThemeMode(value: ModeDarkThemeEnum) {
+        viewModelScope.launch {
+            try {
+                up.updateThemeMode(value)
+            } catch (e: Exception) {
+                Log.e(tag, "updateDarkMode: error", e)
+            }
+        }
+    }
+
+    private val _userData = MutableStateFlow(UserData())
+    val userData: StateFlow<UserData> = _userData.asStateFlow()
+
+    fun getUserData() {
+        viewModelScope.launch {
+            try {
+                val data = withContext(Dispatchers.IO) { udb.get() }
+                _userData.update {
+                    it.copy(
+                        totalGastos = data?.totalGastos,
+                        totalIngresos = data?.totalIngresos,
+                        currentMoney = data?.currentMoney,
+                        isCurrentMoneyIngresos = data?.isCurrentMoneyIngresos,
+                        selectedDate = data?.selectedDate,
+                        isSelectedDate = data?.isSelectedDate
+                    )
+                }
+            } catch (e: Exception) {
+                Log.e(tag, "Error en getUserData", e)
+            }
+        }
+    }
+
+    fun updateCurrentMoney(valueCurrentMoney: Double, valueIsCurrentMoneyIngresos: Boolean) {
+        viewModelScope.launch {
+            try {
+                udb.updateCurrentMoney(valueCurrentMoney, valueIsCurrentMoneyIngresos)
+            } catch (e: Exception) {
+                Log.e(tag, "Error en updateCurrentMoney", e)
+            }
+        }
+    }
 }

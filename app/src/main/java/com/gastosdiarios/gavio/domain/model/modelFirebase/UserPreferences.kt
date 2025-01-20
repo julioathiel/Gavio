@@ -4,10 +4,9 @@ import com.gastosdiarios.gavio.domain.enums.ModeDarkThemeEnum
 
 data class UserPreferences(
     val userId: String? = null,
-    val securityBiometric: Boolean? = null,
-    val darkMode: ModeDarkThemeEnum? = null,
-    val fechaMaximaNumero: String? = null,
-    val fechaMaximaSwitch: Boolean? = null,
-    val selectedHour: Int? = null,
-    val selectedMinute: Int? = null
+    val biometricSecurity: Boolean? = null,
+    val dateMax: Int? = null,
+    val hour: Int? = null,
+    val minute: Int? = null,
+    val themeMode: ModeDarkThemeEnum? = null
 )

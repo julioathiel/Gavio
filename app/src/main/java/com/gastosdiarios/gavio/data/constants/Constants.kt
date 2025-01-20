@@ -30,6 +30,7 @@ object Constants {
     const val COLLECTION_USER_CATEGORY_INGRESOS = "user_category_ingresos"
     const val COLLECTION_LIST= "list"
     const val COLLECTION_SHARE = "share_app"
-    const val COLLECTION_USER_PREFERENCES = "user_preferences"
+    const val COLLECTION_USER_PREFERENCES = "users_preferences"
+    const val COLLECTION_USER_DATA = "users_data"
     const val SHARE_LINK = "share_link"
 }

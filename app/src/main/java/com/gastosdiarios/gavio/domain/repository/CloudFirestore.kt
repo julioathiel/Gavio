@@ -14,6 +14,7 @@ import com.gastosdiarios.gavio.data.constants.Constants.COLLECTION_TRANSACTIONS
 import com.gastosdiarios.gavio.data.constants.Constants.COLLECTION_USERS
 import com.gastosdiarios.gavio.data.constants.Constants.COLLECTION_USER_CATEGORY_GASTOS
 import com.gastosdiarios.gavio.data.constants.Constants.COLLECTION_USER_CATEGORY_INGRESOS
+import com.gastosdiarios.gavio.data.constants.Constants.COLLECTION_USER_DATA
 import com.gastosdiarios.gavio.data.constants.Constants.COLLECTION_USER_PREFERENCES
 import com.gastosdiarios.gavio.domain.enums.ModeDarkThemeEnum
 import com.gastosdiarios.gavio.domain.model.modelFirebase.BarDataModel
@@ -21,6 +22,7 @@ import com.gastosdiarios.gavio.domain.model.modelFirebase.CurrentMoneyModel
 import com.gastosdiarios.gavio.domain.model.modelFirebase.DateModel
 import com.gastosdiarios.gavio.domain.model.modelFirebase.TotalGastosModel
 import com.gastosdiarios.gavio.domain.model.modelFirebase.TotalIngresosModel
+import com.gastosdiarios.gavio.domain.model.modelFirebase.UserData
 import com.gastosdiarios.gavio.domain.model.modelFirebase.UserModel
 import com.gastosdiarios.gavio.domain.model.modelFirebase.UserPreferences
 import com.gastosdiarios.gavio.utils.DateUtils
@@ -84,6 +86,20 @@ open class CloudFirestore @Inject constructor(
                     )
                 )
 
+                val userDataRef = getUserData().document(user.userId)
+                transaction.set(
+                    userDataRef,
+                    UserData(
+                        userId = user.userId,
+                        totalGastos = 0.0,
+                        totalIngresos = 0.0,
+                        currentMoney = 0.0,
+                        isCurrentMoneyIngresos = true,
+                        selectedDate = "",
+                        isSelectedDate = true
+                    )
+                )
+
                 val currentMoneyRef = getCurrentMoneyCollection().document(user.userId)
                 transaction.set(
                     currentMoneyRef,
@@ -118,13 +134,12 @@ open class CloudFirestore @Inject constructor(
                 transaction.set(
                     userPreferencesRef,
                     UserPreferences(
-                        securityBiometric = false,
-                        darkMode = ModeDarkThemeEnum.MODE_AUTO,
-                        fechaMaximaNumero = "31",
-                        fechaMaximaSwitch = true,
-                        selectedHour = 21,
-                        selectedMinute = 0
-                        )
+                        biometricSecurity = false,
+                        dateMax = 31,
+                        hour = 21,
+                        minute = 0,
+                        themeMode = ModeDarkThemeEnum.MODE_AUTO
+                    )
                 )
 
                 null
@@ -196,6 +211,7 @@ open class CloudFirestore @Inject constructor(
             }
 
             collections.runTransaction { transaction ->
+                transaction.delete(getUserData().document(userId))
                 transaction.delete(getUsersCollection().document(userId))
                 transaction.delete(getBarDataCollection().document(userId))
                 transaction.delete(getCurrentMoneyCollection().document(userId))
@@ -244,4 +260,6 @@ open class CloudFirestore @Inject constructor(
     fun getShareCollection(): CollectionReference = collections.collection(COLLECTION_SHARE)
     fun getUserPreferences(): CollectionReference =
         collections.collection(COLLECTION_USER_PREFERENCES)
+
+    fun getUserData(): CollectionReference = collections.collection(COLLECTION_USER_DATA)
 }
