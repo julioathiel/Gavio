@@ -87,13 +87,6 @@ object DateUtils {
     }
 
     fun formatSelectedDate(selectedDateMillis: Long?): String {
-//        return selectedDateMillis?.let {
-//            val zonaHoraria = ZoneId.systemDefault()
-//            val localDate = Instant.ofEpochMilli(it).atZone(zonaHoraria).toLocalDate()
-//            //  "${localDate.dayOfMonth + 1}/${localDate.monthValue}/${localDate.year}"
-//            "$${localDate.year}-${localDate.monthValue}-${localDate.dayOfMonth + 1}"
-//        } ?: ""
-
         return selectedDateMillis?.let {
             val zonaHoraria = ZoneId.systemDefault()
             val localDate = Instant.ofEpochMilli(it).atZone(zonaHoraria).toLocalDate()

@@ -35,7 +35,6 @@ class UserDataFirestore @Inject constructor(
     override suspend fun createOrUpdate(entity: UserData) {
        try {
            val uidUser = authFirebaseImp.getCurrentUser()?.uid ?: return
-
            cloudFirestore.getUserData().document(uidUser).set(entity.copy(userId = uidUser)).await()
        }catch (e:Exception){
            Log.e(tag,"Error al crear userData: ${e.message}")
@@ -61,7 +60,6 @@ class UserDataFirestore @Inject constructor(
     suspend fun updateTotalGastos(valueTotalGastos: Double) {
         try {
             val uidUser = authFirebaseImp.getCurrentUser()?.uid ?: return
-
             cloudFirestore.getUserData().document(uidUser).update("totalGastos", valueTotalGastos)
                 .await()
         } catch (e: Exception) {

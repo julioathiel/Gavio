@@ -1,69 +1,58 @@
 package com.gastosdiarios.gavio.presentation.configuration.ajustes_avanzados
 
-import android.util.Log
-import androidx.compose.ui.graphics.Color
 import androidx.lifecycle.ViewModel
 import androidx.lifecycle.viewModelScope
-import com.gastosdiarios.gavio.data.DataStorePreferences
-import com.gastosdiarios.gavio.data.ui_state.AjustesUiState
 import com.gastosdiarios.gavio.domain.enums.ModeDarkThemeEnum
-import com.gastosdiarios.gavio.domain.model.SeguridadBiometrica
+import com.gastosdiarios.gavio.domain.model.modelFirebase.UserPreferences
+import com.gastosdiarios.gavio.domain.repository.repositoriesFirestrore.UserPreferencesFirestore
 import dagger.hilt.android.lifecycle.HiltViewModel
+import kotlinx.coroutines.Dispatchers
 import kotlinx.coroutines.flow.MutableStateFlow
 import kotlinx.coroutines.flow.StateFlow
 import kotlinx.coroutines.flow.asStateFlow
-import kotlinx.coroutines.flow.first
 import kotlinx.coroutines.flow.update
 import kotlinx.coroutines.launch
+import kotlinx.coroutines.withContext
 import javax.inject.Inject
 
 @HiltViewModel
 class AjustesViewModel @Inject constructor(
-    private val dataStorePreferences: DataStorePreferences
+    private val up: UserPreferencesFirestore
 ) :
     ViewModel() {
 
-    private val _uiState = MutableStateFlow(AjustesUiState())
-    val uiState: StateFlow<AjustesUiState> = _uiState.asStateFlow()
-    private val _isDarkMode = MutableStateFlow(ModeDarkThemeEnum.MODE_AUTO)
-    val isDarkMode: StateFlow<ModeDarkThemeEnum> = _isDarkMode.asStateFlow()
+    private val _uiState = MutableStateFlow(UserPreferences())
+    val uiState: StateFlow<UserPreferences> = _uiState.asStateFlow()
 
     init {
-        getDarkTheme()
-        getBiometric()
+        getUserPreferences()
     }
 
 
-    private fun getDarkTheme() {
+    private fun getUserPreferences() {
         viewModelScope.launch {
-            dataStorePreferences.getThemeMode().collect { mode ->
-                _isDarkMode.value = mode.mode
-                _uiState.update { it.copy(selectedMode = mode.mode) }
+            val data: UserPreferences? = withContext(Dispatchers.IO) { up.get() }
+            _uiState.update {
+                it.copy(
+                    biometricSecurity = data?.biometricSecurity ?: false,
+                    themeMode = data?.themeMode ?: ModeDarkThemeEnum.MODE_AUTO,
+                )
             }
         }
     }
 
 
-    fun setThemeMode(mode: ModeDarkThemeEnum) {
+    fun updateBiometricSecurity(newState: Boolean) {
         viewModelScope.launch {
-            dataStorePreferences.updateDarkMode(mode) // Guardar el modo en DataStore
+            up.updateBiometricSecurity(newState)
+            _uiState.update { it.copy(biometricSecurity = newState) }
         }
     }
 
-
-    fun setBiometric(isChecked: Boolean) {
+    fun updateThemeMode(themeMode: ModeDarkThemeEnum) {
         viewModelScope.launch {
-            dataStorePreferences.setBiometric(SeguridadBiometrica(isChecked))
+            up.updateThemeMode(themeMode)
+            _uiState.update { it.copy(themeMode = themeMode) }
         }
     }
-
-
-    private fun getBiometric() {
-        viewModelScope.launch {
-            dataStorePreferences.getBiometric().collect {
-                _uiState.update { it.copy(securityBiometric = it.securityBiometric) }
-            }
-        }
-    }
-
 }

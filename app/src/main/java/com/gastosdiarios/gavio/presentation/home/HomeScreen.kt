@@ -124,31 +124,6 @@ fun ContentHomeScreen(
                 HorizontalPagerWithCards(viewModel, Modifier.fillMaxWidth())
                 CommonsSpacer(height = 30.dp, width = 0.dp)
 
-                val up by viewModel.userPreferences.collectAsState()
-                var s by remember { mutableStateOf(up.biometricSecurity ?: false) }
-
-                Text(text = up.dateMax.toString())
-                Text(text = up.hour.toString())
-                Text(text = up.minute.toString())
-
-                when (up.themeMode) {
-                    ModeDarkThemeEnum.MODE_AUTO -> Text(text = up.themeMode?.name.toString())
-                    ModeDarkThemeEnum.MODE_DAY -> Text(text = up.themeMode?.name.toString())
-                    ModeDarkThemeEnum.MODE_NIGHT -> Text(text = up.themeMode?.name.toString())
-                    null -> {}
-                }
-                LaunchedEffect(key1 = up) {
-                    // Actualizar el estado local cuando cambien las preferencias
-                    s = up.biometricSecurity ?: false
-                }
-                Log.d("HomeScreen", "ContentHomeScreen  s: $s")
-                Switch(checked = s, onCheckedChange = { newState ->
-                    s = newState
-                    viewModel.updateBiometricSecurity(s)
-                }
-                )
-
-                CommonsSpacer(height = 30.dp, width = 0.dp)
                 Text(
                     "Fecha elegida",
                     modifier = Modifier

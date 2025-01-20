@@ -1,5 +1,6 @@
 package com.gastosdiarios.gavio.presentation.configuration.ajustes_avanzados
 
+
 import androidx.compose.foundation.background
 import androidx.compose.foundation.layout.Box
 import androidx.compose.foundation.layout.Column
@@ -17,6 +18,7 @@ import androidx.compose.material3.Scaffold
 import androidx.compose.material3.Switch
 import androidx.compose.material3.Text
 import androidx.compose.runtime.Composable
+import androidx.compose.runtime.LaunchedEffect
 import androidx.compose.runtime.collectAsState
 import androidx.compose.runtime.getValue
 import androidx.compose.runtime.mutableStateOf
@@ -39,9 +41,15 @@ fun AjustesScreen(
     viewModel: AjustesViewModel = hiltViewModel(),
     onBack: () -> Unit
 ) {
-    // Recolecta el estado del flujo de booleanos
     val uiState by viewModel.uiState.collectAsState()
-    var isChecked by remember { mutableStateOf(uiState.securityBiometric) }
+    var isSecurity by remember { mutableStateOf(uiState.biometricSecurity ?: false) }
+    var checkButton by remember { mutableStateOf(uiState.themeMode ?: ModeDarkThemeEnum.MODE_AUTO) }
+
+    LaunchedEffect(key1 = uiState) {
+        isSecurity = uiState.biometricSecurity ?: false
+        checkButton = uiState.themeMode ?: ModeDarkThemeEnum.MODE_AUTO
+    }
+
 
     Scaffold(
         topBar = {
@@ -52,16 +60,18 @@ fun AjustesScreen(
                 actions = {
                     Icon(
                         painter = painterResource(
-                            id = when (uiState.selectedMode) {
+                            id = when (uiState.themeMode) {
                                 ModeDarkThemeEnum.MODE_AUTO -> R.drawable.ic_rounded_routine
                                 ModeDarkThemeEnum.MODE_DAY -> R.drawable.ic_light_mode
                                 ModeDarkThemeEnum.MODE_NIGHT -> R.drawable.ic_dark_mode
+                                null -> R.drawable.ic_rounded_routine
                             }
                         ),
-                        contentDescription = when (uiState.selectedMode) {
+                        contentDescription = when (uiState.themeMode) {
                             ModeDarkThemeEnum.MODE_AUTO -> stringResource(id = R.string.mode_auto)
                             ModeDarkThemeEnum.MODE_DAY -> stringResource(id = R.string.mode_day)
                             ModeDarkThemeEnum.MODE_NIGHT -> stringResource(id = R.string.mode_night)
+                            null -> stringResource(id = R.string.mode_auto)
                         }.toString(), modifier = Modifier.padding(end = 16.dp)
                     )
                 }
@@ -79,17 +89,19 @@ fun AjustesScreen(
                     .padding(horizontal = dimensionResource(id = R.dimen.padding_medium))
             ) {
 
-                ModeDarkThemeEnum.entries.forEach { mode ->
+                ModeDarkThemeEnum.entries.forEach { option ->
                     Row(verticalAlignment = Alignment.CenterVertically) {
-                        val title = when (mode) {
+                        val title = when (option) {
                             ModeDarkThemeEnum.MODE_AUTO -> stringResource(id = R.string.mode_auto)
                             ModeDarkThemeEnum.MODE_DAY -> stringResource(id = R.string.mode_day)
                             ModeDarkThemeEnum.MODE_NIGHT -> stringResource(id = R.string.mode_night)
                         }
                         Text(text = title, modifier = Modifier.weight(1f))
                         RadioButton(
-                            selected = uiState.selectedMode == mode,
-                            onClick = { viewModel.setThemeMode(mode) }
+                            selected = option == checkButton,
+                            onClick = {
+                                checkButton = option
+                                viewModel.updateThemeMode(checkButton) }
                         )
                     }
                 }
@@ -104,15 +116,16 @@ fun AjustesScreen(
                         ItemConfAvanzada.SEGURIDAD -> {
                             SwitchWith(
                                 switchText = "Seguridad",
-                                isChecked = isChecked,
+                                isChecked = isSecurity,
                                 onCheckedChange = { newState ->
-                                    isChecked = newState
-                                    viewModel.setBiometric(newState)
+                                    isSecurity = newState
+                                    viewModel.updateBiometricSecurity(isSecurity)
                                 }
                             )
                         }
                     }
                 }
+
             }
         }
     }

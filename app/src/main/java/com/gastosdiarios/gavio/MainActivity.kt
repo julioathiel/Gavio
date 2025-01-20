@@ -11,6 +11,7 @@ import androidx.compose.runtime.getValue
 import androidx.core.splashscreen.SplashScreen.Companion.installSplashScreen
 import com.gastosdiarios.gavio.App.ConnectivityStatus.networkReceiver
 import com.gastosdiarios.gavio.domain.enums.ModeDarkThemeEnum
+import com.gastosdiarios.gavio.domain.model.modelFirebase.UserPreferences
 import com.gastosdiarios.gavio.navigation.MyAppContent
 import com.gastosdiarios.gavio.presentation.configuration.ajustes_avanzados.AjustesViewModel
 import com.gastosdiarios.gavio.ui.theme.GavioTheme
@@ -25,11 +26,12 @@ class MainActivity : AppCompatActivity() {
         super.onCreate(savedInstanceState)
         enableEdgeToEdge()
         setContent {
-            val darkMode by ajustesViewModel.uiState.collectAsState()
-            val mode = when (darkMode.selectedMode) {
+            val option: UserPreferences by ajustesViewModel.uiState.collectAsState()
+            val mode = when (option.themeMode) {
                 ModeDarkThemeEnum.MODE_AUTO -> isSystemInDarkTheme()
                 ModeDarkThemeEnum.MODE_DAY -> false
                 ModeDarkThemeEnum.MODE_NIGHT -> true
+                null -> isSystemInDarkTheme()
             }
 
             GavioTheme(darkTheme = mode, dynamicColor = false) {
