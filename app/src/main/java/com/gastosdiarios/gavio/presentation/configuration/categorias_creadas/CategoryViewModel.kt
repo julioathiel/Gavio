@@ -1,8 +1,6 @@
 package com.gastosdiarios.gavio.presentation.configuration.categorias_creadas
 
 import android.content.Context
-import android.util.Log
-import android.widget.Toast
 import androidx.lifecycle.ViewModel
 import androidx.lifecycle.viewModelScope
 import com.gastosdiarios.gavio.data.ui_state.ListUiState
@@ -34,9 +32,9 @@ class CategoryViewModel @Inject constructor(
     private val dbm: DataBaseManager,
     private val repositoryGastos: UserCategoryGastosFirestore,
     private val repositoryIngresos: UserCategoryIngresosFirestore,
-    @ApplicationContext private val context: Context
+    @ApplicationContext private val appContext: Context
 ) : ViewModel() {
-    private val tag = "CategoryViewModel"
+
     private val _uiStateDefault = MutableStateFlow(CategoryDefaultModel())
     var uiStateDefault: StateFlow<CategoryDefaultModel> = _uiStateDefault.asStateFlow()
 
@@ -55,7 +53,7 @@ class CategoryViewModel @Inject constructor(
 
     fun getAllGastos() {
         viewModelScope.launch {
-            if(IsInternetAvailableUtils.isInternetAvailable(context)){
+            if(IsInternetAvailableUtils.isInternetAvailable(appContext)){
                 _uiStateGastos.update { it.copy(isLoading = true) }
                 val data: List<UserCreateCategoryModel> =
                     withContext(Dispatchers.IO) { dbm.getUserCategoryGastos() }

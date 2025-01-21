@@ -6,8 +6,6 @@ import android.content.Context
 import android.content.pm.PackageManager
 import android.content.res.Resources
 import androidx.appcompat.app.AppCompatActivity
-import com.gastosdiarios.gavio.MainActivity
-import com.gastosdiarios.gavio.data.DataStorePreferences
 import com.google.firebase.auth.FirebaseAuth
 import com.google.firebase.firestore.FirebaseFirestore
 import com.google.firebase.firestore.ktx.firestore
@@ -27,22 +25,12 @@ object AppModule {
     fun provideFirebaseAuth(): FirebaseAuth {
         return FirebaseAuth.getInstance()
     }
-
-//    @Provides
-//    @Singleton
-//    fun provideUserId(auth: FirebaseAuth): String? {
-//        return auth.currentUser?.uid
-//    }
+    
 
     @Provides
     @Singleton
     fun provideFirebaseFirestore(): FirebaseFirestore = Firebase.firestore
 
-    @Provides
-    @Singleton
-    fun provideDataStorePreferences(@ApplicationContext context: Context): DataStorePreferences {
-        return DataStorePreferences(context)
-    }
 
     @Provides
     @Singleton

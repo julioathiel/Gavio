@@ -2,26 +2,18 @@ package com.gastosdiarios.gavio.domain.repository
 
 import android.util.Log
 import com.gastosdiarios.gavio.data.constants.Constants.COLLECTION_BAR_DATA
-import com.gastosdiarios.gavio.data.constants.Constants.COLLECTION_CURRENT_MONEY
-import com.gastosdiarios.gavio.data.constants.Constants.COLLECTION_DATE
 import com.gastosdiarios.gavio.data.constants.Constants.COLLECTION_GASTOS_POR_CATEGORIA
 import com.gastosdiarios.gavio.data.constants.Constants.COLLECTION_GASTOS_PROGRAMADOS
 import com.gastosdiarios.gavio.data.constants.Constants.COLLECTION_LIST
 import com.gastosdiarios.gavio.data.constants.Constants.COLLECTION_SHARE
-import com.gastosdiarios.gavio.data.constants.Constants.COLLECTION_TOTAL_GASTOS
-import com.gastosdiarios.gavio.data.constants.Constants.COLLECTION_TOTAL_INGRESOS
 import com.gastosdiarios.gavio.data.constants.Constants.COLLECTION_TRANSACTIONS
 import com.gastosdiarios.gavio.data.constants.Constants.COLLECTION_USERS
 import com.gastosdiarios.gavio.data.constants.Constants.COLLECTION_USER_CATEGORY_GASTOS
 import com.gastosdiarios.gavio.data.constants.Constants.COLLECTION_USER_CATEGORY_INGRESOS
 import com.gastosdiarios.gavio.data.constants.Constants.COLLECTION_USER_DATA
 import com.gastosdiarios.gavio.data.constants.Constants.COLLECTION_USER_PREFERENCES
-import com.gastosdiarios.gavio.domain.enums.ModeDarkThemeEnum
+import com.gastosdiarios.gavio.domain.enums.ThemeMode
 import com.gastosdiarios.gavio.domain.model.modelFirebase.BarDataModel
-import com.gastosdiarios.gavio.domain.model.modelFirebase.CurrentMoneyModel
-import com.gastosdiarios.gavio.domain.model.modelFirebase.DateModel
-import com.gastosdiarios.gavio.domain.model.modelFirebase.TotalGastosModel
-import com.gastosdiarios.gavio.domain.model.modelFirebase.TotalIngresosModel
 import com.gastosdiarios.gavio.domain.model.modelFirebase.UserData
 import com.gastosdiarios.gavio.domain.model.modelFirebase.UserModel
 import com.gastosdiarios.gavio.domain.model.modelFirebase.UserPreferences
@@ -94,40 +86,10 @@ open class CloudFirestore @Inject constructor(
                         totalGastos = 0.0,
                         totalIngresos = 0.0,
                         currentMoney = 0.0,
-                        isCurrentMoneyIngresos = true,
+                        isCurrentMoneyChecked = true,
                         selectedDate = "",
                         isSelectedDate = true
                     )
-                )
-
-                val currentMoneyRef = getCurrentMoneyCollection().document(user.userId)
-                transaction.set(
-                    currentMoneyRef,
-                    CurrentMoneyModel(userId = user.userId, money = 0.0, checked = true)
-                )
-
-                val dateRef = getDateCollection().document(user.userId)
-                transaction.set(dateRef, DateModel(userId = user.userId, isSelected = true))
-
-
-                val totalGastosRef = getTotalGastosCollection().document(user.userId)
-                transaction.set(
-                    totalGastosRef,
-                    TotalGastosModel(userId = user.userId, totalGastos = 0.0)
-                )
-
-                val totalIngresosRef = getTotalIngresosCollection().document(user.userId)
-                transaction.set(
-                    totalIngresosRef,
-                    TotalIngresosModel(userId = user.userId, totalIngresos = 0.0)
-                )
-                val barDataRef = getBarDataCollection()
-                    .document(user.userId)
-                    .collection(COLLECTION_LIST)
-                    .document(uidItem)
-                transaction.set(
-                    barDataRef,
-                    BarDataModel(uid = uidItem, value = 0f, month = mesActual, money = "0")
                 )
 
                 val userPreferencesRef = getUserPreferences().document(user.userId)
@@ -138,9 +100,20 @@ open class CloudFirestore @Inject constructor(
                         dateMax = 31,
                         hour = 21,
                         minute = 0,
-                        themeMode = ModeDarkThemeEnum.MODE_AUTO
+                        themeMode = ThemeMode.MODE_AUTO
                     )
                 )
+
+                val barDataRef = getBarDataCollection()
+                    .document(user.userId)
+                    .collection(COLLECTION_LIST)
+                    .document(uidItem)
+                transaction.set(
+                    barDataRef,
+                    BarDataModel(uid = uidItem, value = 0f, month = mesActual, money = "0")
+                )
+
+
 
                 null
             }.await()
@@ -214,11 +187,7 @@ open class CloudFirestore @Inject constructor(
                 transaction.delete(getUserData().document(userId))
                 transaction.delete(getUsersCollection().document(userId))
                 transaction.delete(getBarDataCollection().document(userId))
-                transaction.delete(getCurrentMoneyCollection().document(userId))
-                transaction.delete(getDateCollection().document(userId))
                 transaction.delete(getGastosPorCategoriaCollection().document(userId))
-                transaction.delete(getTotalGastosCollection().document(userId))
-                transaction.delete(getTotalIngresosCollection().document(userId))
                 transaction.delete(getUserPreferences().document(userId))
                 transaction.delete(getAllTransactionsCollection().document(userId))
                 transaction.delete(getAllGastosProgramadosCollection().document(userId))
@@ -232,34 +201,12 @@ open class CloudFirestore @Inject constructor(
 
     private fun getUsersCollection(): CollectionReference = collections.collection(COLLECTION_USERS)
     fun getBarDataCollection(): CollectionReference = collections.collection(COLLECTION_BAR_DATA)
-    fun getCurrentMoneyCollection(): CollectionReference =
-        collections.collection(COLLECTION_CURRENT_MONEY)
-
-    fun getDateCollection(): CollectionReference = collections.collection(COLLECTION_DATE)
-    fun getGastosPorCategoriaCollection(): CollectionReference =
-        collections.collection(COLLECTION_GASTOS_POR_CATEGORIA)
-
-    fun getTotalGastosCollection(): CollectionReference =
-        collections.collection(COLLECTION_TOTAL_GASTOS)
-
-    fun getTotalIngresosCollection(): CollectionReference =
-        collections.collection(COLLECTION_TOTAL_INGRESOS)
-
-    fun getAllTransactionsCollection(): CollectionReference =
-        collections.collection(COLLECTION_TRANSACTIONS)
-
-    fun getAllGastosProgramadosCollection(): CollectionReference =
-        collections.collection(COLLECTION_GASTOS_PROGRAMADOS)
-
-    fun getUserCategoryGastosCollection(): CollectionReference =
-        collections.collection(COLLECTION_USER_CATEGORY_GASTOS)
-
-    fun getUserCategoryIngresosCollection(): CollectionReference =
-        collections.collection(COLLECTION_USER_CATEGORY_INGRESOS)
-
+    fun getGastosPorCategoriaCollection(): CollectionReference = collections.collection(COLLECTION_GASTOS_POR_CATEGORIA)
+    fun getAllTransactionsCollection(): CollectionReference = collections.collection(COLLECTION_TRANSACTIONS)
+    fun getAllGastosProgramadosCollection(): CollectionReference = collections.collection(COLLECTION_GASTOS_PROGRAMADOS)
+    fun getUserCategoryGastosCollection(): CollectionReference = collections.collection(COLLECTION_USER_CATEGORY_GASTOS)
+    fun getUserCategoryIngresosCollection(): CollectionReference = collections.collection(COLLECTION_USER_CATEGORY_INGRESOS)
     fun getShareCollection(): CollectionReference = collections.collection(COLLECTION_SHARE)
-    fun getUserPreferences(): CollectionReference =
-        collections.collection(COLLECTION_USER_PREFERENCES)
-
+    fun getUserPreferences(): CollectionReference = collections.collection(COLLECTION_USER_PREFERENCES)
     fun getUserData(): CollectionReference = collections.collection(COLLECTION_USER_DATA)
 }

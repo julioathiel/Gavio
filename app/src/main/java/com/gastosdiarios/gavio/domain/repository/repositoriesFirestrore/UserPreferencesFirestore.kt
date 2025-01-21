@@ -1,7 +1,7 @@
 package com.gastosdiarios.gavio.domain.repository.repositoriesFirestrore
 
 import android.util.Log
-import com.gastosdiarios.gavio.domain.enums.ModeDarkThemeEnum
+import com.gastosdiarios.gavio.domain.enums.ThemeMode
 import com.gastosdiarios.gavio.domain.model.modelFirebase.UserPreferences
 import com.gastosdiarios.gavio.domain.repository.AuthFirebaseImp
 import com.gastosdiarios.gavio.domain.repository.BaseRepository
@@ -64,7 +64,7 @@ class UserPreferencesFirestore @Inject constructor(
         }
     }
 
-    suspend fun updateThemeMode(value: ModeDarkThemeEnum) {
+    suspend fun updateThemeMode(value: ThemeMode) {
         try {
             val uidUser = authFirebaseImp.getCurrentUser()?.uid ?: return
             cloudFirestore.getUserPreferences().document(uidUser)

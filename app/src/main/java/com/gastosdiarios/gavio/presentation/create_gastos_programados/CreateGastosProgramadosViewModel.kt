@@ -5,7 +5,6 @@ import androidx.lifecycle.ViewModel
 import androidx.lifecycle.viewModelScope
 import com.gastosdiarios.gavio.data.ui_state.ListUiState
 import com.gastosdiarios.gavio.domain.model.modelFirebase.GastosProgramadosModel
-import com.gastosdiarios.gavio.domain.repository.DataBaseManager
 import com.gastosdiarios.gavio.domain.repository.repositoriesFirestrore.GastosProgramadosFirestore
 import dagger.hilt.android.lifecycle.HiltViewModel
 import kotlinx.coroutines.Dispatchers
@@ -21,14 +20,13 @@ import javax.inject.Inject
 
 @HiltViewModel
 class CreateGastosProgramadosViewModel @Inject constructor(
-    private val dbm: DataBaseManager,
     private val gastosProgramadosFirestore: GastosProgramadosFirestore
 ) : ViewModel() {
     private val _gastosProgramadosUiState = MutableStateFlow(ListUiState<GastosProgramadosModel>())
     val gastosProgramadosUiState: StateFlow<ListUiState<GastosProgramadosModel>> =
         _gastosProgramadosUiState.asStateFlow()
 
-    private val _selectionMode = MutableStateFlow<Boolean>(false)
+    private val _selectionMode = MutableStateFlow(false)
     val selectionMode: StateFlow<Boolean> = _selectionMode
 
     private val _selectedItems = MutableStateFlow<List<GastosProgramadosModel>>(emptyList())

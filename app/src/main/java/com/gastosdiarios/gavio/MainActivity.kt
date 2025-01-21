@@ -10,7 +10,7 @@ import androidx.compose.runtime.collectAsState
 import androidx.compose.runtime.getValue
 import androidx.core.splashscreen.SplashScreen.Companion.installSplashScreen
 import com.gastosdiarios.gavio.App.ConnectivityStatus.networkReceiver
-import com.gastosdiarios.gavio.domain.enums.ModeDarkThemeEnum
+import com.gastosdiarios.gavio.domain.enums.ThemeMode
 import com.gastosdiarios.gavio.domain.model.modelFirebase.UserPreferences
 import com.gastosdiarios.gavio.navigation.MyAppContent
 import com.gastosdiarios.gavio.presentation.configuration.ajustes_avanzados.AjustesViewModel
@@ -28,9 +28,9 @@ class MainActivity : AppCompatActivity() {
         setContent {
             val option: UserPreferences by ajustesViewModel.uiState.collectAsState()
             val mode = when (option.themeMode) {
-                ModeDarkThemeEnum.MODE_AUTO -> isSystemInDarkTheme()
-                ModeDarkThemeEnum.MODE_DAY -> false
-                ModeDarkThemeEnum.MODE_NIGHT -> true
+                ThemeMode.MODE_AUTO -> isSystemInDarkTheme()
+                ThemeMode.MODE_DAY -> false
+                ThemeMode.MODE_NIGHT -> true
                 null -> isSystemInDarkTheme()
             }
 

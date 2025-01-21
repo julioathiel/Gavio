@@ -21,7 +21,6 @@ import androidx.compose.ui.unit.dp
 import com.gastosdiarios.gavio.R
 import com.gastosdiarios.gavio.data.commons.CommonsSpacer
 import com.gastosdiarios.gavio.data.commons.TextFieldDescription
-import com.gastosdiarios.gavio.domain.enums.Modo
 import com.gastosdiarios.gavio.domain.model.CategoriesModel
 import com.gastosdiarios.gavio.domain.model.CategoryGastos
 import com.gastosdiarios.gavio.domain.model.modelFirebase.GastosProgramadosModel

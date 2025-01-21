@@ -1,29 +1,24 @@
 package com.gastosdiarios.gavio.presentation.analisis_gastos
 
 import android.content.Context
-import android.content.res.Configuration
 import android.util.Log
 import android.widget.Toast
-import androidx.compose.foundation.isSystemInDarkTheme
-import androidx.compose.runtime.Composable
 import androidx.compose.ui.graphics.Color
 import androidx.compose.ui.graphics.toArgb
-import androidx.compose.ui.platform.LocalConfiguration
-import androidx.compose.ui.res.painterResource
 import androidx.core.graphics.ColorUtils.colorToHSL
 import androidx.lifecycle.ViewModel
 import androidx.lifecycle.viewModelScope
 import com.gastosdiarios.gavio.bar_graph_custom.CircularBuffer
-import com.gastosdiarios.gavio.data.DataStorePreferences
 import com.gastosdiarios.gavio.data.constants.Constants.LIMIT_MONTH
 import com.gastosdiarios.gavio.data.ui_state.ListUiState
-import com.gastosdiarios.gavio.domain.enums.ModeDarkThemeEnum
+import com.gastosdiarios.gavio.domain.enums.ThemeMode
 import com.gastosdiarios.gavio.domain.model.RefreshDataModel
 import com.gastosdiarios.gavio.domain.model.modelFirebase.BarDataModel
 import com.gastosdiarios.gavio.domain.model.modelFirebase.GastosPorCategoriaModel
 import com.gastosdiarios.gavio.domain.repository.DataBaseManager
 import com.gastosdiarios.gavio.domain.repository.repositoriesFirestrore.BarDataFirestore
-import com.gastosdiarios.gavio.presentation.configuration.ajustes_avanzados.AjustesViewModel
+import com.gastosdiarios.gavio.domain.repository.repositoriesFirestrore.UserDataFirestore
+import com.gastosdiarios.gavio.domain.repository.repositoriesFirestrore.UserPreferencesFirestore
 import com.gastosdiarios.gavio.ui.theme.md_theme_dark_primary
 import com.gastosdiarios.gavio.ui.theme.md_theme_dark_surfaceContainer
 import com.gastosdiarios.gavio.utils.DateUtils
@@ -31,7 +26,6 @@ import com.gastosdiarios.gavio.utils.MathUtils
 import com.gastosdiarios.gavio.utils.RefreshDataUtils
 import dagger.hilt.android.lifecycle.HiltViewModel
 import kotlinx.coroutines.Dispatchers
-import kotlinx.coroutines.delay
 import kotlinx.coroutines.flow.MutableStateFlow
 import kotlinx.coroutines.flow.SharingStarted
 import kotlinx.coroutines.flow.StateFlow
@@ -41,13 +35,13 @@ import kotlinx.coroutines.flow.update
 import kotlinx.coroutines.launch
 import javax.inject.Inject
 import kotlin.random.Random
-import kotlin.time.Duration.Companion.seconds
 
 @HiltViewModel
 class AnalisisGastosViewModel @Inject constructor(
     private val dbm: DataBaseManager,
     private val barDataFirestore: BarDataFirestore,
-    private val dataStorePreferences: DataStorePreferences,
+    private val userPreferencesFirestore: UserPreferencesFirestore,
+    private val userDataFirestore: UserDataFirestore
 ) : ViewModel() {
 
     private val tag = "analisisGastosViewModel"
@@ -71,9 +65,9 @@ class AnalisisGastosViewModel @Inject constructor(
     private var _icon = MutableStateFlow<String?>(null)
     val myIcon: StateFlow<String?> = _icon.asStateFlow()
 
-    private val _isDarkMode = MutableStateFlow(ModeDarkThemeEnum.MODE_AUTO)
-    private val _tertiarysColors = MutableStateFlow<TertiaryColors?>(null)
-    val tertiarysColorsState: StateFlow<TertiaryColors?> = _tertiarysColors.asStateFlow()
+    private val _isDarkMode = MutableStateFlow(ThemeMode.MODE_AUTO)
+    val isDarkMode:StateFlow<ThemeMode> = _isDarkMode.asStateFlow()
+
 
     init {
         getAllListGastos()
@@ -99,7 +93,7 @@ class AnalisisGastosViewModel @Inject constructor(
     private fun getDatosGastos() {
         viewModelScope.launch(Dispatchers.IO) {
             try {
-                val data = dbm.getTotalIngresos()?.totalIngresos ?: 0.0
+                val data = userDataFirestore.get()?.totalIngresos ?: 0.0
                 //variable que muestra el progress de cada lista de itemCategory
                 _totalIngresosRegistros.value = data
                 calcularValorMaximo(data)
@@ -111,9 +105,8 @@ class AnalisisGastosViewModel @Inject constructor(
 
     private fun getDarkTheme() {
         viewModelScope.launch {
-            dataStorePreferences.getThemeMode().collect { mode ->
-                _isDarkMode.value = mode.mode
-            }
+            val data = userPreferencesFirestore.get()?.themeMode
+            _isDarkMode.update { data ?: ThemeMode.MODE_AUTO }
         }
     }
 
@@ -191,16 +184,17 @@ class AnalisisGastosViewModel @Inject constructor(
         var color = Pair(Color.Unspecified, Color.Unspecified)
         viewModelScope.launch {
             _isDarkMode.collect { mode ->
-                when (mode) {
-                    ModeDarkThemeEnum.MODE_AUTO -> {
+                color = when (mode) {
+                    ThemeMode.MODE_AUTO -> {
                         if (isSystemInDarkTheme) {
-                        color =  getRandomDarkColor()
+                            getRandomDarkColor()
                         } else {
-                         color = getRandomLightColor()
+                            getRandomLightColor()
                         }
                     }
-                    ModeDarkThemeEnum.MODE_DAY ->  color = getRandomLightColor()
-                    ModeDarkThemeEnum.MODE_NIGHT ->  color = getRandomDarkColor()
+
+                    ThemeMode.MODE_DAY -> getRandomLightColor()
+                    ThemeMode.MODE_NIGHT -> getRandomDarkColor()
                 }
             }
         }
@@ -226,18 +220,6 @@ class AnalisisGastosViewModel @Inject constructor(
     private fun getRandomDarkColor(): Pair<Color, Color>  {
         val container = md_theme_dark_surfaceContainer
         val onContainer = md_theme_dark_primary
-
-        val hue = Random.nextInt(360).toFloat()
-        // tertiaryContainer color
-        val tertiaryContainerHSL = Color(0xFF3b4664).toHsl()
-        val tertiaryContainerSaturation = tertiaryContainerHSL[1]
-        val tertiaryContainerLightness = tertiaryContainerHSL[2]
-        val tertiaryContainerColor = Color.hsl(hue, tertiaryContainerSaturation, tertiaryContainerLightness)
-        // onTertiaryContainer color with same intensity
-        val onTertiaryContainerHSL = Color(0xFFdae2ff).toHsl()
-        val onTertiaryContainerSaturation = onTertiaryContainerHSL[1]
-        val onTertiaryContainerLightness = onTertiaryContainerHSL[2]
-        val onTertiaryContainerColor = Color.hsl(hue, onTertiaryContainerSaturation, onTertiaryContainerLightness)
         return Pair(container, onContainer)
     }
 
@@ -259,8 +241,5 @@ class AnalisisGastosViewModel @Inject constructor(
             }
         )
     }
-
-
-    data class TertiaryColors(val containerColor: Color, val onColor: Color)
 }
 

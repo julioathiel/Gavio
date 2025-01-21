@@ -6,7 +6,7 @@ data class UserData(
     val totalIngresos: Double? = null,
     val currentMoney: Double? = null,
     @field:JvmField
-    val isCurrentMoneyIngresos: Boolean? = null,//si es dinero ingresado o un gasto
+    val isCurrentMoneyChecked: Boolean? = null,//si es dinero ingresado o un gasto
     val selectedDate: String? = null,
     @field:JvmField
     val isSelectedDate: Boolean? = null

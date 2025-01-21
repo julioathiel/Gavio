@@ -1,5 +1,6 @@
 package com.gastosdiarios.gavio.presentation.splash_screen
 
+import android.util.Log
 import androidx.compose.foundation.background
 import androidx.compose.foundation.layout.Box
 import androidx.compose.foundation.layout.fillMaxSize
@@ -14,7 +15,6 @@ import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.graphics.Color
 import androidx.compose.ui.res.dimensionResource
-import androidx.compose.ui.unit.dp
 import androidx.core.splashscreen.SplashScreen
 import androidx.hilt.navigation.compose.hiltViewModel
 import com.gastosdiarios.gavio.R
@@ -52,11 +52,12 @@ fun MySplashScreen(
             }
         }
     }
-
+    Log.d("SplashViewModel", "MySplashScreen: $uiState")
     if (uiState.startDestination == null) {
-        Box(modifier = Modifier
-            .fillMaxSize()
-            .background(MaterialTheme.colorScheme.surface)
+        Box(
+            modifier = Modifier
+                .fillMaxSize()
+                .background(MaterialTheme.colorScheme.surface)
         ) {
             ProfileIcon(
                 drawableResource = R.drawable.ic_ahorro,

@@ -176,7 +176,7 @@ fun Content(
         Button(
             onClick = {
                 if (isPrueba) {
-                    viewModel.setSelectedOption(selectedSwitchNumber, uiState.switchActivado)
+                    viewModel.updateFechaMaxima(selectedSwitchNumber)
                     scope.launch {
                         isShowSnackbar.showSnackbar("Opción guardada correctamente")
                     }

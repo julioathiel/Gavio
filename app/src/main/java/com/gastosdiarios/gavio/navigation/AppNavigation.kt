@@ -11,7 +11,6 @@ import androidx.compose.ui.Modifier
 import androidx.core.splashscreen.SplashScreen
 import androidx.navigation.compose.NavHost
 import androidx.navigation.compose.composable
-import androidx.navigation.compose.currentBackStackEntryAsState
 import androidx.navigation.compose.rememberNavController
 import androidx.navigation.toRoute
 import com.gastosdiarios.gavio.MainActivity
@@ -46,11 +45,6 @@ fun MyAppContent(
 ) {
     val navController = rememberNavController()
 
-    val navBackStackEntry by navController.currentBackStackEntryAsState()
-    val currentDestination = navBackStackEntry?.destination
-
-    var currentRoute by remember { mutableStateOf("HomeScreen") }
-    // val isInternet by App.ConnectivityStatus.isConnected
     var isInternet by remember {
         mutableStateOf(
             IsInternetAvailableUtils.isInternetAvailable(

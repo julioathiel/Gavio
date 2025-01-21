@@ -1,8 +1,8 @@
 package com.gastosdiarios.gavio.data.ui_state
 
-import com.gastosdiarios.gavio.domain.enums.ModeDarkThemeEnum
+import com.gastosdiarios.gavio.domain.enums.ThemeMode
 
 data class AjustesUiState(
-    val selectedMode: ModeDarkThemeEnum = ModeDarkThemeEnum.MODE_AUTO,
+    val selectedMode: ThemeMode = ThemeMode.MODE_AUTO,
     val securityBiometric: Boolean = false
 )

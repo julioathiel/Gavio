@@ -1,7 +1,6 @@
 package com.gastosdiarios.gavio.domain.model
 
 import com.gastosdiarios.gavio.domain.enums.CategoryTypeEnum
-import com.gastosdiarios.gavio.domain.model.modelFirebase.GastosProgramadosModel
 
 data class CategoryDefaultModel(
     val uid: String = "",

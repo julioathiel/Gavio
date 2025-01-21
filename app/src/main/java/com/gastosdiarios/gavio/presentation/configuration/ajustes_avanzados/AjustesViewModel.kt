@@ -2,7 +2,7 @@ package com.gastosdiarios.gavio.presentation.configuration.ajustes_avanzados
 
 import androidx.lifecycle.ViewModel
 import androidx.lifecycle.viewModelScope
-import com.gastosdiarios.gavio.domain.enums.ModeDarkThemeEnum
+import com.gastosdiarios.gavio.domain.enums.ThemeMode
 import com.gastosdiarios.gavio.domain.model.modelFirebase.UserPreferences
 import com.gastosdiarios.gavio.domain.repository.repositoriesFirestrore.UserPreferencesFirestore
 import dagger.hilt.android.lifecycle.HiltViewModel
@@ -35,7 +35,7 @@ class AjustesViewModel @Inject constructor(
             _uiState.update {
                 it.copy(
                     biometricSecurity = data?.biometricSecurity ?: false,
-                    themeMode = data?.themeMode ?: ModeDarkThemeEnum.MODE_AUTO,
+                    themeMode = data?.themeMode ?: ThemeMode.MODE_AUTO,
                 )
             }
         }
@@ -49,7 +49,7 @@ class AjustesViewModel @Inject constructor(
         }
     }
 
-    fun updateThemeMode(themeMode: ModeDarkThemeEnum) {
+    fun updateThemeMode(themeMode: ThemeMode) {
         viewModelScope.launch {
             up.updateThemeMode(themeMode)
             _uiState.update { it.copy(themeMode = themeMode) }

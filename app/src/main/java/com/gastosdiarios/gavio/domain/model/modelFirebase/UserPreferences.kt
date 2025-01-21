@@ -1,6 +1,6 @@
 package com.gastosdiarios.gavio.domain.model.modelFirebase
 
-import com.gastosdiarios.gavio.domain.enums.ModeDarkThemeEnum
+import com.gastosdiarios.gavio.domain.enums.ThemeMode
 
 data class UserPreferences(
     val userId: String? = null,
@@ -8,5 +8,5 @@ data class UserPreferences(
     val dateMax: Int? = null,
     val hour: Int? = null,
     val minute: Int? = null,
-    val themeMode: ModeDarkThemeEnum? = null
+    val themeMode: ThemeMode? = null
 )

@@ -1,7 +1,6 @@
 package com.gastosdiarios.gavio.presentation.home
 
 import android.content.Context
-import android.util.Log
 import androidx.activity.compose.BackHandler
 import androidx.compose.foundation.background
 import androidx.compose.foundation.clickable
@@ -21,20 +20,14 @@ import androidx.compose.material3.HorizontalDivider
 import androidx.compose.material3.MaterialTheme
 import androidx.compose.material3.SnackbarDuration
 import androidx.compose.material3.SnackbarHostState
-import androidx.compose.material3.Switch
 import androidx.compose.material3.Text
 import androidx.compose.material3.pulltorefresh.PullToRefreshBox
 import androidx.compose.material3.pulltorefresh.rememberPullToRefreshState
 import androidx.compose.runtime.Composable
-import androidx.compose.runtime.LaunchedEffect
 import androidx.compose.runtime.collectAsState
 import androidx.compose.runtime.getValue
-import androidx.compose.runtime.mutableStateOf
-import androidx.compose.runtime.remember
-import androidx.compose.runtime.setValue
 import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
-import androidx.compose.ui.graphics.Color
 import androidx.compose.ui.platform.LocalContext
 import androidx.compose.ui.text.style.TextAlign
 import androidx.compose.ui.unit.dp
@@ -42,17 +35,12 @@ import androidx.hilt.navigation.compose.hiltViewModel
 import androidx.navigation.NavController
 import com.gastosdiarios.gavio.data.commons.CommonsSpacer
 import com.gastosdiarios.gavio.data.ui_state.HomeUiState
-import com.gastosdiarios.gavio.domain.enums.ModeDarkThemeEnum
-import com.gastosdiarios.gavio.domain.model.modelFirebase.UserData
-import com.gastosdiarios.gavio.domain.model.modelFirebase.UserPreferences
 import com.gastosdiarios.gavio.presentation.home.components.AddTransactionDialog
 import com.gastosdiarios.gavio.presentation.home.components.BodyHeader
 import com.gastosdiarios.gavio.presentation.home.components.CardBotonRegistro
 import com.gastosdiarios.gavio.presentation.home.components.CountDate
 import com.gastosdiarios.gavio.presentation.home.components.HorizontalPagerWithCards
 import com.gastosdiarios.gavio.presentation.home.components.NuevoMes
-import com.google.android.play.integrity.internal.s
-import kotlinx.serialization.json.JsonNull.content
 import kotlin.system.exitProcess
 
 @OptIn(ExperimentalMaterial3Api::class)
@@ -65,7 +53,6 @@ fun HomeScreen(
 ) {
     BackHandler { exitProcess(0) }
     val context = LocalContext.current
-    val isShowSnackbar = remember { SnackbarHostState() }
     val uiState by viewModel.homeUiState.collectAsState()
     val isRefreshing by viewModel.isRefreshing.collectAsState()
     val statePullToRefresh = rememberPullToRefreshState()

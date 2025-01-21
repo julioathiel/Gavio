@@ -4,7 +4,6 @@ package com.gastosdiarios.gavio.presentation.welcome.initial
 import android.content.Context
 import android.util.Log
 import android.widget.Toast
-import androidx.credentials.CredentialManager
 import androidx.credentials.GetCredentialRequest
 import androidx.credentials.exceptions.GetCredentialException
 import androidx.lifecycle.ViewModel
@@ -39,7 +38,6 @@ class InitialViewModel @Inject constructor(
             is EventHandlerlLogin.ContinuarConPhone -> iniciarConPhone()
             is EventHandlerlLogin.ContinuarConGoogle -> {}
             is EventHandlerlLogin.ContinuarConFacebok -> iniciarConFacebook()
-            else -> {}
         }
     }
 

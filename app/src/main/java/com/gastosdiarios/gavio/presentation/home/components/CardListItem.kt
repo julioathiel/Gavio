@@ -43,10 +43,8 @@ import androidx.compose.ui.text.font.FontWeight
 import androidx.compose.ui.text.style.TextOverflow
 import androidx.compose.ui.unit.dp
 import androidx.compose.ui.unit.sp
-import androidx.lifecycle.viewmodel.compose.viewModel
 import com.gastosdiarios.gavio.R
 import com.gastosdiarios.gavio.data.commons.ProfileIcon
-import com.gastosdiarios.gavio.data.ui_state.HomeUiState
 import com.gastosdiarios.gavio.domain.model.modelFirebase.GastosProgramadosModel
 import com.gastosdiarios.gavio.presentation.home.HomeViewModel
 import com.gastosdiarios.gavio.utils.CurrencyUtils
@@ -69,9 +67,6 @@ fun CardListItem(
     Column(modifier = modifier) {
         Card(
             modifier = modifier.semantics { selected = isSelected }
-//                .clickable {
-//                    // navigateToDetail(email.id)
-//                }
         ) {
 
             Column(

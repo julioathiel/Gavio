@@ -3,13 +3,13 @@ package com.gastosdiarios.gavio.presentation.configuration
 import android.util.Log
 import androidx.lifecycle.ViewModel
 import androidx.lifecycle.viewModelScope
-import com.gastosdiarios.gavio.data.DataStorePreferences
 import com.gastosdiarios.gavio.data.ui_state.ConfigurationUiState
 import com.gastosdiarios.gavio.domain.model.OpcionEliminarModel
 import com.gastosdiarios.gavio.domain.model.ShareDataModel
 import com.gastosdiarios.gavio.domain.model.modelFirebase.BarDataModel
 import com.gastosdiarios.gavio.domain.repository.DataBaseManager
 import com.gastosdiarios.gavio.domain.repository.repositoriesFirestrore.BarDataFirestore
+import com.gastosdiarios.gavio.domain.repository.repositoriesFirestrore.UserPreferencesFirestore
 import com.gastosdiarios.gavio.utils.DateUtils
 import dagger.hilt.android.lifecycle.HiltViewModel
 import kotlinx.coroutines.Dispatchers
@@ -23,11 +23,10 @@ import javax.inject.Inject
 
 @HiltViewModel
 class ConfigurationViewModel @Inject constructor(
-    private val dataStorePreferences: DataStorePreferences,
+    private val userPreferencesFirestore: UserPreferencesFirestore,
     private val dbm: DataBaseManager,
     private val dataBarDataFirestore: BarDataFirestore
 ) : ViewModel() {
-    private val tag = "ConfigurationViewModel"
 
     private val _configurationUiState = MutableStateFlow(ConfigurationUiState())
     val configurationUiState: StateFlow<ConfigurationUiState> = _configurationUiState.asStateFlow()
@@ -49,9 +48,8 @@ class ConfigurationViewModel @Inject constructor(
     private fun resetData() {
         viewModelScope.launch {
             try {
-                // Restablecer la opción seleccionada en el DataStore
-                dataStorePreferences.setSelectedOption("31", true)
-                dataStorePreferences.setHoraMinuto(21, 0)
+                userPreferencesFirestore.updateDateMax(31)
+                userPreferencesFirestore.updateHourMinute(21, 0)
                 dbm.resetAllApp()
                 _configurationUiState.update { it.copy(resetPending = true, resetComplete = true) }
             } catch (e: Exception) {

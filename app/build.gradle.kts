@@ -76,7 +76,6 @@ dependencies {
     implementation(libs.lottie.compose)
     implementation(libs.play.services.auth)
     implementation(libs.androidx.runtime.livedata)
-    implementation(libs.androidx.datastore.preferences)
     implementation(libs.androidx.appcompat)
     //Dagger Hilt
     ksp(libs.hilt.android.compiler)

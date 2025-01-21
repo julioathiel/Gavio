@@ -19,12 +19,8 @@ import com.gastosdiarios.gavio.domain.model.UserCreateCategoriesModel
 import com.gastosdiarios.gavio.domain.model.defaultCategoriesGastosList
 import com.gastosdiarios.gavio.domain.model.defaultCategoriesIngresosList
 import com.gastosdiarios.gavio.domain.model.modelFirebase.BarDataModel
-import com.gastosdiarios.gavio.domain.model.modelFirebase.CurrentMoneyModel
-import com.gastosdiarios.gavio.domain.model.modelFirebase.DateModel
 import com.gastosdiarios.gavio.domain.model.modelFirebase.GastosPorCategoriaModel
 import com.gastosdiarios.gavio.domain.model.modelFirebase.GastosProgramadosModel
-import com.gastosdiarios.gavio.domain.model.modelFirebase.TotalGastosModel
-import com.gastosdiarios.gavio.domain.model.modelFirebase.TotalIngresosModel
 import com.gastosdiarios.gavio.domain.model.modelFirebase.TransactionModel
 import com.gastosdiarios.gavio.domain.model.modelFirebase.UserData
 import com.gastosdiarios.gavio.domain.model.modelFirebase.UserPreferences
@@ -221,7 +217,6 @@ class HomeViewModel @Inject constructor(
                 mostrarEstadoUsuario()
                 listCatGastosNueva()
                 listCatIngresosNueva()
-                getPreferences()
                 _homeUiState.update { _homeUiState.value.copy(isLoading = false) }
             } catch (e: Exception) {
                 _homeUiState.update { it.copy(isError = true) }
@@ -494,15 +489,10 @@ class HomeViewModel @Inject constructor(
         //obteniendo fecha con guion ej 2024-04-02
         viewModelScope.launch(Dispatchers.IO) {
             //  val document = dateFirestore.get()
-            val document = udf.get()?.selectedDate ?: ""
-            if (document != null) {
                 val entity = DateModel(date = item.date, isSelected = false)
                 //  dateFirestore.createOrUpdate(entity)
                 updateSelectedDate(item.date ?: "", false)
                 mostrandoAlUsuario(entity.date!!)
-            } else {
-                Log.e(tag, "El objeto nuevaFecha es nulo")
-            }
         }
     }
 
@@ -819,28 +809,6 @@ class HomeViewModel @Inject constructor(
     }
 
     //--------------FIN-------Gastos programados -------------------------//
-    private val _userPreferences = MutableStateFlow(UserPreferences())
-    val userPreferences: StateFlow<UserPreferences> = _userPreferences.asStateFlow()
-
-
-    private fun getPreferences() {
-        viewModelScope.launch {
-            try {
-                val data = withContext(Dispatchers.IO) { userPref.get() }
-                _userPreferences.update {
-                    it.copy(
-                        dateMax = data?.dateMax,
-                        hour = data?.hour,
-                        minute = data?.minute,
-                        biometricSecurity = data?.biometricSecurity,
-                        themeMode = data?.themeMode
-                    )
-                }
-            } catch (e: Exception) {
-                Log.e(tag, "getPreferences: error", e)
-            }
-        }
-    }
 
     private fun updateCurrentMoney(valueCurrentMoney: Double, valueIsChecked: Boolean) {
         viewModelScope.launch {

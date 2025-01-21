@@ -5,18 +5,12 @@ import androidx.lifecycle.ViewModel
 import androidx.lifecycle.viewModelScope
 import com.gastosdiarios.gavio.R
 import com.gastosdiarios.gavio.data.ui_state.ListUiState
-import com.gastosdiarios.gavio.data.ui_state.TransactionsUiState
 import com.gastosdiarios.gavio.domain.model.RefreshDataModel
-import com.gastosdiarios.gavio.domain.model.modelFirebase.CurrentMoneyModel
-import com.gastosdiarios.gavio.domain.model.modelFirebase.TotalGastosModel
-import com.gastosdiarios.gavio.domain.model.modelFirebase.TotalIngresosModel
 import com.gastosdiarios.gavio.domain.model.modelFirebase.TransactionModel
 import com.gastosdiarios.gavio.domain.repository.DataBaseManager
-import com.gastosdiarios.gavio.domain.repository.repositoriesFirestrore.CurrentMoneyFirestore
 import com.gastosdiarios.gavio.domain.repository.repositoriesFirestrore.GastosPorCategoriaFirestore
-import com.gastosdiarios.gavio.domain.repository.repositoriesFirestrore.TotalGastosFirestore
-import com.gastosdiarios.gavio.domain.repository.repositoriesFirestrore.TotalIngresosFirestore
 import com.gastosdiarios.gavio.domain.repository.repositoriesFirestrore.TransactionsFirestore
+import com.gastosdiarios.gavio.domain.repository.repositoriesFirestrore.UserDataFirestore
 import com.gastosdiarios.gavio.utils.MathUtils
 import com.gastosdiarios.gavio.utils.RefreshDataUtils
 import dagger.hilt.android.lifecycle.HiltViewModel
@@ -34,9 +28,7 @@ import javax.inject.Inject
 
 @HiltViewModel
 class TransactionsViewModel @Inject constructor(
-    private val currentMoneyFirestore: CurrentMoneyFirestore,
-    private val totalIngresosFirestore: TotalIngresosFirestore,
-    private val totalGastosFirestore: TotalGastosFirestore,
+    private val userDataFirestore: UserDataFirestore,
     private val transactionsFirestore: TransactionsFirestore,
     private val gastosPorCategoriaFirestore: GastosPorCategoriaFirestore,
     private val dbm: DataBaseManager
@@ -49,9 +41,6 @@ class TransactionsViewModel @Inject constructor(
 
     private val _snackbarMessage = MutableStateFlow<Int?>(null)
     val snackbarMessage: StateFlow<Int?> get() = _snackbarMessage
-
-    private val _interactionState = MutableStateFlow(TransactionsUiState())
-    val interactionState: StateFlow<TransactionsUiState> = _interactionState.asStateFlow()
 
     private val _isRefreshing = MutableStateFlow(RefreshDataModel(isRefreshing = false))
     val isRefreshing: StateFlow<RefreshDataModel> = _isRefreshing.asStateFlow()
@@ -88,7 +77,7 @@ class TransactionsViewModel @Inject constructor(
     }
 
 
-     fun onItemRemoveMov(
+    fun onItemRemoveMov(
         list: List<TransactionModel>,
         item: TransactionModel
     ) {
@@ -138,7 +127,7 @@ class TransactionsViewModel @Inject constructor(
         }
     }
 
-     fun updateItem(
+    fun updateItem(
         title: String,
         nuevoValor: String,
         description: String,
@@ -147,9 +136,10 @@ class TransactionsViewModel @Inject constructor(
         viewModelScope.launch {
             try {
                 //obteniendo el total de ingresos y gastos
-                val dataTotalGastos = dbm.getTotalGastos()?.totalGastos ?: 0.0
-                val dataTotalIngresos = dbm.getTotalIngresos()?.totalIngresos ?: 0.0
 
+                val data = userDataFirestore.get()
+                val dataTotalIngresos = data?.totalIngresos ?: 0.0
+                val dataTotalGastos = data?.totalGastos ?: 0.0
 
                 if (valorViejo.select == false && nuevoValor.toDouble() > dataTotalIngresos) {
                     _snackbarMessage.value =
@@ -182,10 +172,7 @@ class TransactionsViewModel @Inject constructor(
                                     nuevoValor.toDouble().minus(valorViejo.cash.toDouble())
                                 val nuevoTotalIngresos = dataTotalIngresos.plus(diferencia)
                                 val currentMoney = if (dataTotalGastos != 0.0) {
-                                    MathUtils.restarBigDecimal(
-                                        nuevoTotalIngresos,
-                                        dataTotalGastos
-                                    )
+                                    MathUtils.restarBigDecimal(nuevoTotalIngresos, dataTotalGastos)
                                 } else {
                                     MathUtils.sumarBigDecimal(dataTotalIngresos, diferencia)
                                 }
@@ -262,9 +249,9 @@ class TransactionsViewModel @Inject constructor(
     private fun updateIngresosTotales(item: TotalIngresosModel) {
         viewModelScope.launch(Dispatchers.IO) {
             try {
-                val totalIngresos = dbm.getTotalIngresos()?.totalIngresos
-                val nuevoValor = totalIngresos?.minus(item.totalIngresos!!)
-                totalIngresosFirestore.createOrUpdate(TotalIngresosModel(totalIngresos = nuevoValor))
+                val totalIngresos = userDataFirestore.get()?.totalIngresos ?: 0.0
+                val nuevoValor = totalIngresos.minus(item.totalIngresos ?: 0.0)
+                userDataFirestore.updateTotalIngresos(nuevoValor)
             } catch (e: Exception) {
                 Log.e(
                     tag,
@@ -278,9 +265,9 @@ class TransactionsViewModel @Inject constructor(
     private fun updateGastos(item: TotalGastosModel) {
         viewModelScope.launch(Dispatchers.IO) {
             try {
-                val totalGastos = dbm.getTotalGastos()?.totalGastos
-                val nuevoValor = totalGastos?.minus(item.totalGastos!!)
-                totalGastosFirestore.createOrUpdate(TotalGastosModel(totalGastos = nuevoValor))
+                val totalGastos = userDataFirestore.get()?.totalGastos ?: 0.0
+                val nuevoValor = totalGastos.minus(item.totalGastos ?: 0.0)
+                userDataFirestore.updateTotalGastos(nuevoValor)
             } catch (e: Exception) {
                 Log.e(
                     tag,
@@ -299,14 +286,15 @@ class TransactionsViewModel @Inject constructor(
         viewModelScope.launch(Dispatchers.IO) {
             if (listTransactions.size == 1) {
                 // Si es el último elemento, establecer el saldo directamente a 0.0
-                currentMoneyFirestore.createOrUpdate(item)
+               // currentMoneyFirestore.createOrUpdate(item)
+                userDataFirestore.updateCurrentMoney(0.0, true)
                 Log.d(tag, "updateCurrentMoneyList listTransaction.size == 1: $item")
             } else {
-                val newValue: Double = dbm.getCurrentMoney()?.money!! + item.money!!
+               // val newValue: Double = dbm.getCurrentMoney()?.money!! + item.money!!
+                val currentMoney = userDataFirestore.get()?.currentMoney ?: 0.0
+                val newValue = currentMoney + item.money!!
                 Log.d(tag, "updateCurrentMoneyList newValue =: $newValue")
-                currentMoneyFirestore.createOrUpdate(
-                    CurrentMoneyModel(money = maxOf(newValue, 0.0), checked = false)
-                )
+                userDataFirestore.updateCurrentMoney(maxOf(newValue, 0.0), true)
             }
         }
     }
@@ -314,9 +302,7 @@ class TransactionsViewModel @Inject constructor(
     private fun updateCurrentMoney(nuevoDinero: Double) {
         viewModelScope.launch {
             try {
-                currentMoneyFirestore.createOrUpdate(
-                    CurrentMoneyModel(money = nuevoDinero, checked = false)
-                )
+                userDataFirestore.updateCurrentMoney(nuevoDinero, false)
                 cargandoListaActualizada()
             } catch (e: Exception) {
                 Log.e(tag, " Error en updateCurrentMoney: ${e.message}")
@@ -327,7 +313,7 @@ class TransactionsViewModel @Inject constructor(
     private fun updateTotalIngresos(totalIngresos: Double) {
         viewModelScope.launch {
             try {
-                totalIngresosFirestore.createOrUpdate(TotalIngresosModel(totalIngresos = totalIngresos))
+                userDataFirestore.updateTotalIngresos(totalIngresos)
                 cargandoListaActualizada()
             } catch (e: Exception) {
                 Log.e(tag, " Error en updateTotalIngresos: ${e.message}")
@@ -340,7 +326,7 @@ class TransactionsViewModel @Inject constructor(
         viewModelScope.launch(Dispatchers.Main) {
             try {
                 //si el usuario edita un gasto se actualiza el total de gastos
-                totalGastosFirestore.createOrUpdate(TotalGastosModel(totalGastos = totalGastos))
+                userDataFirestore.updateTotalGastos(totalGastos)
             } catch (e: Exception) {
                 Log.e(tag, "Error en updateTotalGastos: ${e.message}")
             }

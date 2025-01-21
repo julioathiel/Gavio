@@ -38,10 +38,6 @@ class LoginViewModel @Inject constructor(
     private val _snackbarMessage = MutableStateFlow<Int?>(null)
     val snackbarMessage: StateFlow<Int?> get() = _snackbarMessage
 
-    private val _isEnabledButton = MutableStateFlow<Boolean?>(null)
-    val isEnabledButton: StateFlow<Boolean?> get() = _isEnabledButton
-
-
     fun onEmailChange(newValue: String) {
         uiState.value = uiState.value.copy(email = newValue)
     }
@@ -64,15 +60,21 @@ class LoginViewModel @Inject constructor(
                     } else {
                         _loginSuccess.value = false
                         val exception = task.exception
-                        if (exception is FirebaseAuthInvalidUserException) {
-                            // La cuenta no existe o está deshabilitada
-                            _snackbarMessage.value = R.string.la_cuenta_no_existe_o_esta_deshabilitada
-                        }else if(exception is FirebaseAuthInvalidCredentialsException){
-                            // Contraseña incorrecta
-                            _snackbarMessage.value = R.string.contraseña_incorrecta
-                        }else{
-                            // Otro error de autenticación
-                            _snackbarMessage.value = R.string.authentication_failed
+                        when (exception) {
+                            is FirebaseAuthInvalidUserException -> {
+                                // La cuenta no existe o está deshabilitada
+                                _snackbarMessage.value = R.string.la_cuenta_no_existe_o_esta_deshabilitada
+                            }
+
+                            is FirebaseAuthInvalidCredentialsException -> {
+                                // Contraseña incorrecta
+                                _snackbarMessage.value = R.string.contraseña_incorrecta
+                            }
+
+                            else -> {
+                                // Otro error de autenticación
+                                _snackbarMessage.value = R.string.authentication_failed
+                            }
                         }
                         _snackbarMessage.value = R.string.email_error
                     }
@@ -108,10 +110,6 @@ class LoginViewModel @Inject constructor(
 
     private fun String.passwordMatches(repeated: String): Boolean {
         return this == repeated
-    }
-
-    fun String.idFromParameter(): String {
-        return this.substring(1, this.length - 1)
     }
 
     fun resetLoginSuccess() {

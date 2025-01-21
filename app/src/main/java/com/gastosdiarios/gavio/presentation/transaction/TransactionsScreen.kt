@@ -35,7 +35,6 @@ import com.gastosdiarios.gavio.data.ui_state.ListUiState
 import com.gastosdiarios.gavio.domain.model.modelFirebase.TransactionModel
 import com.gastosdiarios.gavio.presentation.transaction.components.ItemFecha
 import com.gastosdiarios.gavio.presentation.transaction.components.ItemTransactions
-import com.gastosdiarios.gavio.presentation.transaction.components.ToolbarTransactions
 import com.gastosdiarios.gavio.utils.DateUtils
 
 @OptIn(ExperimentalMaterial3Api::class)

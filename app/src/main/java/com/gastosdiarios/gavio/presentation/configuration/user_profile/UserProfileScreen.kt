@@ -14,14 +14,11 @@ import androidx.compose.foundation.layout.padding
 import androidx.compose.foundation.layout.size
 import androidx.compose.foundation.shape.CircleShape
 import androidx.compose.material3.AlertDialog
-import androidx.compose.material3.ExperimentalMaterial3Api
 import androidx.compose.material3.HorizontalDivider
 import androidx.compose.material3.MaterialTheme
-import androidx.compose.material3.OutlinedTextField
 import androidx.compose.material3.Scaffold
 import androidx.compose.material3.Text
 import androidx.compose.material3.TextButton
-import androidx.compose.material3.TopAppBar
 import androidx.compose.runtime.Composable
 import androidx.compose.runtime.getValue
 import androidx.compose.runtime.mutableStateOf
@@ -36,7 +33,6 @@ import androidx.compose.ui.layout.ContentScale
 import androidx.compose.ui.platform.LocalContext
 import androidx.compose.ui.res.painterResource
 import androidx.compose.ui.res.stringResource
-import androidx.compose.ui.tooling.preview.Preview
 import androidx.compose.ui.unit.dp
 import androidx.hilt.navigation.compose.hiltViewModel
 import coil.compose.AsyncImage
@@ -181,90 +177,5 @@ fun UserProfileScreen(
                 }
             }
         )
-    }
-}
-
-@OptIn(ExperimentalMaterial3Api::class)
-@Preview(showBackground = true)
-@Composable
-fun UserProfileScreen() {
-
-    var showDialog by remember { mutableStateOf(false) }
-
-    Scaffold(
-        topBar = {
-            TopAppBar(title = { Text("Mi Perfil") })
-        }
-    ) { paddingValues ->
-        Box(
-            modifier = Modifier
-                .padding(paddingValues)
-                .fillMaxSize()
-        ) {
-            Column(
-                horizontalAlignment = Alignment.CenterHorizontally
-            ) {
-                Spacer(modifier = Modifier.height(16.dp))
-                // Foto de perfil
-                Box(
-                    modifier = Modifier
-                        .size(128.dp)
-                        .border(1.dp, Color.LightGray, CircleShape)
-                ) {
-
-                    Image(
-                        painter = painterResource(id = R.drawable.ic_persona_circle), // Reemplazacon la imagen actual del usuario
-                        contentDescription = "Foto de perfil",
-                        modifier = Modifier
-                            .size(128.dp),
-                        colorFilter = ColorFilter.tint(MaterialTheme.colorScheme.onSurface)
-                    )
-                }
-                Spacer(modifier = Modifier.height(16.dp))
-                // Nombre del usuario
-                Text(
-                    text = "julio",
-                    style = MaterialTheme.typography.headlineSmall
-                )
-                Spacer(modifier = Modifier.height(32.dp))
-
-                // Opciones del perfil
-                Spacer(modifier = Modifier.height(8.dp))
-
-
-                Spacer(modifier = Modifier.height(8.dp))
-                HorizontalDivider()
-                Column(Modifier.padding(horizontal = 16.dp)) {
-                    Spacer(modifier = Modifier.height(16.dp))
-                    var name by remember { mutableStateOf("") }
-
-                    Text(text = "Editar nombre")
-                    OutlinedTextField(
-                        value = name, onValueChange = { newName ->
-                            name = newName
-                        }, modifier = Modifier.fillMaxWidth()
-                    )
-                    Spacer(modifier = Modifier.weight(1f))
-                    CommonsTextButton(modifier = Modifier
-                        .fillMaxWidth()
-                        .padding(16.dp),
-                        title = stringResource(R.string.cerrar_sesion),
-                        onClick = {})
-
-                    CommonsTextButton(
-                        modifier = Modifier
-                            .fillMaxWidth()
-                            .padding(16.dp)
-                            .height(56.dp)
-                            .background(MaterialTheme.colorScheme.error),
-                        title = stringResource(R.string.eliminar_cuenta)
-                    ) {
-                        showDialog = true
-                    }
-                }
-
-            }
-
-        }
     }
 }

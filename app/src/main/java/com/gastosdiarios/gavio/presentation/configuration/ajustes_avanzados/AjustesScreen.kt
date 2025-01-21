@@ -34,20 +34,21 @@ import androidx.hilt.navigation.compose.hiltViewModel
 import com.gastosdiarios.gavio.R
 import com.gastosdiarios.gavio.data.commons.TopAppBarOnBack
 import com.gastosdiarios.gavio.domain.enums.ItemConfAvanzada
-import com.gastosdiarios.gavio.domain.enums.ModeDarkThemeEnum
+import com.gastosdiarios.gavio.domain.enums.ThemeMode
+import com.gastosdiarios.gavio.domain.model.modelFirebase.UserPreferences
 
 @Composable
 fun AjustesScreen(
     viewModel: AjustesViewModel = hiltViewModel(),
     onBack: () -> Unit
 ) {
-    val uiState by viewModel.uiState.collectAsState()
-    var isSecurity by remember { mutableStateOf(uiState.biometricSecurity ?: false) }
-    var checkButton by remember { mutableStateOf(uiState.themeMode ?: ModeDarkThemeEnum.MODE_AUTO) }
+    val uiState: UserPreferences by viewModel.uiState.collectAsState()
+    var isSecurity:Boolean by remember { mutableStateOf(uiState.biometricSecurity ?: false) }
+    var checkButton:ThemeMode by remember { mutableStateOf(uiState.themeMode ?: ThemeMode.MODE_AUTO) }
 
     LaunchedEffect(key1 = uiState) {
         isSecurity = uiState.biometricSecurity ?: false
-        checkButton = uiState.themeMode ?: ModeDarkThemeEnum.MODE_AUTO
+        checkButton = uiState.themeMode ?: ThemeMode.MODE_AUTO
     }
 
 
@@ -61,16 +62,16 @@ fun AjustesScreen(
                     Icon(
                         painter = painterResource(
                             id = when (uiState.themeMode) {
-                                ModeDarkThemeEnum.MODE_AUTO -> R.drawable.ic_rounded_routine
-                                ModeDarkThemeEnum.MODE_DAY -> R.drawable.ic_light_mode
-                                ModeDarkThemeEnum.MODE_NIGHT -> R.drawable.ic_dark_mode
+                                ThemeMode.MODE_AUTO -> R.drawable.ic_rounded_routine
+                                ThemeMode.MODE_DAY -> R.drawable.ic_light_mode
+                                ThemeMode.MODE_NIGHT -> R.drawable.ic_dark_mode
                                 null -> R.drawable.ic_rounded_routine
                             }
                         ),
                         contentDescription = when (uiState.themeMode) {
-                            ModeDarkThemeEnum.MODE_AUTO -> stringResource(id = R.string.mode_auto)
-                            ModeDarkThemeEnum.MODE_DAY -> stringResource(id = R.string.mode_day)
-                            ModeDarkThemeEnum.MODE_NIGHT -> stringResource(id = R.string.mode_night)
+                            ThemeMode.MODE_AUTO -> stringResource(id = R.string.mode_auto)
+                            ThemeMode.MODE_DAY -> stringResource(id = R.string.mode_day)
+                            ThemeMode.MODE_NIGHT -> stringResource(id = R.string.mode_night)
                             null -> stringResource(id = R.string.mode_auto)
                         }.toString(), modifier = Modifier.padding(end = 16.dp)
                     )
@@ -89,12 +90,12 @@ fun AjustesScreen(
                     .padding(horizontal = dimensionResource(id = R.dimen.padding_medium))
             ) {
 
-                ModeDarkThemeEnum.entries.forEach { option ->
+                ThemeMode.entries.forEach { option ->
                     Row(verticalAlignment = Alignment.CenterVertically) {
                         val title = when (option) {
-                            ModeDarkThemeEnum.MODE_AUTO -> stringResource(id = R.string.mode_auto)
-                            ModeDarkThemeEnum.MODE_DAY -> stringResource(id = R.string.mode_day)
-                            ModeDarkThemeEnum.MODE_NIGHT -> stringResource(id = R.string.mode_night)
+                            ThemeMode.MODE_AUTO -> stringResource(id = R.string.mode_auto)
+                            ThemeMode.MODE_DAY -> stringResource(id = R.string.mode_day)
+                            ThemeMode.MODE_NIGHT -> stringResource(id = R.string.mode_night)
                         }
                         Text(text = title, modifier = Modifier.weight(1f))
                         RadioButton(

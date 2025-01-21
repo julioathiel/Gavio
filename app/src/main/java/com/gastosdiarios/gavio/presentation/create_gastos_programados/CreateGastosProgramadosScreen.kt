@@ -75,7 +75,7 @@ fun CreateGastosProgramadosScreen(
 
             else -> {
                 // Estado para almacenar los elementos seleccionados
-                val selectedItems by viewModel.selectedItems.collectAsState()
+                val selectedItem by viewModel.selectedItems.collectAsState()
                 LazyColumn(
                     modifier = Modifier
                         .fillMaxSize()
@@ -83,7 +83,7 @@ fun CreateGastosProgramadosScreen(
                 ) {
                     items(uiState.items, key = { it.uid ?: it.hashCode() }) { item ->
                        // val isSelected = selectedItems.contains(item.uid)
-                        val isSelected = selectedItems.any { it.uid == item.uid }
+                        val isSelected = selectedItem.any { it.uid == item.uid }
                         ReplyEmailListItem(
                             item = item,
                             isSelected = isSelected,

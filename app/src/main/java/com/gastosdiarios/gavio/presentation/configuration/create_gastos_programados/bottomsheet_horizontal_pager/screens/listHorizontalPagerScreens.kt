@@ -2,7 +2,6 @@ package com.gastosdiarios.gavio.presentation.configuration.create_gastos_program
 
 import androidx.compose.runtime.Composable
 import androidx.compose.ui.focus.FocusRequester
-import com.gastosdiarios.gavio.domain.enums.Modo
 import com.gastosdiarios.gavio.domain.model.CategoriesModel
 import com.gastosdiarios.gavio.domain.model.modelFirebase.GastosProgramadosModel
 import com.gastosdiarios.gavio.presentation.configuration.create_gastos_programados.bottomsheet_horizontal_pager.data_class.ListHorizontalPagerScreen

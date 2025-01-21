@@ -1,7 +1,5 @@
 package com.gastosdiarios.gavio.presentation.configuration.categorias_creadas.components
 
-import androidx.compose.material.icons.Icons
-import androidx.compose.material.icons.automirrored.filled.ArrowBack
 import androidx.compose.material3.DropdownMenu
 import androidx.compose.material3.DropdownMenuItem
 import androidx.compose.material3.Icon
@@ -29,32 +27,6 @@ fun ToolbarGastos(
 ) {
     viewModel.isActivatedTrue()
     var showDropdown by remember { mutableStateOf(false) }
-
-//    TopAppBar(
-//        title = { Text(text = stringResource(R.string.categorias_nuevas)) },
-//        actions = {
-//            if (uiStateDefault.isActivated) {
-//                IconButton(onClick = { showDropdown = true }) {
-//                    Icon(
-//                        painter = painterResource(id = R.drawable.ic_option),
-//                        contentDescription = null
-//                    )
-//                }
-//                DropdownMenu(
-//                    expanded = showDropdown,
-//                    onDismissRequest = { showDropdown = !showDropdown }) {
-//                    DropdownMenuItem(
-//                        text = { Text(stringResource(id = R.string.eliminar_todo)) },
-//                        onClick = {
-//                            onClickAction()
-//                            showDropdown = false
-//                        }
-//                    )
-//                }
-//            }
-//        },
-//        colors = TopAppBarDefaults.topAppBarColors(containerColor = MaterialTheme.colorScheme.background)
-//    )
 
     TopAppBarOnBack(
         title = stringResource(R.string.categorias_nuevas),
