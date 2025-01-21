@@ -1,6 +1,5 @@
 package com.gastosdiarios.gavio.presentation.home.components
 
-import android.content.Context
 import androidx.compose.material3.DatePicker
 import androidx.compose.material3.DatePickerDialog
 import androidx.compose.material3.DatePickerState
@@ -22,7 +21,7 @@ import com.gastosdiarios.gavio.presentation.home.HomeViewModel
 import com.gastosdiarios.gavio.utils.DateUtils
 
 @Composable
-fun MyDatePickerDialog(context: Context, homeViewModel: HomeViewModel) {
+fun MyDatePickerDialog(homeViewModel: HomeViewModel) {
     var selectedDate: String? by remember { mutableStateOf(null) }
     var showDatePicker by remember { mutableStateOf(false) }
 
@@ -39,8 +38,8 @@ fun MyDatePickerDialog(context: Context, homeViewModel: HomeViewModel) {
             homeViewModel
         )
     }
-    //selectedDate get la fecha ··/··/····
-    selectedDate?.let { homeViewModel.sendDateElegida(context,it) }
+
+    selectedDate?.let { homeViewModel.insertUpdateFecha(it) }
 }
 
 @OptIn(ExperimentalMaterial3Api::class)
@@ -56,7 +55,8 @@ fun DatePickerView(
         override fun isSelectableDate(utcTimeMillis: Long): Boolean {
             return DateUtils.isDateSelectableRestrictMinMax(utcTimeMillis, homeUiState.selectedOptionFechaMaxima)
         }
-    })
+    }
+    )
 
    val selectedDate:String = DateUtils.formatSelectedDate(state.selectedDateMillis)
 

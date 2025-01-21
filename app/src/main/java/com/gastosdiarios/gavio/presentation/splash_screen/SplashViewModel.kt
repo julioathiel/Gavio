@@ -31,16 +31,17 @@ class SplashViewModel @Inject constructor(
 
     private fun comprobando() {
         viewModelScope.launch {
+            _uiState.update { it.copy(isLoading = true) } // Iniciar la carga
             val currentUser = authFirebaseImp.getCurrentUser()
             if (currentUser != null) {
-                _uiState.update { it.copy(userRegistered = true) }
+                _uiState.update { it.copy(userRegistered = true, isLoading = false) }
                 getBiometricSelect()
             } else {
+                // El usuario no esta registrado
                 _uiState.update {
                     it.copy(
                         userRegistered = false,
-                        startDestination = null,
-                        isLoading = false
+                        isLoading = false // Detener la carga
                     )
                 }
             }

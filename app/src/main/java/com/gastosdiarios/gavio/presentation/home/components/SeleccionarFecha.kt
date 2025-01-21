@@ -1,6 +1,5 @@
 package com.gastosdiarios.gavio.presentation.home.components
 
-import android.content.Context
 import androidx.compose.foundation.background
 import androidx.compose.foundation.layout.Arrangement
 import androidx.compose.foundation.layout.Column
@@ -24,7 +23,7 @@ import com.gastosdiarios.gavio.R
 import com.gastosdiarios.gavio.presentation.home.HomeViewModel
 
 @Composable
-fun CountDate(context: Context, modifier: Modifier, viewModel: HomeViewModel, fechaElegida: String?) {
+fun CountDate(modifier: Modifier, viewModel: HomeViewModel, fechaElegida: String?) {
     val homeUiState by viewModel.homeUiState.collectAsState()
     val textDia = if (homeUiState.diasRestantes == 1) stringResource(id = R.string.dia) else stringResource(R.string.dias)
 
@@ -76,7 +75,7 @@ fun CountDate(context: Context, modifier: Modifier, viewModel: HomeViewModel, fe
                 )
             }
 
-            MyDatePickerDialog(context,homeViewModel = viewModel)
+            MyDatePickerDialog(homeViewModel = viewModel)
         }
     }
 }

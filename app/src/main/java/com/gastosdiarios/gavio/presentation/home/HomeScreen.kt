@@ -1,6 +1,6 @@
 package com.gastosdiarios.gavio.presentation.home
 
-import android.content.Context
+
 import androidx.activity.compose.BackHandler
 import androidx.compose.foundation.background
 import androidx.compose.foundation.clickable
@@ -28,7 +28,7 @@ import androidx.compose.runtime.collectAsState
 import androidx.compose.runtime.getValue
 import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
-import androidx.compose.ui.platform.LocalContext
+import androidx.compose.ui.graphics.Color
 import androidx.compose.ui.text.style.TextAlign
 import androidx.compose.ui.unit.dp
 import androidx.hilt.navigation.compose.hiltViewModel
@@ -41,6 +41,7 @@ import com.gastosdiarios.gavio.presentation.home.components.CardBotonRegistro
 import com.gastosdiarios.gavio.presentation.home.components.CountDate
 import com.gastosdiarios.gavio.presentation.home.components.HorizontalPagerWithCards
 import com.gastosdiarios.gavio.presentation.home.components.NuevoMes
+import kotlinx.serialization.json.JsonNull.content
 import kotlin.system.exitProcess
 
 @OptIn(ExperimentalMaterial3Api::class)
@@ -52,7 +53,7 @@ fun HomeScreen(
     navigateToMovimientosScreen: () -> Unit
 ) {
     BackHandler { exitProcess(0) }
-    val context = LocalContext.current
+
     val uiState by viewModel.homeUiState.collectAsState()
     val isRefreshing by viewModel.isRefreshing.collectAsState()
     val statePullToRefresh = rememberPullToRefreshState()
@@ -60,11 +61,10 @@ fun HomeScreen(
     PullToRefreshBox(
         state = statePullToRefresh,
         isRefreshing = isRefreshing.isRefreshing,
-        onRefresh = { viewModel.refreshData(context) },
+        onRefresh = { viewModel.refreshData() },
         modifier = modifier,
         content = {
             ContentHomeScreen(
-                context,
                 uiState,
                 viewModel,
                 navController,
@@ -76,7 +76,6 @@ fun HomeScreen(
 
 @Composable
 fun ContentHomeScreen(
-    context: Context,
     uiState: HomeUiState,
     viewModel: HomeViewModel,
     navController: NavController,
@@ -92,9 +91,14 @@ fun ContentHomeScreen(
                 verticalArrangement = Arrangement.Center
             ) {
                 CircularProgressIndicator(Modifier.size(30.dp))
-                Spacer(modifier = Modifier.height(8.dp))
+                Spacer(modifier = Modifier.height(16.dp))
                 Text(
-                    text = "cargando datos espere un momento",
+                    text = "cargando datos...",
+                    textAlign = TextAlign.Center,
+                    color = MaterialTheme.colorScheme.onBackground
+                )
+                Text(
+                    text = "espere un momento",
                     textAlign = TextAlign.Center,
                     color = MaterialTheme.colorScheme.onBackground
                 )
@@ -103,7 +107,8 @@ fun ContentHomeScreen(
 
         else -> {
             Column(
-                modifier = Modifier.verticalScroll(rememberScrollState()),
+                modifier = Modifier
+                    .verticalScroll(rememberScrollState()),
             ) {
                 BodyHeader(viewModel, onNavigationMovimientos = { navigateToMovimientos() })
                 CommonsSpacer(height = 30.dp, width = 0.dp)
@@ -120,7 +125,7 @@ fun ContentHomeScreen(
                     textAlign = TextAlign.Start
                 )
                 CommonsSpacer(height = 16.dp, width = 0.dp)
-                CountDate(context, Modifier.fillMaxWidth(), viewModel, uiState.fechaElegida)
+                CountDate(Modifier.fillMaxWidth(), viewModel, uiState.fechaElegida)
                 CommonsSpacer(height = 4.dp, width = 0.dp)
                 NuevoMes(viewModel, uiState.showNuevoMes)
                 CommonsSpacer(height = 30.dp, width = 0.dp)

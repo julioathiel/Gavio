@@ -28,23 +28,6 @@ object DateUtils {
         return fechaActual.month.getDisplayName(TextStyle.SHORT, Locale.getDefault())
     }
 
-    fun parsearFechaALocalDate(fechaString: String): LocalDate? {
-        return try {
-            val formato = "yyyy-MM-dd"
-            LocalDate.parse(fechaString, DateTimeFormatter.ofPattern(formato))
-        } catch (e: DateTimeParseException) {
-            Log.e(TAG, "Error al parsear la fecha: ${e.message}")
-            null
-        }
-    }
-
-    fun converterFechaABarra(fechaGuion: String): String {
-        // fechaGuion sería "2024-04-30"
-        val formatter = DateTimeFormatter.ofPattern("yyyy-MM-dd")
-        val localDate = LocalDate.parse(fechaGuion, formatter)
-        return localDate.format(DateTimeFormatter.ofPattern("dd/MM/yyyy"))
-    }
-
     fun converterFechaPersonalizada(date: String): String {
         val partesFecha = date.split("-") // Dividir la fecha en partes: [dia, mes, año]
         if (partesFecha.size == 3) {
@@ -57,10 +40,10 @@ object DateUtils {
         }
     }
 
-    fun agregandoUnMes(fechaActual: LocalDate, fechaParseada: LocalDate): String {
+    fun agregandoUnMes(fechaActual: LocalDate, fechaParseada: LocalDate): LocalDate {
         val diff = ChronoUnit.MONTHS.between(fechaParseada, fechaActual).plus(1)
         val mes = fechaParseada.plus(diff, ChronoUnit.MONTHS)
-        return mes.toString()
+        return mes
     }
 
     private fun getNameMes(mes: Int): String {

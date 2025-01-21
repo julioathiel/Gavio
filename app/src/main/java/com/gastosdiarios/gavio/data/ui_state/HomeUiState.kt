@@ -21,7 +21,7 @@ data class HomeUiState(
     val agregar: Boolean = false,
     val editar: Boolean = false,
     val showNuevoMes: Boolean = false,
-    val isLoading: Boolean = true,
+    val isLoading: Boolean = false,
     val currentUser: String? = null,
     val isError: Boolean = false
 )

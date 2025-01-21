@@ -52,7 +52,7 @@ object AppModule {
     @Provides
     @Singleton
     fun provideMainActivityProvider(mainActivity: AppCompatActivity): AppCompatActivity {
-        return mainActivity
+        return mainActivity //deberia eliminar este provide
     }
 
 }

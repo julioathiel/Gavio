@@ -1,6 +1,5 @@
 package com.gastosdiarios.gavio.presentation.splash_screen
 
-import android.util.Log
 import androidx.compose.foundation.background
 import androidx.compose.foundation.layout.Box
 import androidx.compose.foundation.layout.fillMaxSize
@@ -29,11 +28,13 @@ fun MySplashScreen(
     onToLoginInitScreen: () -> Unit,
 ) {
     val uiState by viewModel.uiState.collectAsState()
-    splashScreen.setKeepOnScreenCondition { uiState.isLoading }
+   splashScreen.setKeepOnScreenCondition { uiState.isLoading }
+
 
     LaunchedEffect(
         key1 = uiState.isLoading,
-        key2 = uiState.securityActivated
+        key2 = uiState.securityActivated,
+        key3 = uiState.userRegistered
     ) {
         when (uiState.userRegistered) {
             true -> {
@@ -46,13 +47,13 @@ fun MySplashScreen(
                     }
                 }
             }
-            //SI NO ENCUENTRA NINGUN REGISTRO EN LA BASE DE DATOS LO ENVIA A LA PANTALLA DE INICIO DE SESION
+
             false -> {
                 onToLoginInitScreen()
             }
         }
     }
-    Log.d("SplashViewModel", "MySplashScreen: $uiState")
+
     if (uiState.startDestination == null) {
         Box(
             modifier = Modifier
