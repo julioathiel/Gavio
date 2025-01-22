@@ -24,11 +24,11 @@ import androidx.compose.material3.Text
 import androidx.compose.material3.pulltorefresh.PullToRefreshBox
 import androidx.compose.material3.pulltorefresh.rememberPullToRefreshState
 import androidx.compose.runtime.Composable
+import androidx.compose.runtime.LaunchedEffect
 import androidx.compose.runtime.collectAsState
 import androidx.compose.runtime.getValue
 import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
-import androidx.compose.ui.graphics.Color
 import androidx.compose.ui.text.style.TextAlign
 import androidx.compose.ui.unit.dp
 import androidx.hilt.navigation.compose.hiltViewModel
@@ -41,7 +41,6 @@ import com.gastosdiarios.gavio.presentation.home.components.CardBotonRegistro
 import com.gastosdiarios.gavio.presentation.home.components.CountDate
 import com.gastosdiarios.gavio.presentation.home.components.HorizontalPagerWithCards
 import com.gastosdiarios.gavio.presentation.home.components.NuevoMes
-import kotlinx.serialization.json.JsonNull.content
 import kotlin.system.exitProcess
 
 @OptIn(ExperimentalMaterial3Api::class)
@@ -53,6 +52,7 @@ fun HomeScreen(
     navigateToMovimientosScreen: () -> Unit
 ) {
     BackHandler { exitProcess(0) }
+
 
     val uiState by viewModel.homeUiState.collectAsState()
     val isRefreshing by viewModel.isRefreshing.collectAsState()
@@ -81,8 +81,9 @@ fun ContentHomeScreen(
     navController: NavController,
     navigateToMovimientos: () -> Unit
 ) {
+    val isLoading by viewModel.isLoading.collectAsState()
     when {
-        uiState.isLoading -> {
+       isLoading -> {
             Column(
                 modifier = Modifier
                     .fillMaxSize()

@@ -5,6 +5,7 @@ import com.gastosdiarios.gavio.domain.model.modelFirebase.UserData
 import com.gastosdiarios.gavio.domain.repository.AuthFirebaseImp
 import com.gastosdiarios.gavio.domain.repository.BaseRepository
 import com.gastosdiarios.gavio.domain.repository.CloudFirestore
+import com.google.firebase.firestore.FieldValue
 import kotlinx.coroutines.tasks.await
 import javax.inject.Inject
 
@@ -29,8 +30,7 @@ class UserDataFirestore @Inject constructor(
         }
     }
 
-    override suspend fun delete() {
-    }
+    override suspend fun delete() {}
 
     override suspend fun createOrUpdate(entity: UserData) {
        try {
@@ -89,6 +89,50 @@ class UserDataFirestore @Inject constructor(
                 .update(item).await()
         } catch (e: Exception) {
             Log.e(tag, "Error al actualizar el selectedDate: ${e.message}")
+        }
+    }
+
+    suspend fun deleteCurrentMoneyData() {
+        try {
+            val uidUser = authFirebaseImp.getCurrentUser()?.uid ?: return
+            val updates = mapOf(
+                "currentMoney" to FieldValue.delete(),
+                "isCurrentMoneyIngresos" to FieldValue.delete()
+            )
+            cloudFirestore.getUserData().document(uidUser).update(updates).await()
+        } catch (e: Exception) {
+            Log.e(tag, "Error al eliminar currentMoney data: ${e.message}")
+        }
+    }
+
+    suspend fun deleteSelectedDateData() {
+        try {
+            val uidUser = authFirebaseImp.getCurrentUser()?.uid ?: return
+            val updates = mapOf(
+                "selectedDate" to FieldValue.delete(),
+                "isSelectedDate" to FieldValue.delete()
+            )
+            cloudFirestore.getUserData().document(uidUser).update(updates).await()
+        } catch (e: Exception) {
+            Log.e(tag, "Error al eliminar selectedDate data: ${e.message}")
+        }
+    }
+
+    suspend fun deleteTotalIngresos() {
+        try {
+            val uidUser = authFirebaseImp.getCurrentUser()?.uid ?: return
+            cloudFirestore.getUserData().document(uidUser).update("totalIngresos", FieldValue.delete()).await()
+        } catch (e: Exception) {
+            Log.e(tag, "Error al eliminar totalIngresos:${e.message}")
+        }
+    }
+
+    suspend fun deleteTotalGastos() {
+        try {
+            val uidUser = authFirebaseImp.getCurrentUser()?.uid ?: return
+            cloudFirestore.getUserData().document(uidUser).update("totalGastos", FieldValue.delete()).await()
+        } catch (e: Exception) {
+            Log.e(tag, "Error al eliminar totalGastos: ${e.message}")
         }
     }
 

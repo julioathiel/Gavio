@@ -39,7 +39,7 @@
     <string name="toolbar_home">Gavio</string>
     <string name="toolbar_configuration">Configuración</string>
     <string name="toolbar_cambio_fecha">Cambio de fechas</string>
-    <string name="toolbar_registro_gastos">All expenses</string>
+    <string name="toolbar_registro_gastos">Registro</string>
     <string name="toolbar_analisis_de_gastos">Análisis de gastos</string>
     <string name="toolbar_ajustes">Ajustes</string>
     <string name="toolbar_gastos_programados">Gastos programados</string>

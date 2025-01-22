@@ -42,9 +42,9 @@ class DataBaseManager @Inject constructor(
 
     //FUNCION PARA LA PANTALLA DE TRANSACTIONS
     suspend fun deleteAllScreenTransactions() {
-//        totalGastosFirestore.delete()
-//        currentMoneyFirestore.delete()
-//        totalIngresosFirestore.delete()
+        userDataFirestore.deleteCurrentMoneyData()
+        userDataFirestore.deleteTotalGastos()
+        userDataFirestore.deleteTotalIngresos()
         transactionsFirestore.deleteAll()
         gastosPorCategoriaFirestore.deleteAll()
     }
@@ -70,7 +70,7 @@ class DataBaseManager @Inject constructor(
     }
 
     suspend fun resetAllApp() {
-      //  dateFirestore.delete()
+        userDataFirestore.deleteSelectedDateData()
         deleteAllTransactions()
         deleteAllGastosPorCategory()
         userDataFirestore.updateTotalGastos(0.0)

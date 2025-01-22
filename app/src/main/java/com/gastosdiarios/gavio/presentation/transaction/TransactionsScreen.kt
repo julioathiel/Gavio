@@ -2,6 +2,7 @@ package com.gastosdiarios.gavio.presentation.transaction
 
 import androidx.activity.compose.BackHandler
 import androidx.compose.foundation.ExperimentalFoundationApi
+import androidx.compose.foundation.background
 import androidx.compose.foundation.layout.Box
 import androidx.compose.foundation.layout.fillMaxSize
 import androidx.compose.foundation.layout.fillMaxWidth
@@ -113,7 +114,7 @@ fun ContentList(
     uiState: ListUiState<TransactionModel>,
     viewModel: TransactionsViewModel
 ) {
-    Box(modifier = Modifier.fillMaxSize()) {
+    Box(modifier = Modifier.fillMaxSize().background(MaterialTheme.colorScheme.surface)) {
         LazyColumn(
             modifier = Modifier.fillMaxWidth(),
             state = listState
