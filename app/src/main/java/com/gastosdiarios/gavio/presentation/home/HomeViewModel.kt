@@ -28,8 +28,6 @@ import com.gastosdiarios.gavio.domain.repository.repositoriesFirestrore.BarDataF
 import com.gastosdiarios.gavio.domain.repository.repositoriesFirestrore.GastosPorCategoriaFirestore
 import com.gastosdiarios.gavio.domain.repository.repositoriesFirestrore.GastosProgramadosFirestore
 import com.gastosdiarios.gavio.domain.repository.repositoriesFirestrore.TransactionsFirestore
-import com.gastosdiarios.gavio.domain.repository.repositoriesFirestrore.UserDataFirestore
-import com.gastosdiarios.gavio.domain.repository.repositoriesFirestrore.UserPreferencesFirestore
 import com.gastosdiarios.gavio.utils.DateUtils
 import com.gastosdiarios.gavio.utils.DateUtils.agregandoUnMes
 import com.gastosdiarios.gavio.utils.DateUtils.converterFechaPersonalizada
@@ -65,8 +63,6 @@ class HomeViewModel @Inject constructor(
     private val transactionsFirestore: TransactionsFirestore,
     private val gastosPorCategoriaFirestore: GastosPorCategoriaFirestore,
     private val gastosProgramadosFirestore: GastosProgramadosFirestore,
-    private val userPref: UserPreferencesFirestore,
-    private val userDataFirestore: UserDataFirestore,
     barDataFirestore: BarDataFirestore,
 ) : ViewModel() {
 
@@ -94,8 +90,8 @@ class HomeViewModel @Inject constructor(
      private fun calculandoInit() {
         viewModelScope.launch {
             try {
-                val data = userDataFirestore.get()
                 val fechaActual = obtenerFechaActual()// muestra 2025-01-01
+                val data = dbm.getUserData()
                 val dataCurrentMoney = data?.currentMoney
                 val dataDate = data?.selectedDate
 
@@ -125,8 +121,8 @@ class HomeViewModel @Inject constructor(
                                         money = "0"
                                     )
                                 )
-                                updateTotalGastos(0.0)
-                                transactionsFirestore.deleteAll()
+                                dbm.updateTotalGastos(0.0)
+                                dbm.deleteAllTransactions()
                                 _transactionUiState.update { it.copy(items = emptyList()) }
                                 crearTransaction(
                                     cantidad = dataCurrentMoney.toString(),
@@ -174,12 +170,12 @@ class HomeViewModel @Inject constructor(
     private fun reseteandoProgress() {
         //si el usuario gasto el dinero antes del dia de la fecha elegida
         viewModelScope.launch {
-            transactionsFirestore.deleteAll()
+            dbm.deleteAllTransactions()
             gastosPorCategoriaFirestore.deleteAll()
             updateIngresos(0.0)
+            dbm.updateTotalGastos(0.0)
+            dbm.updateCurrentMoney(0.0, false)
         }
-        updateTotalGastos(0.0)
-        updateCurrentMoney(0.0, false)
     }
 
     private fun updateFechaUnMesMas(fechaActual: LocalDate, fechaParseada: LocalDate) {
@@ -198,7 +194,7 @@ class HomeViewModel @Inject constructor(
             try {
                 _isLoading.update { true }
                 getMaxDate()
-                getUserData()
+                dbm.getUserData()
                 getGastosProgramados()
                 mostrarCurrentMoney()
                 mostrarTotalIngresos()
@@ -223,10 +219,9 @@ class HomeViewModel @Inject constructor(
     private fun mostrarEstadoUsuario() {
         viewModelScope.launch {
             try {
-                val data = userDataFirestore.get()
-
-                val selectedDate = data?.selectedDate
+                val data = dbm.getUserData()
                 val currentMoney = data?.currentMoney
+                val selectedDate = data?.selectedDate
 
                 if (selectedDate != null) {
                     mostrandoAlUsuario(selectedDate)
@@ -251,7 +246,7 @@ class HomeViewModel @Inject constructor(
 
     private fun mostrarCurrentMoney() {
         viewModelScope.launch {
-            val data = userDataFirestore.get()
+            val data = dbm.getUserData()
             val currentMoney = data?.currentMoney ?: 0.0
             _homeUiState.update { it.copy(dineroActual = currentMoney) }
         }
@@ -271,7 +266,7 @@ class HomeViewModel @Inject constructor(
     private fun mostrarTotalIngresos() {
         viewModelScope.launch {
             try {
-                val data = userDataFirestore.get()
+                val data = dbm.getUserData()
                 val totalIngresos = data?.totalIngresos ?: 0.0
                 _homeUiState.update { it.copy(mostrandoDineroTotalIngresos = totalIngresos) }
             } catch (e: Exception) {
@@ -283,7 +278,7 @@ class HomeViewModel @Inject constructor(
     private fun mostrarTotalGastos() {
         viewModelScope.launch {
             try {
-                val data = userDataFirestore.get()
+                val data = dbm.getUserData()
 
                 val totalGastos = data?.totalGastos ?: 0.0
                 _homeUiState.update {
@@ -298,10 +293,9 @@ class HomeViewModel @Inject constructor(
 
     private fun mostrarLimitePorDia(currentMoney: Double?, selectedDate: String?) {
         val diasRestantes = getDiasRestantes(selectedDate)
-        Log.d(tag, "mostrarLimitePorDia = dias Restantes: $diasRestantes")
+
         val limitePorDia =
             MathUtils.getLimitePorDia(currentMoney ?: 0.0, diasRestantes = diasRestantes)
-        Log.d(tag, "mostrarLimitePorDia = limite por dia: $limitePorDia")
         _homeUiState.update { _homeUiState.value.copy(limitePorDia = limitePorDia) }
     }
 
@@ -309,10 +303,8 @@ class HomeViewModel @Inject constructor(
     private fun getMaxDate() {
         viewModelScope.launch {
             //obteniendo fecha guardada maxima por el usuario
-            Log.d(tag, "getMaxDate")
-            val data = userPref.get()?.dateMax ?: 0
-            _homeUiState.update { it.copy(selectedOptionFechaMaxima = data) }
-            Log.d(tag, "getMaxDate: ${_homeUiState.value.selectedOptionFechaMaxima}")
+            val data:Int = dbm.getUserPreferences()?.limitMonth ?: 0
+            _homeUiState.update { it.copy(limitMonth = data) }
         }
     }
 
@@ -339,7 +331,7 @@ class HomeViewModel @Inject constructor(
         userSelected: Boolean
     ) {
         viewModelScope.launch {
-            val data = userDataFirestore.get()
+            val data = dbm.getUserData()
             val totalIngresos = data?.totalIngresos ?: 0.0
             val totalGastos = data?.totalGastos ?: 0.0
             val currentMoney = data?.currentMoney ?: 0.0
@@ -378,13 +370,13 @@ class HomeViewModel @Inject constructor(
                         reseteandoProgress()
                     } else {
                         // Si el usuario eligió gastos, actualizar la base de datos con el nuevo dinero
-                        updateTotalGastos(nuevoTotal)
+                        dbm.updateTotalGastos(nuevoTotal)
                         mostrarTotalGastos()
                     }
                 }
             }
             //actualizando el dinero actual siempre
-            updateCurrentMoney(dinerActual, false)
+            dbm.updateCurrentMoney(dinerActual, false)
             mostrarCurrentMoney()
             mostrarLimitePorDia(currentMoney = dinerActual, selectedDate = date)
         }
@@ -406,7 +398,7 @@ class HomeViewModel @Inject constructor(
     fun insertUpdateFecha(fecha: String) {
         viewModelScope.launch {
             try {
-                val data = userDataFirestore.get()
+                val data = dbm.getUserData()
                 Log.d(tag, "insertUpdateFecha: $data")
                 val selectedDate = data?.selectedDate
 
@@ -433,22 +425,26 @@ class HomeViewModel @Inject constructor(
 
 
     private fun insertDate(fecha: String) {
-        updateSelectedDate(fecha, false)
-        _homeUiState.update { _homeUiState.value.copy(fechaElegida = fecha) }
-        mostrandoAlUsuario(fecha)
-        mostrarDiasRestantes(fecha)
+        viewModelScope.launch {
+           dbm.updateSelectedDate(fecha, false)
+            _homeUiState.update { _homeUiState.value.copy(fechaElegida = fecha) }
+            mostrandoAlUsuario(fecha)
+            mostrarDiasRestantes(fecha)
+        }
 
     }
 
     private fun updateDate(fecha: String) {
-        updateSelectedDate(fecha, false)
-        mostrandoAlUsuario(fecha)
+        viewModelScope.launch {
+            dbm.updateSelectedDate(fecha, false)
+            mostrandoAlUsuario(fecha)
+        }
     }
 
     private fun updateIngresos(value: Double) {
         viewModelScope.launch {
             try {
-                updateTotalIngresos(value)
+                dbm.updateTotalIngresos(value)
                 mostrarCurrentMoney()
                 mostrarTotalIngresos()
             } catch (e: Exception) {
@@ -693,59 +689,5 @@ class HomeViewModel @Inject constructor(
             }
         }
     }
-
     //--------------FIN-------Gastos programados -------------------------//
-
-
-    private fun getUserData() {
-        viewModelScope.launch { // Usa Dispatchers.IO para operaciones de red/BD
-            try {
-                userDataFirestore.get()
-            } catch (e: Exception) {
-                Log.e(tag, "Error en getUserData", e)
-            }
-        }
-    }
-
-    private fun updateCurrentMoney(valueCurrentMoney: Double, isCurrentMoneyChecked: Boolean) {
-        viewModelScope.launch {
-            try {
-                userDataFirestore.updateCurrentMoney(valueCurrentMoney, isCurrentMoneyChecked)
-
-            } catch (e: Exception) {
-                Log.e(tag, "Error en updateCurrentMoney", e)
-            }
-        }
-    }
-
-    private fun updateTotalGastos(valueTotalGastos: Double) {
-        viewModelScope.launch {
-            try {
-                userDataFirestore.updateTotalGastos(valueTotalGastos)
-            } catch (e: Exception) {
-                Log.e(tag, "Error en updateTotalGastos", e)
-            }
-        }
-    }
-
-    private fun updateTotalIngresos(valueTotalIngresos: Double) {
-        viewModelScope.launch {
-            try {
-                userDataFirestore.updateTotalIngresos(valueTotalIngresos)
-            } catch (e: Exception) {
-                Log.e(tag, "Error en updateTotalIngresos", e)
-            }
-        }
-    }
-
-    private fun updateSelectedDate(date: String, isSelectedDate: Boolean) {
-        viewModelScope.launch {
-            try {
-                userDataFirestore.updateSelectedDate(date, isSelectedDate)
-            } catch (e: Exception) {
-                Log.e(tag, "Error en updateSelectedDate", e)
-            }
-        }
-    }
-
 }

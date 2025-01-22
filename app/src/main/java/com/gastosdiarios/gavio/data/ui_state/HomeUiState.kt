@@ -11,7 +11,7 @@ data class HomeUiState(
     val categoryName: String? = "",
     val description: String? = "",
     val fechaElegida: String? = "",
-    val selectedOptionFechaMaxima: Int = 0,
+    val limitMonth: Int = 0,
     val buttonIngresosActivated: Int = 0,
     val diasRestantes:Int = 0,
     val limitePorDia:Double = 0.0,

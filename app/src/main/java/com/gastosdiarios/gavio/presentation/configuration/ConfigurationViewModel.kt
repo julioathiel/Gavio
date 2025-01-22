@@ -9,7 +9,6 @@ import com.gastosdiarios.gavio.domain.model.ShareDataModel
 import com.gastosdiarios.gavio.domain.model.modelFirebase.BarDataModel
 import com.gastosdiarios.gavio.domain.repository.DataBaseManager
 import com.gastosdiarios.gavio.domain.repository.repositoriesFirestrore.BarDataFirestore
-import com.gastosdiarios.gavio.domain.repository.repositoriesFirestrore.UserPreferencesFirestore
 import com.gastosdiarios.gavio.utils.DateUtils
 import dagger.hilt.android.lifecycle.HiltViewModel
 import kotlinx.coroutines.Dispatchers
@@ -23,7 +22,6 @@ import javax.inject.Inject
 
 @HiltViewModel
 class ConfigurationViewModel @Inject constructor(
-    private val userPreferencesFirestore: UserPreferencesFirestore,
     private val dbm: DataBaseManager,
     private val dataBarDataFirestore: BarDataFirestore
 ) : ViewModel() {
@@ -48,8 +46,8 @@ class ConfigurationViewModel @Inject constructor(
     private fun resetData() {
         viewModelScope.launch {
             try {
-                userPreferencesFirestore.updateDateMax(31)
-                userPreferencesFirestore.updateHourMinute(21, 0)
+                dbm.updateLimitMonth(31)
+                dbm.updateHourMinute(21, 0)
                 dbm.resetAllApp()
                 _configurationUiState.update { it.copy(resetPending = true, resetComplete = true) }
             } catch (e: Exception) {

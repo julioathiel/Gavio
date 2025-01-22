@@ -97,7 +97,7 @@ open class CloudFirestore @Inject constructor(
                     userPreferencesRef,
                     UserPreferences(
                         biometricSecurity = false,
-                        dateMax = 31,
+                        limitMonth = 31,
                         hour = 21,
                         minute = 0,
                         themeMode = ThemeMode.MODE_AUTO

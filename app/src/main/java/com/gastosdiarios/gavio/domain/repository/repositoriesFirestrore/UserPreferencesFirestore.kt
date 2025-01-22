@@ -17,7 +17,7 @@ class UserPreferencesFirestore @Inject constructor(
 
     override suspend fun get(): UserPreferences? {
         return try {
-            val uidUser = authFirebaseImp.getCurrentUser()?.uid  ?: return null
+            val uidUser = authFirebaseImp.getCurrentUser()?.uid ?: return null
             val snapshot = cloudFirestore.getUserPreferences().document(uidUser).get().await()
 
             if (snapshot.exists()) {
@@ -51,14 +51,11 @@ class UserPreferencesFirestore @Inject constructor(
         }
     }
 
-     fun updateBiometricSecurity(value: Boolean) {
+    fun updateBiometricSecurity(value: Boolean) {
         try {
             val uidUser = authFirebaseImp.getCurrentUser()?.uid ?: return
-
-            if (uidUser != null) {
-                cloudFirestore.getUserPreferences().document(uidUser)
-                    .update("biometricSecurity", value)
-            }
+            cloudFirestore.getUserPreferences().document(uidUser)
+                .update("biometricSecurity", value)
         } catch (e: Exception) {
             Log.d(tag, "error al actualizar el userPreferences: ${e.message}")
         }
@@ -74,11 +71,11 @@ class UserPreferencesFirestore @Inject constructor(
         }
     }
 
-    suspend fun updateDateMax(value: Int) {
+    suspend fun updateLimitMonth(value: Int) {
         try {
             val uidUser = authFirebaseImp.getCurrentUser()?.uid ?: return
             cloudFirestore.getUserPreferences().document(uidUser)
-                .update("dateMax", value).await()
+                .update("limitMonth", value).await()
         } catch (e: Exception) {
             Log.d(tag, "error al actualizar el userPreferences: ${e.message}")
         }

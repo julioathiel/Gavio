@@ -53,7 +53,7 @@ fun DatePickerView(
 
     val state: DatePickerState = rememberDatePickerState(selectableDates = object : SelectableDates {
         override fun isSelectableDate(utcTimeMillis: Long): Boolean {
-            return DateUtils.isDateSelectableRestrictMinMax(utcTimeMillis, homeUiState.selectedOptionFechaMaxima)
+            return DateUtils.isDateSelectableRestrictMinMax(utcTimeMillis, homeUiState.limitMonth)
         }
     }
     )
