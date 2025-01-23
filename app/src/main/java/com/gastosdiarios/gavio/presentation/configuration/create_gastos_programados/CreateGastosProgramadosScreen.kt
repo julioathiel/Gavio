@@ -1,7 +1,6 @@
 package com.gastosdiarios.gavio.presentation.configuration.create_gastos_programados
 
 import androidx.compose.foundation.ExperimentalFoundationApi
-import androidx.compose.foundation.background
 import androidx.compose.foundation.combinedClickable
 import androidx.compose.foundation.layout.Arrangement
 import androidx.compose.foundation.layout.Box
@@ -37,7 +36,7 @@ import androidx.compose.runtime.setValue
 import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.draw.clip
-import androidx.compose.ui.graphics.Color
+import androidx.compose.ui.res.dimensionResource
 import androidx.compose.ui.res.painterResource
 import androidx.compose.ui.text.style.TextOverflow
 import androidx.compose.ui.unit.dp
@@ -51,7 +50,6 @@ import com.gastosdiarios.gavio.domain.enums.CategoryTypeEnum
 import com.gastosdiarios.gavio.domain.enums.Modo
 import com.gastosdiarios.gavio.domain.model.modelFirebase.GastosProgramadosModel
 import com.gastosdiarios.gavio.presentation.configuration.create_gastos_programados.components.ContentBottomSheetGastosProgramados
-import kotlinx.serialization.json.JsonNull.content
 
 @OptIn(ExperimentalMaterial3Api::class)
 @Composable
@@ -64,7 +62,6 @@ fun CreateGastosProgramadosScreen(
     val selectionMode: Boolean by viewModel.selectionMode.collectAsState()
     val selectedItems: List<GastosProgramadosModel> by viewModel.selectedItems.collectAsState()
     val isCreate by viewModel.isCreate.collectAsState()
-    var isEditar by remember { mutableStateOf(false) }
 
     BottomSheetScaffold(
         topBar = {
@@ -76,21 +73,19 @@ fun CreateGastosProgramadosScreen(
                     if (selectionMode && selectedItems.size > 1) {
                         IconButton(onClick = {
                             selectedItems.forEach { item ->
-                                viewModel.delete(item)
+                                viewModel.deleteItemSelected(item)
                             }
                         }) {
                             Icon(imageVector = Icons.Default.Delete, contentDescription = "delete")
                         }
                     } else if (selectionMode && selectedItems.size == 1) {
-                        IconButton(onClick = {
-                            isEditar = true
-                        }) {
+                        IconButton(onClick = { viewModel.isCreateTrue() }) {
                             Icon(imageVector = Icons.Default.Create, contentDescription = "delete")
                         }
 
                         IconButton(onClick = {
                             selectedItems.forEach { item ->
-                                viewModel.delete(item)
+                                viewModel.deleteItemSelected(item)
                             }
                         }) {
                             Icon(imageVector = Icons.Default.Delete, contentDescription = "delete")
@@ -102,39 +97,17 @@ fun CreateGastosProgramadosScreen(
         sheetMaxWidth = 0.dp,
         sheetContent = {
             when{
-                isEditar -> {
-                    val item = selectedItems.firstOrNull() ?: GastosProgramadosModel()
-                    ModalBottomSheet(
-                        onDismissRequest = { isEditar = false }, // Reset isEditar when dismissing
-                        sheetState = rememberModalBottomSheetState(skipPartiallyExpanded = true),
-                        content = {
-                            ContentBottomSheetGastosProgramados(
-                                item = item,
-                                onDismiss = {
-                                    isEditar = false // Reset isEditar when dismissing
-                                  //  viewModel.clearSelection()
-                                },
-                                categoryTypes = CategoryTypeEnum.GASTOS,
-                                viewModel = viewModel,
-                                modo = Modo.EDITAR // Set modo to EDITAR
-                            )
-                        }
-                    )
-                }
                 isCreate -> {
 
-                    val item = selectedItems.firstOrNull()
-                        ?: GastosProgramadosModel() // Get selected item or create new one
+                    val item = selectedItems.firstOrNull() ?: GastosProgramadosModel()
                     val modo =
-                        if (selectedItems.size == 1) Modo.EDITAR else Modo.AGREGAR // Set modo based on selectedItems size
+                        if (selectedItems.size == 1) Modo.EDITAR else Modo.AGREGAR
                     ModalBottomSheet(onDismissRequest = { viewModel.isCreateFalse() },
                         sheetState = rememberModalBottomSheetState(skipPartiallyExpanded = true),
                         content = {
                             ContentBottomSheetGastosProgramados(
                                 item = item,
-                                onDismiss = {
-                                    //viewModel.clearSelection()
-                                }, // Clear selection when dismissing
+                                onDismiss = { viewModel.clearSelection(item) },
                                 categoryTypes = CategoryTypeEnum.GASTOS,
                                 viewModel = viewModel,
                                 modo = modo
@@ -166,11 +139,7 @@ fun CreateGastosProgramadosScreen(
                             .fillMaxSize()
                             .padding(paddingValues)
                     ) {
-                        LazyColumn(
-                            modifier = Modifier
-                                .fillMaxSize()
-                                .padding(paddingValues)
-                        ) {
+                        LazyColumn(modifier = Modifier.fillMaxSize()) {
                             items(uiState.items, key = { it.uid ?: it.hashCode() }) { item ->
                                 val isSelected = selectedItem.any { it.uid == item.uid }
                                 ReplyEmailListItem(
@@ -187,7 +156,9 @@ fun CreateGastosProgramadosScreen(
                         }
                         FloatingActionButton(
                             onClick = { viewModel.isCreateTrue() },
-                            Modifier.align(Alignment.BottomEnd)
+                            Modifier
+                                .align(Alignment.BottomEnd)
+                                .padding(dimensionResource(id = R.dimen.padding_medium)),
                         ) {
                             Icon(imageVector = Icons.Default.Add, contentDescription = "agregar")
                         }

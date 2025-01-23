@@ -96,6 +96,7 @@ open class CloudFirestore @Inject constructor(
                 transaction.set(
                     userPreferencesRef,
                     UserPreferences(
+                        userId = user.userId,
                         biometricSecurity = false,
                         limitMonth = 31,
                         hour = 21,

@@ -65,16 +65,22 @@ class CreateGastosProgramadosViewModel @Inject constructor(
 
     fun delete(item: GastosProgramadosModel) {
         viewModelScope.launch(Dispatchers.IO) {
-            Log.d("delete", item.toString())
             try {
                 gastosProgramadosFirestore.delete(item)
-                cargandoListaActualizada()
-            }catch (e:Exception){
+            } catch (e: Exception) {
                 Log.e("Error", e.message.toString())
             }
 
         }
     }
+
+    fun deleteItemSelected(item: GastosProgramadosModel) {
+        delete(item)
+        cargandoListaActualizada()
+        _selectedItems.value = emptyList()
+        _selectionMode.value = false
+    }
+
 
     fun deleteAll() {
         viewModelScope.launch(Dispatchers.IO) {
@@ -114,7 +120,7 @@ class CreateGastosProgramadosViewModel @Inject constructor(
 
     private fun cargandoListaActualizada() {
         viewModelScope.launch(Dispatchers.IO) {
-            _gastosProgramadosUiState .update { it.copy(isUpdateItem = true) }
+            _gastosProgramadosUiState.update { it.copy(isUpdateItem = true) }
             val data = gastosProgramadosFirestore.get()
             _gastosProgramadosUiState.update {
                 it.copy(items = data, isUpdateItem = false)
@@ -125,11 +131,18 @@ class CreateGastosProgramadosViewModel @Inject constructor(
     private val _isCreate = MutableStateFlow(false)
     val isCreate: StateFlow<Boolean> = _isCreate.asStateFlow()
 
+
     fun isCreateTrue() {
-       _isCreate.value = true
+        _isCreate.value = true
     }
 
     fun isCreateFalse() {
         _isCreate.value = false
+    }
+
+   // funcion que se usa cuando se edita y se guarda el item
+    fun clearSelection(item: GastosProgramadosModel) {
+        isCreateFalse()
+        onClickGastosProgramados(item)
     }
 }

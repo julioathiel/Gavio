@@ -399,7 +399,6 @@ class HomeViewModel @Inject constructor(
         viewModelScope.launch {
             try {
                 val data = dbm.getUserData()
-                Log.d(tag, "insertUpdateFecha: $data")
                 val selectedDate = data?.selectedDate
 
                 if (selectedDate == null) {
