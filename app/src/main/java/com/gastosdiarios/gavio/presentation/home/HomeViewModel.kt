@@ -89,6 +89,7 @@ class HomeViewModel @Inject constructor(
 
      private fun calculandoInit() {
         viewModelScope.launch {
+            _isLoading.update { true }
             try {
                 val fechaActual = obtenerFechaActual()// muestra 2025-01-01
                 val data = dbm.getUserData()
@@ -160,6 +161,7 @@ class HomeViewModel @Inject constructor(
                         //  manejarFechayDiasRestantesNulos()
                     }
                 }
+                _isLoading.update { false }
             } catch (e: Exception) {
                 Log.e(tag, "calculandoInit: error: ${e.message}")
                 manejarFechayDiasRestantesNulos()
@@ -192,7 +194,6 @@ class HomeViewModel @Inject constructor(
     private fun initMostrandoAlUsuario() {
         viewModelScope.launch {
             try {
-                _isLoading.update { true }
                 getMaxDate()
                 dbm.getUserData()
                 getGastosProgramados()
@@ -203,7 +204,6 @@ class HomeViewModel @Inject constructor(
                 listCatGastosNueva()
                 listCatIngresosNueva()
                 _homeUiState.update { it.copy(isLoading = false) }
-                _isLoading.update { false }
             } catch (e: Exception) {
                 _homeUiState.update { it.copy(isError = true) }
                 Log.e(tag, "initMostrandoAlUsuario no hay internet: ${e.message}")

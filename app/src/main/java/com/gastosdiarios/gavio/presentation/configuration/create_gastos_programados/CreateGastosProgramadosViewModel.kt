@@ -88,6 +88,9 @@ class CreateGastosProgramadosViewModel @Inject constructor(
         }
     }
 
+    private val _expandedItem = MutableStateFlow<GastosProgramadosModel?>(null)
+    val expandedItem: StateFlow<GastosProgramadosModel?> = _expandedItem
+
     fun onClickGastosProgramados(item: GastosProgramadosModel) {
         if (_selectionMode.value) {
             _selectedItems.update { currentList ->
@@ -102,6 +105,8 @@ class CreateGastosProgramadosViewModel @Inject constructor(
             if (_selectedItems.value.isEmpty()) {
                 _selectionMode.value = false
             }
+        } else {
+            _expandedItem.value = if (_expandedItem.value == item) null else item
         }
     }
 
@@ -140,7 +145,7 @@ class CreateGastosProgramadosViewModel @Inject constructor(
         _isCreate.value = false
     }
 
-   // funcion que se usa cuando se edita y se guarda el item
+    // funcion que se usa cuando se edita y se guarda el item
     fun clearSelection(item: GastosProgramadosModel) {
         isCreateFalse()
         onClickGastosProgramados(item)
