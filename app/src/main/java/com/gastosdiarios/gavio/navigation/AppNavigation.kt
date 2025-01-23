@@ -24,10 +24,10 @@ import com.gastosdiarios.gavio.presentation.configuration.actualizarMaximoFecha.
 import com.gastosdiarios.gavio.presentation.configuration.ajustes_avanzados.AjustesScreen
 import com.gastosdiarios.gavio.presentation.configuration.categorias_creadas.CategoryScreen
 import com.gastosdiarios.gavio.presentation.configuration.components.CongratulationsScreen
+import com.gastosdiarios.gavio.presentation.configuration.create_gastos_programados.CreateGastosProgramadosScreen
 import com.gastosdiarios.gavio.presentation.configuration.exportar_datos.ExportarDatosScreen
 import com.gastosdiarios.gavio.presentation.configuration.notifications.RecordatorioScreen
 import com.gastosdiarios.gavio.presentation.configuration.user_profile.UserProfileScreen
-import com.gastosdiarios.gavio.presentation.create_gastos_programados.CreateGastosProgramadosScreen
 import com.gastosdiarios.gavio.presentation.splash_screen.MySplashScreen
 import com.gastosdiarios.gavio.presentation.transaction.TransactionsScreen
 import com.gastosdiarios.gavio.presentation.welcome.initial.InitialScreen

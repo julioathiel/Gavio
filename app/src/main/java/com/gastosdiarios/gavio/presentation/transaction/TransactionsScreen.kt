@@ -117,7 +117,7 @@ fun ContentList(
     Box(modifier = Modifier.fillMaxSize().background(MaterialTheme.colorScheme.surface)) {
         LazyColumn(
             modifier = Modifier.fillMaxWidth(),
-            state = listState
+          //  state = listState
         ) {
             //Agrupa los elementos de uiState.items por fecha.
             val groupItems = uiState.items.groupBy { it.date }.entries.sortedByDescending { it.key }

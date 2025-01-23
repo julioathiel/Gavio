@@ -31,7 +31,7 @@ import com.gastosdiarios.gavio.domain.enums.CategoryTypeEnum
 import com.gastosdiarios.gavio.domain.enums.Modo
 import com.gastosdiarios.gavio.domain.model.CategoriesModel
 import com.gastosdiarios.gavio.domain.model.modelFirebase.GastosProgramadosModel
-import com.gastosdiarios.gavio.presentation.configuration.create_gastos_programados.CreateGastosDefaultViewModel
+import com.gastosdiarios.gavio.presentation.configuration.create_gastos_programados.CreateGastosProgramadosViewModel
 import com.gastosdiarios.gavio.presentation.configuration.create_gastos_programados.bottomsheet_horizontal_pager.screens.listHorizontalPagerScreens
 import com.gastosdiarios.gavio.utils.DateUtils
 import kotlinx.coroutines.launch
@@ -41,7 +41,7 @@ fun ContentBottomSheetGastosProgramados(
     item: GastosProgramadosModel,
     onDismiss: () -> Unit,
     categoryTypes: CategoryTypeEnum,
-    viewModel: CreateGastosDefaultViewModel,
+    viewModel: CreateGastosProgramadosViewModel,
     modo: Modo,
 ) {
     var enabledButton by remember { mutableStateOf(false) }
@@ -72,7 +72,6 @@ fun ContentBottomSheetGastosProgramados(
         Box(
             Modifier
                 .fillMaxWidth()
-//                .background(MaterialTheme.colorScheme.surface)
                 .padding(dimensionResource(id = R.dimen.padding_medium))
         ) {
             Column(
@@ -145,7 +144,7 @@ fun ContentBottomSheetGastosProgramados(
 @Composable
 fun RealizarAccion(
     modo: Modo,
-    viewModel: CreateGastosDefaultViewModel,
+    viewModel: CreateGastosProgramadosViewModel,
     item: GastosProgramadosModel,
     selectedDate: String,
     onDismiss: () -> Unit
@@ -156,7 +155,7 @@ fun RealizarAccion(
             Button(
                 modifier = Modifier.height(dimensionResource(id = R.dimen.padding_altura_boton)),
                 onClick = {
-                    viewModel.createNewCategory(item)
+                    viewModel.create(item)
                     onDismiss()
                 },
                 enabled = selectedDate.isNotEmpty()
@@ -170,7 +169,7 @@ fun RealizarAccion(
             Button(
                 modifier = Modifier.height(dimensionResource(id = R.dimen.padding_altura_boton)),
                 onClick = {
-                    viewModel.updateItem(item)
+                    viewModel.update(item)
                     onDismiss()
                 },
                 enabled = selectedDate.isNotEmpty()

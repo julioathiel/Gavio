@@ -13,11 +13,11 @@ import androidx.compose.ui.unit.dp
 
 @Composable
 fun CommonsEmptyFloating(onClick: () -> Unit, modifier: Modifier = Modifier){
-    Box {
+    Box(modifier = modifier) {
         CommonsIsEmpty()
         FloatingActionButton(
             onClick = onClick,
-            modifier = modifier
+            modifier = Modifier
                 .align(alignment = Alignment.BottomEnd)
                 .padding(10.dp)
         )

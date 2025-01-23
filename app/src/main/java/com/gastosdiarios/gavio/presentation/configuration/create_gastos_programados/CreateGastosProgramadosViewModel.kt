@@ -1,4 +1,4 @@
-package com.gastosdiarios.gavio.presentation.create_gastos_programados
+package com.gastosdiarios.gavio.presentation.configuration.create_gastos_programados
 
 import android.util.Log
 import androidx.lifecycle.ViewModel
@@ -52,12 +52,14 @@ class CreateGastosProgramadosViewModel @Inject constructor(
     fun create(item: GastosProgramadosModel) {
         viewModelScope.launch(Dispatchers.IO) {
             gastosProgramadosFirestore.create(item)
+            cargandoListaActualizada()
         }
     }
 
     fun update(item: GastosProgramadosModel) {
         viewModelScope.launch(Dispatchers.IO) {
             gastosProgramadosFirestore.update(item)
+            cargandoListaActualizada()
         }
     }
 
@@ -118,5 +120,16 @@ class CreateGastosProgramadosViewModel @Inject constructor(
                 it.copy(items = data, isUpdateItem = false)
             }
         }
+    }
+
+    private val _isCreate = MutableStateFlow(false)
+    val isCreate: StateFlow<Boolean> = _isCreate.asStateFlow()
+
+    fun isCreateTrue() {
+       _isCreate.value = true
+    }
+
+    fun isCreateFalse() {
+        _isCreate.value = false
     }
 }
