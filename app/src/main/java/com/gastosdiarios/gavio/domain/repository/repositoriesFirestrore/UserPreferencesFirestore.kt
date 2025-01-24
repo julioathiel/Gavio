@@ -83,7 +83,7 @@ class UserPreferencesFirestore @Inject constructor(
 
     suspend fun updateHourMinute(hour: Int, minute: Int) {
         try {
-            val item = hashMapOf<String, Any>(
+            val item = mapOf(
                 "hour" to hour,
                 "minute" to minute
             )

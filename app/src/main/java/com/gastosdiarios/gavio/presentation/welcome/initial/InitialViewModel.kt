@@ -79,11 +79,11 @@ class InitialViewModel @Inject constructor(
                         if (task.isSuccessful) {
                             insertUsersFirestore(
                                 UserModel(
-                                    userId = task.result.user!!.uid,
-                                    name = task.result.user!!.displayName!!,
-                                    email = task.result.user!!.email!!,
+                                    userId = task.result.user?.uid,
+                                    name = task.result.user?.displayName,
+                                    email = task.result.user?.email,
                                     password = "",
-                                    photoUrl = task.result.user!!.photoUrl.toString(),
+                                    photoUrl = task.result.user?.photoUrl.toString(),
                                     date = DateFormat.getDateInstance().format(Date()),
                                     provider = PROVIDER_GOOGLE,
                                 )

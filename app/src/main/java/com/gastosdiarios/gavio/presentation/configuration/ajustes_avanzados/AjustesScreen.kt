@@ -56,7 +56,7 @@ fun AjustesScreen(
         topBar = {
             TopAppBarOnBack(
                 title = stringResource(id = R.string.toolbar_ajustes),
-                containerColor = MaterialTheme.colorScheme.surface,
+                containerColor = MaterialTheme.colorScheme.secondaryContainer,
                 onBack = { onBack() },
                 actions = {
                     Icon(

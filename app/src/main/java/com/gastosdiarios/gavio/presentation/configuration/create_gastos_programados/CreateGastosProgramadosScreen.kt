@@ -66,7 +66,7 @@ fun CreateGastosProgramadosScreen(
         topBar = {
             TopAppBarOnBack(
                 title = "Gastos programados",
-                containerColor = MaterialTheme.colorScheme.surface,
+                containerColor = MaterialTheme.colorScheme.secondaryContainer,
                 onBack = onBack,
                 actions = {
                     if (selectionMode && selectedItems.size > 1) {

@@ -19,10 +19,10 @@ class UserCategoryIngresosFirestore @Inject constructor(
     private val tagData = "userCategoryIngresosFirestore"
 
     override suspend fun get(): List<UserCreateCategoryModel> {
-        val uidUser = authFirebaseImp.getCurrentUser()?.uid
+        val uidUser = authFirebaseImp.getCurrentUser()?.uid ?: return emptyList()
         return try {
             cloudFirestore.getUserCategoryIngresosCollection()
-                .document(uidUser!!)
+                .document(uidUser)
                 .collection(COLLECTION_LIST)
                 .get()
                 .await()
@@ -36,17 +36,13 @@ class UserCategoryIngresosFirestore @Inject constructor(
 
     override suspend fun create(entity: UserCreateCategoryModel) {
         try {
-            val uidUser = authFirebaseImp.getCurrentUser()?.uid
+            val uidUser = authFirebaseImp.getCurrentUser()?.uid ?: return
             val uidItem = UUID.randomUUID().toString()
-            val item = UserCreateCategoryModel(
-                uid = uidItem,
-                categoryName = entity.categoryName,
-                categoryIcon = entity.categoryIcon,
-                categoryType = entity.categoryType
-            )
 
-            cloudFirestore.getUserCategoryIngresosCollection().document(uidUser!!)
-                .collection(COLLECTION_LIST).document(uidItem).set(item).await()
+            cloudFirestore.getUserCategoryIngresosCollection().document(uidUser)
+                .collection(COLLECTION_LIST).document(uidItem).set(
+                    entity.copy(uid = uidItem)
+                ).await()
         } catch (e: FirebaseFirestoreException) {
             Log.i(tagData, "Error al crear lista item de categorias de Ingresos: ${e.message}")
         }
@@ -54,16 +50,11 @@ class UserCategoryIngresosFirestore @Inject constructor(
 
     override suspend fun update(entity: UserCreateCategoryModel) {
         try {
-            val uidUser = authFirebaseImp.getCurrentUser()?.uid
+            val uidUser = authFirebaseImp.getCurrentUser()?.uid ?: return
+            val uidItem = entity.uid ?: return
 
-            val item = UserCreateCategoryModel(
-                uid = entity.uid,
-                categoryName = entity.categoryName,
-                categoryIcon = entity.categoryIcon,
-                categoryType = entity.categoryType
-            )
-            cloudFirestore.getUserCategoryIngresosCollection().document(uidUser!!)
-                .collection(COLLECTION_LIST).document(entity.uid!!.toString()).set(item).await()
+            cloudFirestore.getUserCategoryIngresosCollection().document(uidUser)
+                .collection(COLLECTION_LIST).document(uidItem).set(entity).await()
         } catch (e: FirebaseFirestoreException) {
             Log.i(tagData, "Error al actualizar el item de categorias de Ingresos: ${e.message}")
         }
@@ -71,10 +62,11 @@ class UserCategoryIngresosFirestore @Inject constructor(
 
     override suspend fun delete(entity: UserCreateCategoryModel) {
         try {
-            val uidUser = authFirebaseImp.getCurrentUser()?.uid
+            val uidUser = authFirebaseImp.getCurrentUser()?.uid ?: return
+            val uidItem = entity.uid ?: return
 
-            cloudFirestore.getUserCategoryIngresosCollection().document(uidUser!!)
-                .collection(COLLECTION_LIST).document(entity.uid!!).delete()
+            cloudFirestore.getUserCategoryIngresosCollection().document(uidUser)
+                .collection(COLLECTION_LIST).document(uidItem).delete()
                 .await()
         } catch (e: FirebaseFirestoreException) {
             Log.i(

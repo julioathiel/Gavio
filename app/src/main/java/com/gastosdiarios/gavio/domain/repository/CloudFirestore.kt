@@ -36,8 +36,8 @@ open class CloudFirestore @Inject constructor(
 
     suspend fun insertUserToFirestore(user: UserModel) {
         try {
-            val userId = auth.currentUser?.uid
-            val existingUser = getUsersCollection().document(userId!!).get().await()
+            val userId = auth.currentUser?.uid ?: return
+            val existingUser = getUsersCollection().document(userId).get().await()
             Log.d(tag, "existingUser: $existingUser")
 
             if (existingUser.exists()) {
@@ -60,15 +60,16 @@ open class CloudFirestore @Inject constructor(
         try {
             val mesActual = DateUtils.currentMonth()
             val uidItem = UUID.randomUUID().toString()
+            val userUid = user.userId ?: ""
 
             collections.runTransaction { transaction ->
                 val date = DateFormat.getDateInstance().format(Date())
-                val userRef = getUsersCollection().document(user.userId!!)
+                val userRef = getUsersCollection().document(userUid)
 
                 transaction.set(
                     userRef,
                     UserModel(
-                        userId = user.userId,
+                        userId = userUid,
                         name = user.name,
                         email = user.email,
                         password = user.password,
@@ -78,11 +79,11 @@ open class CloudFirestore @Inject constructor(
                     )
                 )
 
-                val userDataRef = getUserData().document(user.userId)
+                val userDataRef = getUserData().document(userUid)
                 transaction.set(
                     userDataRef,
                     UserData(
-                        userId = user.userId,
+                        userId = userUid,
                         totalGastos = 0.0,
                         totalIngresos = 0.0,
                         currentMoney = 0.0,
@@ -92,11 +93,11 @@ open class CloudFirestore @Inject constructor(
                     )
                 )
 
-                val userPreferencesRef = getUserPreferences().document(user.userId)
+                val userPreferencesRef = getUserPreferences().document(userUid)
                 transaction.set(
                     userPreferencesRef,
                     UserPreferences(
-                        userId = user.userId,
+                        userId = userUid,
                         biometricSecurity = false,
                         limitMonth = 31,
                         hour = 21,
@@ -106,7 +107,7 @@ open class CloudFirestore @Inject constructor(
                 )
 
                 val barDataRef = getBarDataCollection()
-                    .document(user.userId)
+                    .document(userUid)
                     .collection(COLLECTION_LIST)
                     .document(uidItem)
                 transaction.set(
@@ -128,15 +129,15 @@ open class CloudFirestore @Inject constructor(
             Log.i(tag, "email: $email")
             // Busca el documento que tenga el correo electrónico proporcionado
             Log.i(tag, "Iniciando consulta...")
-            val userId = auth.currentUser?.uid
-            val userRef = getUsersCollection().document(userId!!) // Usa userId directamente
+            val userUid = auth.currentUser?.uid ?: ""
+            val userRef = getUsersCollection().document(userUid) // Usa userId directamente
             val existingUserSnapshot = userRef.get().await()
 
             Log.i(tag, "existingUserSnapshot: $existingUserSnapshot")
             // Verifica si el documento existe
             if (existingUserSnapshot.exists()) {
                 // Elimina documentos relacionados en otras colecciones
-                deleteUserDataDocument(userId)
+                deleteUserDataDocument(userUid)
                 Log.i(tag, "Usuario con correo electronico $email eliminado correctamente")
             } else {
                 Log.i(tag, "No se encontro un usuario con ese correo electrónico ")

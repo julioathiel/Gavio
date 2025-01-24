@@ -1,10 +1,10 @@
 package com.gastosdiarios.gavio.data.ui_state
 
 data class SplashUiState(
-    val securityActivated: Boolean = false,
-    val isLoading: Boolean = false,
-    val isActivated: Boolean = false,
-    val userRegistered: Boolean = true,
-    val primerInicioSesion: Boolean = false,
+    val securityActivated: Boolean? = null,
+    val isLoading: Boolean? = null,
+    val isActivated: Boolean? = null,
+    val userRegistered: Boolean? = null,
+    val primerInicioSesion: Boolean? = null,
     val startDestination: String? = null
 )

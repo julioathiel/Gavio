@@ -19,10 +19,10 @@ class UserCategoryGastosFirestore @Inject constructor(
     private val tagData = "userCategoryGastosFirestore"
 
     override suspend fun get(): List<UserCreateCategoryModel> {
-        val uidUser = authFirebaseImp.getCurrentUser()?.uid
+        val uidUser = authFirebaseImp.getCurrentUser()?.uid ?: return emptyList()
         return try {
             cloudFirestore.getUserCategoryGastosCollection()
-                .document(uidUser!!)
+                .document(uidUser)
                 .collection(COLLECTION_LIST)
                 .get()
                 .await()
@@ -36,18 +36,21 @@ class UserCategoryGastosFirestore @Inject constructor(
 
     override suspend fun create(entity: UserCreateCategoryModel) {
         try {
-            val uidUser = authFirebaseImp.getCurrentUser()?.uid
+            val uidUser = authFirebaseImp.getCurrentUser()?.uid ?: return
             val uidItem = UUID.randomUUID().toString()
 
-            val item = UserCreateCategoryModel(
-                uid = uidItem,
-                categoryName = entity.categoryName,
-                categoryIcon = entity.categoryIcon,
-                categoryType = entity.categoryType
-            )
+//            val item = UserCreateCategoryModel(
+//                uid = uidItem,
+//                categoryName = entity.categoryName,
+//                categoryIcon = entity.categoryIcon,
+//                categoryType = entity.categoryType
+//            )
 
-            cloudFirestore.getUserCategoryGastosCollection().document(uidUser!!)
-                .collection(COLLECTION_LIST).document(uidItem).set(item).await()
+            cloudFirestore.getUserCategoryGastosCollection().document(uidUser)
+                .collection(COLLECTION_LIST).document(uidItem).set(
+                    entity.copy(uid = uidItem)
+
+                ).await()
         } catch (e: FirebaseFirestoreException) {
             Log.i(tagData, "Error al crear lista item de categorias de gastos: ${e.message}")
         }
@@ -55,7 +58,8 @@ class UserCategoryGastosFirestore @Inject constructor(
 
     override suspend fun update(entity: UserCreateCategoryModel) {
         try {
-            val uidUser = authFirebaseImp.getCurrentUser()?.uid
+            val uidUser = authFirebaseImp.getCurrentUser()?.uid ?: return
+            val uidItem = entity.uid ?: return
 
             val item = UserCreateCategoryModel(
                 uid = entity.uid,
@@ -64,8 +68,8 @@ class UserCategoryGastosFirestore @Inject constructor(
                 categoryType = entity.categoryType
             )
 
-            cloudFirestore.getUserCategoryGastosCollection().document(uidUser!!)
-                .collection(COLLECTION_LIST).document(entity.uid!!).set(item).await()
+            cloudFirestore.getUserCategoryGastosCollection().document(uidUser)
+                .collection(COLLECTION_LIST).document(uidItem).set(entity).await()
         } catch (e: FirebaseFirestoreException) {
             Log.i(tagData, "Error al actualizar el item de categorias de gastos: ${e.message}")
         }
@@ -73,9 +77,11 @@ class UserCategoryGastosFirestore @Inject constructor(
 
     override suspend fun delete(entity: UserCreateCategoryModel) {
         try {
-            val uidUser = authFirebaseImp.getCurrentUser()?.uid
-            cloudFirestore.getUserCategoryGastosCollection().document(uidUser!!)
-                .collection(COLLECTION_LIST).document(entity.uid!!).delete().await()
+            val uidUser = authFirebaseImp.getCurrentUser()?.uid ?: return
+            val uidItem = entity.uid ?: return
+
+            cloudFirestore.getUserCategoryGastosCollection().document(uidUser)
+                .collection(COLLECTION_LIST).document(uidItem).delete().await()
         } catch (e: FirebaseFirestoreException) {
             Log.i(
                 tagData,
@@ -86,8 +92,9 @@ class UserCategoryGastosFirestore @Inject constructor(
 
     override suspend fun deleteAll() {
         try {
-            val uidUser = authFirebaseImp.getCurrentUser()?.uid
-            val snapshot = cloudFirestore.getUserCategoryGastosCollection().document(uidUser!!)
+            val uidUser = authFirebaseImp.getCurrentUser()?.uid ?: return
+
+            val snapshot = cloudFirestore.getUserCategoryGastosCollection().document(uidUser)
                 .collection(COLLECTION_LIST)
 
             val documents = snapshot.get().await()

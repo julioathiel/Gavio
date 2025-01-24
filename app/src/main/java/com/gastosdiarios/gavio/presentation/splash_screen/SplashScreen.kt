@@ -1,5 +1,6 @@
 package com.gastosdiarios.gavio.presentation.splash_screen
 
+import android.util.Log
 import androidx.compose.foundation.background
 import androidx.compose.foundation.layout.Box
 import androidx.compose.foundation.layout.fillMaxSize
@@ -28,7 +29,7 @@ fun MySplashScreen(
     onToLoginInitScreen: () -> Unit,
 ) {
     val uiState by viewModel.uiState.collectAsState()
-   splashScreen.setKeepOnScreenCondition { uiState.isLoading }
+    splashScreen.setKeepOnScreenCondition { uiState.isLoading == true }
 
 
     LaunchedEffect(
@@ -38,19 +39,20 @@ fun MySplashScreen(
     ) {
         when (uiState.userRegistered) {
             true -> {
-                if (!uiState.isLoading) {
-
-                    if (uiState.securityActivated) {
-                        onToBiometricScreen()
-                    } else {
-                        onToHomeScreen()
-                    }
+                Log.d("SplashViewModel", "User registered: ${uiState.userRegistered}")
+                Log.d("SplashViewModel", "Security activated: ${uiState.securityActivated}")
+                if (uiState.securityActivated == true) {
+                    onToBiometricScreen()
+                } else {
+                    onToHomeScreen()
                 }
             }
 
             false -> {
                 onToLoginInitScreen()
             }
+
+            null -> {}
         }
     }
 

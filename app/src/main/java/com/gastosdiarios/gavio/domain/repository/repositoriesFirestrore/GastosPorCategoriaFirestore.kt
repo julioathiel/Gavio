@@ -19,10 +19,10 @@ class GastosPorCategoriaFirestore @Inject constructor(
     private val tagData = "gastosPorCategoriaFirestore"
 
     override suspend fun get(): List<GastosPorCategoriaModel> {
-        val uidUser = authFirebaseImp.getCurrentUser()?.uid
+        val uidUser = authFirebaseImp.getCurrentUser()?.uid ?: return emptyList()
         return try {
             cloudFirestore.getGastosPorCategoriaCollection()
-                .document(uidUser!!)
+                .document(uidUser)
                 .collection(COLLECTION_LIST)
                 .get()
                 .await()
@@ -37,18 +37,14 @@ class GastosPorCategoriaFirestore @Inject constructor(
 
     override suspend fun create(entity: GastosPorCategoriaModel) {
         try {
-            val uidUser = authFirebaseImp.getCurrentUser()?.uid
+            val uidUser = authFirebaseImp.getCurrentUser()?.uid ?: return
             val uidItem = UUID.randomUUID().toString()
 
-            val createItem = GastosPorCategoriaModel(
-                uid = uidItem,
-                title = entity.title,
-                icon = entity.icon,
-                totalGastado = entity.totalGastado
-            )
-
-            cloudFirestore.getGastosPorCategoriaCollection().document(uidUser!!)
-                .collection(COLLECTION_LIST).document(uidItem).set(createItem).await()
+            cloudFirestore.getGastosPorCategoriaCollection().document(uidUser)
+                .collection(COLLECTION_LIST).document(uidItem)
+                .set(
+                    entity.copy(uid = uidItem)
+                ).await()
         } catch (e: FirebaseFirestoreException) {
             Log.i(tagData, "Error al crear lista item en lista de transacciones: ${e.message}")
         }
@@ -57,17 +53,11 @@ class GastosPorCategoriaFirestore @Inject constructor(
 
     override suspend fun update(entity: GastosPorCategoriaModel) {
         try {
-            val uidUser = authFirebaseImp.getCurrentUser()?.uid
+            val uidUser = authFirebaseImp.getCurrentUser()?.uid ?: return
+            val uidItem = entity.uid ?: return
 
-            val item = GastosPorCategoriaModel(
-                uid = entity.uid,
-                title = entity.title,
-                icon = entity.icon,
-                totalGastado = entity.totalGastado
-            )
-
-            cloudFirestore.getGastosPorCategoriaCollection().document(uidUser!!)
-                .collection(COLLECTION_LIST).document(entity.uid!!).set(item).await()
+            cloudFirestore.getGastosPorCategoriaCollection().document(uidUser)
+                .collection(COLLECTION_LIST).document(uidItem).set(entity).await()
         } catch (e: FirebaseFirestoreException) {
             Log.i(tagData, "Error al actualizar EL ITEM DE GASTOS POR CATEGORIA: ${e.message}")
         }
@@ -76,9 +66,11 @@ class GastosPorCategoriaFirestore @Inject constructor(
 
     override suspend fun delete(entity: GastosPorCategoriaModel) {
         try {
-            val uidUser = authFirebaseImp.getCurrentUser()?.uid
-            cloudFirestore.getGastosPorCategoriaCollection().document(uidUser!!)
-                .collection(COLLECTION_LIST).document(entity.uid!!).delete().await()
+            val uidUser = authFirebaseImp.getCurrentUser()?.uid ?: return
+            val uidItem = entity.uid ?: return
+
+            cloudFirestore.getGastosPorCategoriaCollection().document(uidUser)
+                .collection(COLLECTION_LIST).document(uidItem).delete().await()
         } catch (e: FirebaseFirestoreException) {
             Log.i(
                 tagData,
@@ -89,8 +81,8 @@ class GastosPorCategoriaFirestore @Inject constructor(
 
     override suspend fun deleteAll() {
         try {
-            val uidUser = authFirebaseImp.getCurrentUser()?.uid
-            val snapshot = cloudFirestore.getGastosPorCategoriaCollection().document(uidUser!!)
+            val uidUser = authFirebaseImp.getCurrentUser()?.uid ?: return
+            val snapshot = cloudFirestore.getGastosPorCategoriaCollection().document(uidUser)
                 .collection(COLLECTION_LIST)
 
             val documents = snapshot.get().await().documents

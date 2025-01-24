@@ -21,10 +21,10 @@ class BarDataFirestore @Inject constructor(
 
     override suspend fun get(): List<BarDataModel> {
         return try {
-            val uidUser = authFirebaseImp.getCurrentUser()?.uid
+            val uidUser = authFirebaseImp.getCurrentUser()?.uid ?: return emptyList()
 
             cloudFirestore.getBarDataCollection()
-                .document(uidUser!!)
+                .document(uidUser)
                 .collection(COLLECTION_LIST)
                 .get()
                 .await()
@@ -39,17 +39,18 @@ class BarDataFirestore @Inject constructor(
 
     override suspend fun create(entity: BarDataModel) {
         try {
-            val uidUser = authFirebaseImp.getCurrentUser()?.uid
+            val uidUser = authFirebaseImp.getCurrentUser()?.uid ?: return
             val uidItem = UUID.randomUUID().toString()
 
-            val item = BarDataModel(
-                uid = uidItem,
-                value = entity.value,
-                month = entity.month,
-                money = entity.money,
-            )
-            cloudFirestore.getBarDataCollection().document(uidUser!!)
-                .collection(COLLECTION_LIST).document(uidItem).set(item).await()
+//            val item = BarDataModel(
+//                uid = uidItem,
+//                value = entity.value,
+//                month = entity.month,
+//                money = entity.money,
+//            )
+
+            cloudFirestore.getBarDataCollection().document(uidUser)
+                .collection(COLLECTION_LIST).document(uidItem).set(entity.copy(uid= uidItem)).await()
         } catch (e: FirebaseFirestoreException) {
             Log.i(tag, "Error al crear item en lista de bardata: ${e.message}")
         }
@@ -57,18 +58,13 @@ class BarDataFirestore @Inject constructor(
 
     override suspend fun update(entity: BarDataModel) {
         try {
-            val uidUser = authFirebaseImp.getCurrentUser()?.uid
+            val uidUser = authFirebaseImp.getCurrentUser()?.uid ?: return
+            val uidItem = entity.uid ?: return
 
-            val item = BarDataModel(
-                uid = entity.uid,
-                value = entity.value,
-                month = entity.month,
-                money = entity.money
-            )
-            cloudFirestore.getBarDataCollection().document(uidUser!!)
+            cloudFirestore.getBarDataCollection().document(uidUser)
                 .collection(COLLECTION_LIST)
-                .document(entity.uid!!)
-                .set(item)
+                .document(uidItem)
+                .set(entity)
                 .await()
 
         } catch (e: FirebaseFirestoreException) {
@@ -78,9 +74,11 @@ class BarDataFirestore @Inject constructor(
 
     override suspend fun delete(entity: BarDataModel) {
         try {
-            val uidUser = authFirebaseImp.getCurrentUser()?.uid
-            cloudFirestore.getBarDataCollection().document(uidUser!!)
-                .collection(COLLECTION_LIST).document(entity.uid!!).delete().await()
+            val uidUser = authFirebaseImp.getCurrentUser()?.uid ?: return
+            val uidItem = entity.uid ?: return
+
+            cloudFirestore.getBarDataCollection().document(uidUser)
+                .collection(COLLECTION_LIST).document(uidItem).delete().await()
         } catch (e: FirebaseFirestoreException) {
             Log.e(tag, "Error al eliminar: ${e.message}")
         }
@@ -88,9 +86,10 @@ class BarDataFirestore @Inject constructor(
 
     override suspend fun deleteAll() {
         try {
-            val uidUser = authFirebaseImp.getCurrentUser()?.uid
+            val uidUser = authFirebaseImp.getCurrentUser()?.uid ?: return
+
             val collectionRef = cloudFirestore.getBarDataCollection()
-                .document(uidUser!!)
+                .document(uidUser)
                 .collection(COLLECTION_LIST)
             // Obtener todos los documentos de la colección
             val documents = collectionRef.get().await().documents

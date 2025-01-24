@@ -52,6 +52,7 @@ fun MyAppContent(
             )
         )
     }
+
     var isLoading by remember { mutableStateOf(false) }
     val scope = rememberCoroutineScope()
     if (isLoading) {
@@ -73,32 +74,11 @@ fun MyAppContent(
             composable<RegisterScreen> {
                 RegisterScreen(
                     onToLogin = { email, password ->
-                        //  navController.navigate(Routes.LoginScreen.route + "?email=${email}&password=${password}")
                         navController.navigate(EmailPassword(email, password))
                     }
                 )
             }
-////            composable<EmailPassword>(
-////                Routes.LoginScreen.route + "?email={email}&password={password}",
-////                arguments = listOf(
-////                    navArgument("email") {
-////                        type = NavType.StringType; defaultValue = ""
-////                    },
-////                    navArgument("password") { type = NavType.StringType; defaultValue = "" }
-////                )
-////
-////            ) { backStackEntry ->
-////                val email = requireNotNull(backStackEntry.arguments?.getString("email") ?: "")
-////                val password =
-////                    requireNotNull(backStackEntry.arguments?.getString("password") ?: "")
-////                val args = it.toRoute<EmailPassword>()
-////                EmailPassword(email, password)
-////                LoginScreen(
-////                    email = email,
-////                    password = password,
-////                    navigateToHome = { navController.navigate(HomeScreen) }
-////                )
-////            }
+
             composable<LoginScreen> {
                 LoginScreen(
                     email = "",

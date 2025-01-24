@@ -53,7 +53,7 @@ fun ActualizarMaximoFechaScreen(
         topBar = {
             TopAppBarOnBack(
                 title = stringResource(id = R.string.toolbar_cambio_fecha),
-                containerColor = MaterialTheme.colorScheme.surface,
+                containerColor = MaterialTheme.colorScheme.secondaryContainer,
                 onBack = { onBack() },
             )
         },

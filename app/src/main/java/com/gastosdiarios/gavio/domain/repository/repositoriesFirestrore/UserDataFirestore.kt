@@ -81,7 +81,8 @@ class UserDataFirestore @Inject constructor(
     suspend fun updateSelectedDate(valueSelectedDate: String, valueIsSelectedDate: Boolean) {
         try {
             val uidUser = authFirebaseImp.getCurrentUser()?.uid ?: return
-            val item = hashMapOf<String, Any>(
+
+            val item = mapOf(
                 "selectedDate" to valueSelectedDate,
                 "isSelectedDate" to valueIsSelectedDate
             )
@@ -95,6 +96,7 @@ class UserDataFirestore @Inject constructor(
     suspend fun deleteCurrentMoneyData() {
         try {
             val uidUser = authFirebaseImp.getCurrentUser()?.uid ?: return
+
             val updates = mapOf(
                 "currentMoney" to FieldValue.delete(),
                 "isCurrentMoneyIngresos" to FieldValue.delete()
@@ -108,6 +110,7 @@ class UserDataFirestore @Inject constructor(
     suspend fun deleteSelectedDateData() {
         try {
             val uidUser = authFirebaseImp.getCurrentUser()?.uid ?: return
+
             val updates = mapOf(
                 "selectedDate" to FieldValue.delete(),
                 "isSelectedDate" to FieldValue.delete()

@@ -18,10 +18,10 @@ class GastosProgramadosFirestore @Inject constructor(
     private val tagData = "gastosProgramadosFirestore"
 
     override suspend fun get(): List<GastosProgramadosModel> {
-        val uidUser = authFirebaseImp.getCurrentUser()?.uid
+        val uidUser = authFirebaseImp.getCurrentUser()?.uid ?: return emptyList()
         return try {
             cloudFirestore.getAllGastosProgramadosCollection()
-                .document(uidUser!!)
+                .document(uidUser)
                 .collection(COLLECTION_LIST)
                 .get()
                 .await()
@@ -54,9 +54,11 @@ class GastosProgramadosFirestore @Inject constructor(
 
     override suspend fun delete(entity: GastosProgramadosModel) {
         try {
-            val uidUser = authFirebaseImp.getCurrentUser()?.uid
-            cloudFirestore.getAllGastosProgramadosCollection().document(uidUser!!)
-                .collection(COLLECTION_LIST).document(entity.uid!!).delete().await()
+            val uidUser = authFirebaseImp.getCurrentUser()?.uid ?: return
+            val uidItem = entity.uid ?: return
+
+            cloudFirestore.getAllGastosProgramadosCollection().document(uidUser)
+                .collection(COLLECTION_LIST).document(uidItem).delete().await()
         } catch (e: FirebaseFirestoreException) {
             Log.i(tagData, "Error al eliminar la transacción con ID ${entity.uid}: ${e.message}")
         }
@@ -64,10 +66,11 @@ class GastosProgramadosFirestore @Inject constructor(
 
     override suspend fun update(entity: GastosProgramadosModel) {
         try {
-            val uidUser = authFirebaseImp.getCurrentUser()?.uid
+            val uidUser = authFirebaseImp.getCurrentUser()?.uid ?: return
+            val uidItem = entity.uid ?: return
 
-            cloudFirestore.getAllGastosProgramadosCollection().document(uidUser!!)
-                .collection(COLLECTION_LIST).document(entity.uid!!).set(entity).await()
+            cloudFirestore.getAllGastosProgramadosCollection().document(uidUser)
+                .collection(COLLECTION_LIST).document(uidItem).set(entity).await()
         } catch (e: FirebaseFirestoreException) {
             Log.i(tagData, "Error al actualizar lista de gastos programados: ${e.message}")
         }
@@ -75,12 +78,13 @@ class GastosProgramadosFirestore @Inject constructor(
 
     override suspend fun create(entity: GastosProgramadosModel) {
         try {
-            val uidUser = authFirebaseImp.getCurrentUser()?.uid
+            val uidUser = authFirebaseImp.getCurrentUser()?.uid ?: return
             val uidItem = UUID.randomUUID().toString()
-            val item = entity.copy(uid = uidItem)
 
-            cloudFirestore.getAllGastosProgramadosCollection().document(uidUser!!)
-                .collection(COLLECTION_LIST).document(uidItem).set(item).await()
+            cloudFirestore.getAllGastosProgramadosCollection().document(uidUser)
+                .collection(COLLECTION_LIST).document(uidItem).set(
+                    entity.copy(uid = uidItem)
+                ).await()
         } catch (e: FirebaseFirestoreException) {
             Log.i(tagData, "Error al crear en lista de gastos programados: ${e.message}")
         }
