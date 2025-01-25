@@ -6,6 +6,7 @@ import android.content.Context
 import android.content.pm.PackageManager
 import android.content.res.Resources
 import androidx.appcompat.app.AppCompatActivity
+import androidx.credentials.CredentialManager
 import com.google.firebase.auth.FirebaseAuth
 import com.google.firebase.firestore.FirebaseFirestore
 import com.google.firebase.firestore.ktx.firestore
@@ -25,7 +26,6 @@ object AppModule {
     fun provideFirebaseAuth(): FirebaseAuth {
         return FirebaseAuth.getInstance()
     }
-    
 
     @Provides
     @Singleton
@@ -53,6 +53,12 @@ object AppModule {
     @Singleton
     fun provideMainActivityProvider(mainActivity: AppCompatActivity): AppCompatActivity {
         return mainActivity //deberia eliminar este provide
+    }
+
+    @Provides
+    @Singleton
+    fun provideCredentialManager(application: Application): CredentialManager {
+        return CredentialManager.create(application)
     }
 
 }

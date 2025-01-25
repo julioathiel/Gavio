@@ -1,6 +1,9 @@
 package com.gastosdiarios.gavio.presentation.welcome.initial
 
 import android.content.Context
+import android.content.Intent
+import androidx.activity.compose.ManagedActivityResultLauncher
+import androidx.activity.result.ActivityResult
 import androidx.compose.foundation.Image
 import androidx.compose.foundation.background
 import androidx.compose.foundation.layout.Box
@@ -17,6 +20,7 @@ import androidx.compose.material3.OutlinedButton
 import androidx.compose.material3.Text
 import androidx.compose.material3.TextButton
 import androidx.compose.runtime.Composable
+import androidx.compose.runtime.rememberCoroutineScope
 import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.graphics.Brush
@@ -28,8 +32,17 @@ import androidx.compose.ui.text.font.FontWeight
 import androidx.compose.ui.text.style.TextAlign
 import androidx.compose.ui.unit.dp
 import androidx.compose.ui.unit.sp
+import androidx.credentials.CredentialManager
+import androidx.credentials.GetCredentialRequest
+import androidx.credentials.exceptions.GetCredentialException
+import androidx.credentials.exceptions.NoCredentialException
 import androidx.hilt.navigation.compose.hiltViewModel
 import com.gastosdiarios.gavio.R
+import com.google.android.libraries.identity.googleid.GetSignInWithGoogleOption
+import kotlinx.coroutines.CoroutineScope
+import kotlinx.coroutines.launch
+import java.security.MessageDigest
+import java.util.UUID
 
 @Composable
 fun InitialScreen(
@@ -109,6 +122,7 @@ fun BoxButtons(
     navigateToLogin: () -> Unit,
     navigateToHomeScreen: () -> Unit
 ) {
+    val coroutineScope = rememberCoroutineScope()
     Button(
         onClick = { navigateToRegister() }, modifier = Modifier
             .fillMaxWidth()
@@ -121,7 +135,16 @@ fun BoxButtons(
 
     CustomButton(
         {
-            viewModel.signInWithGoogle(context = context) { success ->
+//            viewModel.signInWithGoogle(context = context) { success ->
+//                if (success) {
+//                    navigateToHomeScreen()
+//                }
+//            }
+            doGoogleSignIn(
+                viewModel,
+                coroutineScope,
+                context
+            ) { success ->
                 if (success) {
                     navigateToHomeScreen()
                 }
@@ -171,6 +194,54 @@ fun CustomButton(onClick: () -> Unit, painter: Painter, title: String) {
                 fontWeight = FontWeight.Bold,
                 color = Color.White
             )
+        }
+    }
+}
+
+private fun doGoogleSignIn(
+    viewModel: InitialViewModel,
+    coroutineScope: CoroutineScope,
+    context: Context,
+    navigateToHomeScreen: (Boolean) -> Unit
+) {
+// 1
+    val credentialManager = CredentialManager.create(context)
+
+    // 2
+    fun getSignInWithGoogleOption(context: Context): GetSignInWithGoogleOption {
+
+        // 2.1
+        val rawNonce = UUID.randomUUID().toString()
+        val bytes = rawNonce.toByteArray()
+        val md = MessageDigest.getInstance("SHA-256")
+        val digest = md.digest(bytes)
+        val hashedNonce = digest.fold("") { str, it ->
+            str + "%02x".format(it)
+        }
+        // 2.2
+        return GetSignInWithGoogleOption.Builder(context.getString(R.string.web_client_id))
+            .setNonce(hashedNonce)
+            .build()
+    }
+
+// 3
+    val googleSignRequest: GetCredentialRequest = GetCredentialRequest.Builder()
+        .addCredentialOption(getSignInWithGoogleOption(context))
+        .build()
+
+    coroutineScope.launch {
+        try {
+// 4
+            val result = credentialManager.getCredential(
+                request = googleSignRequest,
+                context = context,
+            )
+// 5
+            viewModel.handleSignIn(result, navigateToHomeScreen)
+        } catch (e: NoCredentialException) {
+            e.printStackTrace()
+        } catch (e: GetCredentialException) {
+            e.printStackTrace()
         }
     }
 }

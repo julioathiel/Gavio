@@ -23,14 +23,14 @@ class NetworkReceiver(private val context: Context) {
             // Verificar si hay una conexión a internet activa
 //            MainActivity.ConnectivityStatus.isConnected.value = true
             if (IsInternetAvailableUtils.isInternetAvailable(context)) {
-                App.ConnectivityStatus.isConnected.value = true
+               // App.ConnectivityStatus.isConnected.value = true
             }
         }
 
         override fun onLost(network: Network) {
             // La red se ha perdido
             if (!IsInternetAvailableUtils.isInternetAvailable(context)) {
-                App.ConnectivityStatus.isConnected.value = false
+            //    App.ConnectivityStatus.isConnected.value = false
             }
         }
     }

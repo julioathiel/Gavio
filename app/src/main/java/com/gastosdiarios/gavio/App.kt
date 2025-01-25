@@ -13,20 +13,14 @@ import javax.inject.Inject
 class App: Application() {
     @Inject
     lateinit var firebaseAuth: FirebaseAuth
-
-    companion object ConnectivityStatus {
-        var isConnected = mutableStateOf(true)
-       lateinit var auth: FirebaseAuth
-       lateinit var credentialManager: CredentialManager
-        lateinit var networkReceiver: NetworkReceiver
-   }
+    lateinit var credentialManager: CredentialManager
+    private val networkReceiver by lazy { NetworkReceiver(this) }
 
     override fun onCreate() {
         super.onCreate()
         FirebaseApp.initializeApp(this) // Inicializa Firebase aquí
-        networkReceiver = NetworkReceiver(this)
-        networkReceiver.register()
         credentialManager = CredentialManager.create(this)
-        auth = firebaseAuth
+        networkReceiver.register()
+
     }
 }

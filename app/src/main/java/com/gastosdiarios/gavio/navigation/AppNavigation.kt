@@ -1,14 +1,18 @@
 package com.gastosdiarios.gavio.navigation
 
+import androidx.compose.foundation.layout.Box
 import androidx.compose.foundation.layout.fillMaxSize
+import androidx.compose.material3.Button
+import androidx.compose.material3.Text
 import androidx.compose.runtime.Composable
+import androidx.compose.runtime.LaunchedEffect
+import androidx.compose.runtime.collectAsState
 import androidx.compose.runtime.getValue
-import androidx.compose.runtime.mutableStateOf
-import androidx.compose.runtime.remember
 import androidx.compose.runtime.rememberCoroutineScope
-import androidx.compose.runtime.setValue
+import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
 import androidx.core.splashscreen.SplashScreen
+import androidx.hilt.navigation.compose.hiltViewModel
 import androidx.navigation.compose.NavHost
 import androidx.navigation.compose.composable
 import androidx.navigation.compose.rememberNavController
@@ -33,7 +37,6 @@ import com.gastosdiarios.gavio.presentation.transaction.TransactionsScreen
 import com.gastosdiarios.gavio.presentation.welcome.initial.InitialScreen
 import com.gastosdiarios.gavio.presentation.welcome.login.LoginScreen
 import com.gastosdiarios.gavio.presentation.welcome.register.RegisterScreen
-import com.gastosdiarios.gavio.utils.IsInternetAvailableUtils
 import kotlinx.coroutines.delay
 import kotlinx.coroutines.launch
 import kotlin.time.Duration.Companion.seconds
@@ -41,29 +44,63 @@ import kotlin.time.Duration.Companion.seconds
 @Composable
 fun MyAppContent(
     mainActivity: MainActivity,
-    splashScreen: SplashScreen
+    splashScreen: SplashScreen,
+    viewModel: MyAppContentViewmodel = hiltViewModel()
 ) {
     val navController = rememberNavController()
+    val isInternet by viewModel.isInternetAvailable.collectAsState() // Observa desde el ViewModel
+    val isLoading by viewModel.isLoading.collectAsState() // Observa el estado de carga desde el ViewModel
 
-    var isInternet by remember {
-        mutableStateOf(
-            IsInternetAvailableUtils.isInternetAvailable(
-                mainActivity
-            )
-        )
-    }
 
-    var isLoading by remember { mutableStateOf(false) }
     val scope = rememberCoroutineScope()
     if (isLoading) {
         CommonsLoadingScreen(Modifier.fillMaxSize())
     } else if (isInternet) {
+
+//        LaunchedEffect(Unit) {
+//            viewModel.navigationAction.collect { action ->
+//                when (action) {
+//                    NavigationAction.ToSplash -> navController.navigate(SplashScreens)
+//                    NavigationAction.ToLoginInit -> navController.navigate(LoginInitScreen)
+//                    NavigationAction.ToLogin -> navController.navigate(LoginScreen)
+//                    NavigationAction.ToForgotPassword -> navController.navigate(ForgotPasswordScreen)
+//                    NavigationAction.ToRegister -> navController.navigate(RegisterScreen)
+//                    NavigationAction.ToHome -> navController.navigate(HomeScreen)
+//                    NavigationAction.ToAcercaDe -> navController.navigate(AcercaDeScreens)
+//                    NavigationAction.ToActualizarMaximoFecha -> navController.navigate(ActualizarMaximoFechaScreen)
+//                    NavigationAction.ToAjustes -> navController.navigate(AjustesScreen)
+//                    NavigationAction.ToAnalisisGastos -> navController.navigate(AnalisisGastosScreen)
+//                    NavigationAction.ToBiometric -> navController.navigate(BiometricScreen)
+//                    NavigationAction.ToCategory -> navController.navigate(CategoryScreen)
+//                    NavigationAction.ToCongratulations -> navController.navigate(CongratulationsScreen)
+//                    NavigationAction.ToCreateGastosProgramados -> navController.navigate(CreateGastosProgramadosScreen)
+//                    NavigationAction.ToExportarDatos -> navController.navigate(ExportarDatosScreen)
+//                    NavigationAction.ToMenu -> navController.navigate(MenuScreen)
+//                    NavigationAction.ToRecordatorio -> navController.navigate(RecordatorioScreen)
+//                    NavigationAction.ToTransactions -> navController.navigate(TransactionsScreen)
+//                    NavigationAction.ToUserProfile -> navController.navigate(UserProfileScreen)
+//                    NavigationAction.ToPantallaDos -> navController.navigate(PantallasDos.route)
+//                    NavigationAction.ToPantallaUno -> navController.navigate(PantallasUno.route)
+//                    null -> {}
+//                }
+//                viewModel.resetNavigationAction()
+//            }
+//        }
 
         //OTRAS RUTAS PRINCIPALES
         NavHost(
             navController = navController,
             startDestination = SplashScreens
         ) {
+            composable<SplashScreens> {
+                MySplashScreen(
+                    splashScreen = splashScreen,
+                    onToHomeScreen = { navController.navigate(HomeScreen) },
+                    onToBiometricScreen = { navController.navigate(BiometricScreen) },
+                    onToLoginInitScreen = { navController.navigate(LoginInitScreen) }
+                )
+            }
+
             composable<LoginInitScreen> {
                 InitialScreen(
                     navigateToRegister = { navController.navigate(RegisterScreen) },
@@ -96,14 +133,7 @@ fun MyAppContent(
                 )
             }
 
-            composable<SplashScreens> {
-                MySplashScreen(
-                    splashScreen = splashScreen,
-                    onToHomeScreen = { navController.navigate(HomeScreen) },
-                    onToBiometricScreen = { navController.navigate(BiometricScreen) },
-                    onToLoginInitScreen = { navController.navigate(LoginInitScreen) }
-                )
-            }
+
             composable<HomeScreen> {
                 MainScaffold(navController)
             }
@@ -162,13 +192,33 @@ fun MyAppContent(
         }
     } else {
         ConnectivityErrorScreen(onRetry = {
-            isLoading = true
             scope.launch {
-                isInternet = IsInternetAvailableUtils.isInternetAvailable(mainActivity)
+                viewModel.checkInternetConnection(context = mainActivity)
                 delay(5.seconds)
-                isLoading = false
             }
         }
         )
     }
+}
+
+@Composable
+fun PantallaDos(viewModel: MyAppContentViewmodel) {
+    Box(Modifier.fillMaxSize(), contentAlignment = Alignment.Center){
+        Button(onClick = {
+            viewModel.navigateToPantallaUno()
+        }) {
+            Text(text = "Navegar a pantallaUno")
+        }
+    }
+}
+
+@Composable
+fun PantallaUno(viewModel: MyAppContentViewmodel) {
+Box(Modifier.fillMaxSize(), contentAlignment = Alignment.Center){
+    Button(onClick = {
+        viewModel.navigateToPantallaDos()
+    }) {
+        Text(text = "Navegar a pantallaDos")
+    }
+}
 }

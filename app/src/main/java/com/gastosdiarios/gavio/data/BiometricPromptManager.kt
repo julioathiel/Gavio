@@ -1,6 +1,8 @@
 package com.gastosdiarios.gavio.data
 
 
+import android.app.KeyguardManager
+import android.content.Context
 import android.os.Build
 import androidx.appcompat.app.AppCompatActivity
 import androidx.biometric.BiometricManager
@@ -12,7 +14,7 @@ import kotlinx.coroutines.channels.Channel
 import kotlinx.coroutines.flow.receiveAsFlow
 
 
-class BiometricPromptManager(private val activity: AppCompatActivity){
+class BiometricPromptManager(private val activity: AppCompatActivity) {
     private val resultChannel = Channel<BiometricResult>()
     val promptResults = resultChannel.receiveAsFlow()
 
@@ -87,14 +89,23 @@ class BiometricPromptManager(private val activity: AppCompatActivity){
         data object AuthenticationSuccess : BiometricResult
         data object AuthenticationNotSet : BiometricResult
     }
+
     private var canAuth = false
     private lateinit var promptInfo: BiometricPrompt.PromptInfo
 
-    fun showBiometric(activity: AppCompatActivity,title: String, subtitle: String,auth: (canAuth: Boolean) -> Unit) {
-        if (BiometricManager.from(activity)
-                .canAuthenticate(BIOMETRIC_STRONG or DEVICE_CREDENTIAL) == BiometricManager.BIOMETRIC_SUCCESS
-        ) {
-            canAuth = true
+    fun showBiometric(
+        activity: AppCompatActivity,
+        title: String,
+        subtitle: String,
+        auth: (canAuth: Boolean) -> Unit
+    ) {
+        if (Build.VERSION.SDK_INT >= Build.VERSION_CODES.P) {
+            // Usar BiometricPrompt para API 28 y superior
+            if (BiometricManager.from(activity)
+                    .canAuthenticate(BIOMETRIC_STRONG or DEVICE_CREDENTIAL) == BiometricManager.BIOMETRIC_SUCCESS
+            ) {
+                canAuth = true
+            }
         }
 
         promptInfo = BiometricPrompt.PromptInfo.Builder()
@@ -117,5 +128,6 @@ class BiometricPromptManager(private val activity: AppCompatActivity){
             auth(false)
         }
     }
+
 
 }
