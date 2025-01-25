@@ -22,9 +22,16 @@ import javax.inject.Inject
 class CreateGastosProgramadosViewModel @Inject constructor(
     private val gastosProgramadosFirestore: GastosProgramadosFirestore
 ) : ViewModel() {
+
     private val _gastosProgramadosUiState = MutableStateFlow(ListUiState<GastosProgramadosModel>())
     val gastosProgramadosUiState: StateFlow<ListUiState<GastosProgramadosModel>> =
         _gastosProgramadosUiState.asStateFlow()
+
+    private val _isCreate = MutableStateFlow(false)
+    val isCreate: StateFlow<Boolean> = _isCreate.asStateFlow()
+
+    private val _isDelete= MutableStateFlow(false)
+    val isDelete: StateFlow<Boolean> = _isDelete.asStateFlow()
 
     private val _selectionMode = MutableStateFlow(false)
     val selectionMode: StateFlow<Boolean> = _selectionMode
@@ -133,9 +140,6 @@ class CreateGastosProgramadosViewModel @Inject constructor(
         }
     }
 
-    private val _isCreate = MutableStateFlow(false)
-    val isCreate: StateFlow<Boolean> = _isCreate.asStateFlow()
-
 
     fun isCreateTrue() {
         _isCreate.value = true
@@ -143,6 +147,14 @@ class CreateGastosProgramadosViewModel @Inject constructor(
 
     fun isCreateFalse() {
         _isCreate.value = false
+    }
+
+    fun isDeleteTrue() {
+        _isDelete.value = true
+    }
+
+    fun isDeleteFalse() {
+        _isDelete.value = false
     }
 
     // funcion que se usa cuando se edita y se guarda el item

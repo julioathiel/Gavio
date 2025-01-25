@@ -3,12 +3,13 @@ package com.gastosdiarios.gavio.presentation.configuration.categorias_creadas
 import android.util.Log
 import androidx.activity.compose.BackHandler
 import androidx.compose.foundation.layout.Box
+import androidx.compose.foundation.layout.Column
 import androidx.compose.foundation.layout.PaddingValues
 import androidx.compose.foundation.layout.fillMaxSize
-import androidx.compose.foundation.layout.fillMaxWidth
-import androidx.compose.foundation.layout.height
 import androidx.compose.foundation.layout.padding
 import androidx.compose.foundation.lazy.LazyColumn
+import androidx.compose.foundation.pager.HorizontalPager
+import androidx.compose.foundation.pager.rememberPagerState
 import androidx.compose.material.icons.Icons
 import androidx.compose.material.icons.filled.Add
 import androidx.compose.material3.BottomSheetScaffold
@@ -17,14 +18,15 @@ import androidx.compose.material3.FloatingActionButton
 import androidx.compose.material3.Icon
 import androidx.compose.material3.ModalBottomSheet
 import androidx.compose.material3.SheetState
+import androidx.compose.material3.Tab
+import androidx.compose.material3.TabRow
+import androidx.compose.material3.Text
 import androidx.compose.material3.rememberModalBottomSheetState
 import androidx.compose.runtime.Composable
 import androidx.compose.runtime.LaunchedEffect
 import androidx.compose.runtime.collectAsState
 import androidx.compose.runtime.getValue
-import androidx.compose.runtime.mutableStateOf
-import androidx.compose.runtime.remember
-import androidx.compose.runtime.setValue
+import androidx.compose.runtime.rememberCoroutineScope
 import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.unit.dp
@@ -36,24 +38,25 @@ import com.gastosdiarios.gavio.data.commons.CommonsLoadingScreen
 import com.gastosdiarios.gavio.domain.enums.CategoryTypeEnum
 import com.gastosdiarios.gavio.domain.model.CategoryDefaultModel
 import com.gastosdiarios.gavio.domain.model.UserCreateCategoryModel
-import com.gastosdiarios.gavio.presentation.configuration.categorias_creadas.components.BotonGastosIngresosPantallaGastos
 import com.gastosdiarios.gavio.presentation.configuration.categorias_creadas.components.ContentBottomSheet
-import com.gastosdiarios.gavio.presentation.configuration.categorias_creadas.components.ToolbarGastos
 import com.gastosdiarios.gavio.presentation.configuration.categorias_creadas.components.ItemCategory
+import com.gastosdiarios.gavio.presentation.configuration.categorias_creadas.components.ToolbarGastos
+import kotlinx.coroutines.launch
 
 @OptIn(ExperimentalMaterial3Api::class)
 @Composable
 fun CategoryScreen(
     viewModel: CategoryViewModel = hiltViewModel(),
-    categoryType: CategoryTypeEnum,
     onBack: () -> Unit
 ) {
     // ... (Lógica común para ambas pantallas) ...
     //al presion el boton fisico de retoceso, se dirige a la pantalla de configuracion
     BackHandler { onBack() }
-    var categoryTypes by remember { mutableStateOf(categoryType) }
+
     val uiStateDefault by viewModel.uiStateDefault.collectAsState()
     val sheetState = rememberModalBottomSheetState(skipPartiallyExpanded = true)
+    val pagerState = rememberPagerState(initialPage = 0, pageCount = { 2 })
+    val coroutineScope = rememberCoroutineScope()
 
     LaunchedEffect(Unit) {
         viewModel.getAllGastos()
@@ -64,60 +67,79 @@ fun CategoryScreen(
         uiStateDefault = uiStateDefault,
         viewModel = viewModel,
         sheetState = sheetState,
-        categoryTypes = categoryTypes,
+        categoryTypes = if (pagerState.currentPage == 0) CategoryTypeEnum.INGRESOS else CategoryTypeEnum.GASTOS,
         onBack = { onBack() },
-        content = {
-            BotonGastosIngresosPantallaGastos(
-                Modifier
-                    .fillMaxWidth()
-                    .height(51.dp)
-                    .padding(horizontal = 16.dp)
-            ) { tipoClase ->
-                categoryTypes =
-                    if (tipoClase == CategoryTypeEnum.INGRESOS) CategoryTypeEnum.INGRESOS else CategoryTypeEnum.GASTOS
-            }
-            when (categoryTypes) {
-                CategoryTypeEnum.INGRESOS -> {
-                    val ingresosActions = object : CategoryActions {
-                        override fun onEditClick(
-                            item: UserCreateCategoryModel,
-                            iconSelect: Int
-                        ) {
-                            viewModel.selectedParaEditar(item, iconSelect)
-                        }
+        content = { paddingValues ->
 
-                        override fun onDeleteClick(item: UserCreateCategoryModel) {
-                            viewModel.eliminarItemSelected(item, typeCategory = categoryTypes)
-                        }
-                    }
-                    // Contenido para la pantalla de ingresos
-                    StateContentCategoryIngresos(
-                        viewModel = viewModel,
-                        ingresosActions = ingresosActions,
-                        modifier = Modifier
-                            .padding(it)
+            Column(modifier = Modifier.padding(paddingValues)) {
+                TabRow(selectedTabIndex = pagerState.currentPage) {
+                    Tab(
+                        selected = pagerState.currentPage == 0,
+                        onClick = {
+                            coroutineScope.launch {
+                                pagerState.animateScrollToPage(0)
+                            }
+                        },
+                        text = { Text("Ingresos") }
+                    )
+                    Tab(
+                        selected = pagerState.currentPage == 1,
+                        onClick = {
+                            coroutineScope.launch {
+                                pagerState.animateScrollToPage(1)
+                            }
+                        },
+                        text = { Text("Gastos") }
                     )
                 }
+                HorizontalPager(state = pagerState) { page ->
+                    when (page) {
+                        0 -> { // Ingresos tab
+                            val ingresosActions = object : CategoryActions {
+                                override fun onEditClick(
+                                    item: UserCreateCategoryModel,
+                                    iconSelect: Int
+                                ) {
+                                    viewModel.selectedParaEditar(item, iconSelect)
+                                }
 
-                CategoryTypeEnum.GASTOS -> {
-                    val gastosActions = object : CategoryActions {
-                        override fun onEditClick(
-                            item: UserCreateCategoryModel,
-                            iconSelect: Int
-                        ) {
-                            viewModel.selectedParaEditar(item, iconSelect)
+                                override fun onDeleteClick(item: UserCreateCategoryModel) {
+                                    viewModel.eliminarItemSelected(
+                                        item,
+                                        typeCategory = CategoryTypeEnum.INGRESOS
+                                    )
+                                }
+                            }
+                            StateContentCategoryIngresos(
+                                viewModel,
+                                ingresosActions,
+                                Modifier.fillMaxSize()
+                            )
                         }
 
-                        override fun onDeleteClick(item: UserCreateCategoryModel) {
-                            viewModel.eliminarItemSelected(item, typeCategory = categoryTypes)
+                        1 -> { // Gastos tab
+                            val gastosActions = object : CategoryActions {
+                                override fun onEditClick(
+                                    item: UserCreateCategoryModel,
+                                    iconSelect: Int
+                                ) {
+                                    viewModel.selectedParaEditar(item, iconSelect)
+                                }
+
+                                override fun onDeleteClick(item: UserCreateCategoryModel) {
+                                    viewModel.eliminarItemSelected(
+                                        item,
+                                        typeCategory = CategoryTypeEnum.GASTOS
+                                    )
+                                }
+                            }
+                            StateContentCategoryGastos(
+                                viewModel,
+                                gastosActions,
+                                Modifier.fillMaxSize()
+                            )
                         }
                     }
-                    // Contenido para la pantalla de gastos
-                    StateContentCategoryGastos(
-                        viewModel = viewModel,
-                        gastosActions = gastosActions,
-                        modifier = Modifier.padding(it)
-                    )
                 }
             }
         }
@@ -244,6 +266,7 @@ fun PantallaDeCategoriasCreadas(
         }
     )
 }
+
 @Composable
 fun ListContentTypeCategory(
     uiState: List<UserCreateCategoryModel>,
@@ -252,11 +275,7 @@ fun ListContentTypeCategory(
     modifier: Modifier,
 ) {
     viewModel.isActivatedTrue()
-    Box(
-        modifier
-            .fillMaxSize()
-            .padding(top = 56.dp)
-    ) {
+    Box(modifier) {
         LazyColumn(horizontalAlignment = Alignment.CenterHorizontally) {
             items(uiState.size) { nuevoItem ->
                 val item = uiState[nuevoItem]
@@ -280,6 +299,6 @@ fun ContentCategoryEmpty(viewModel: CategoryViewModel, modifier: Modifier) {
     CommonsEmptyFloating(
         onClick = {
             viewModel.onDismissSet(true)
-        }, modifier = modifier.padding(top = 56.dp)
+        }, modifier = modifier
     )
 }

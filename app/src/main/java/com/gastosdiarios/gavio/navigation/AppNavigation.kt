@@ -163,11 +163,7 @@ fun MyAppContent(
             }
 
             composable<CategoryScreen> {
-                CategoryScreen(
-                    categoryType = CategoryTypeEnum.GASTOS,
-                    // onBack = { navController.navigate(Routes.ConfigurationScreen.route) }
-                    onBack = { navController.popBackStack() }
-                )
+                CategoryScreen(onBack = { navController.popBackStack() })
             }
 
             composable<CreateGastosProgramadosScreen> {

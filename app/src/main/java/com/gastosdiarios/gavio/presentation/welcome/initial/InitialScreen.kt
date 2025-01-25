@@ -1,9 +1,6 @@
 package com.gastosdiarios.gavio.presentation.welcome.initial
 
 import android.content.Context
-import android.content.Intent
-import androidx.activity.compose.ManagedActivityResultLauncher
-import androidx.activity.result.ActivityResult
 import androidx.compose.foundation.Image
 import androidx.compose.foundation.background
 import androidx.compose.foundation.layout.Box

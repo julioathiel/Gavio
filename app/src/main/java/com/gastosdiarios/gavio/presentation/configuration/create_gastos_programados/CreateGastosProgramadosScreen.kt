@@ -47,6 +47,7 @@ import com.gastosdiarios.gavio.domain.enums.CategoryTypeEnum
 import com.gastosdiarios.gavio.domain.enums.Modo
 import com.gastosdiarios.gavio.domain.model.modelFirebase.GastosProgramadosModel
 import com.gastosdiarios.gavio.presentation.configuration.create_gastos_programados.components.ContentBottomSheetGastosProgramados
+import com.gastosdiarios.gavio.presentation.configuration.create_gastos_programados.components.DialogDelete
 import com.gastosdiarios.gavio.utils.CurrencyUtils
 import com.gastosdiarios.gavio.utils.DateUtils
 
@@ -61,6 +62,7 @@ fun CreateGastosProgramadosScreen(
     val selectionMode: Boolean by viewModel.selectionMode.collectAsState()
     val selectedItems: List<GastosProgramadosModel> by viewModel.selectedItems.collectAsState()
     val isCreate by viewModel.isCreate.collectAsState()
+    val isDelete by viewModel.isDelete.collectAsState()
 
     BottomSheetScaffold(
         topBar = {
@@ -71,9 +73,9 @@ fun CreateGastosProgramadosScreen(
                 actions = {
                     if (selectionMode && selectedItems.size > 1) {
                         IconButton(onClick = {
-                            selectedItems.forEach { item ->
-                                viewModel.deleteItemSelected(item)
-                            }
+                           selectedItems.forEach { item ->
+                               viewModel.deleteItemSelected(item)
+                           }
                         }) {
                             Icon(imageVector = Icons.Default.Delete, contentDescription = "delete")
                         }
@@ -83,9 +85,7 @@ fun CreateGastosProgramadosScreen(
                         }
 
                         IconButton(onClick = {
-                            selectedItems.forEach { item ->
-                                viewModel.deleteItemSelected(item)
-                            }
+                            viewModel.isDeleteTrue()
                         }) {
                             Icon(imageVector = Icons.Default.Delete, contentDescription = "delete")
                         }
@@ -138,7 +138,7 @@ fun CreateGastosProgramadosScreen(
                             .fillMaxSize()
                             .padding(paddingValues)
                     ) {
-                       val expandedItem by viewModel.expandedItem.collectAsState()
+                        val expandedItem by viewModel.expandedItem.collectAsState()
                         LazyColumn(modifier = Modifier.fillMaxSize()) {
                             items(uiState.items, key = { it.uid ?: it.hashCode() }) { item ->
                                 val isSelected = selectedItem.any { it.uid == item.uid }
@@ -156,16 +156,20 @@ fun CreateGastosProgramadosScreen(
                             }
                         }
                         //si ahy un elemento seleccionado, desaparece el boton de agregar
-                        if(!selectionMode){
+                        if (!selectionMode) {
                             FloatingActionButton(
                                 onClick = { viewModel.isCreateTrue() },
                                 Modifier
                                     .align(Alignment.BottomEnd)
-                                    .padding(dimensionResource(id = R.dimen.padding_medium)
+                                    .padding(
+                                        dimensionResource(id = R.dimen.padding_medium)
                                     ),
                                 containerColor = MaterialTheme.colorScheme.primary
                             ) {
-                                Icon(imageVector = Icons.Default.Add, contentDescription = "agregar")
+                                Icon(
+                                    imageVector = Icons.Default.Add,
+                                    contentDescription = "agregar"
+                                )
                             }
                         }
                     }
@@ -174,6 +178,15 @@ fun CreateGastosProgramadosScreen(
             }
         }
     )
+
+    DialogDelete(isDelete, onDismiss = { viewModel.isDeleteFalse() },
+        onConfirm = {
+            selectedItems.forEach { item ->
+                viewModel.deleteItemSelected(item)
+            }
+        }
+    )
+
 }
 
 
@@ -211,9 +224,11 @@ fun ReplyEmailListItem(
             )
             .padding(start = 16.dp, end = 16.dp, top = 5.dp, bottom = 20.dp)
     ) {
-        Box(Modifier.background(
-            MaterialTheme.colorScheme.surfaceContainer,
-            shape = RoundedCornerShape(10.dp))
+        Box(
+            Modifier.background(
+                MaterialTheme.colorScheme.surfaceContainer,
+                shape = RoundedCornerShape(10.dp)
+            )
         ) {
             ProfileIcon(
                 drawableResource = icon,
@@ -233,12 +248,13 @@ fun ReplyEmailListItem(
                     .align(Alignment.BottomEnd)
             ) {
                 if (isSelected) {
-                    Icon(imageVector = Icons.Default.Done, contentDescription = "selected",
+                    Icon(
+                        imageVector = Icons.Default.Done, contentDescription = "selected",
                         tint = MaterialTheme.colorScheme.onSecondaryContainer,
                         modifier = Modifier
                             .size(20.dp)
                             .padding(2.dp)
-                        )
+                    )
 
                 }
             }

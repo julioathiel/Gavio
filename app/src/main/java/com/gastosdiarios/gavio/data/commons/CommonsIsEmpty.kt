@@ -29,7 +29,7 @@ fun CommonsIsEmpty() {
             painter = painterResource(id = R.drawable.ic_no_data),
             contentDescription = null,
             modifier = Modifier
-                .size(200.dp)
+                .size(100.dp)
                 .align(Alignment.CenterHorizontally)
         )
      //   CommonsLoaderData(modifier = Modifier.size(300.dp), image = R.raw.no_data_lottie, repeat = true)
