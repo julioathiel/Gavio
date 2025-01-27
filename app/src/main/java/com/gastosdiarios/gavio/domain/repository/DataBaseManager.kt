@@ -40,10 +40,17 @@ class DataBaseManager @Inject constructor(
     suspend fun getUserPreferences(): UserPreferences? = userPreferencesFirestore.get()
     suspend fun getBarDataGraph(): List<BarDataModel> = barDataFirestore.get()
     suspend fun getTransactions(): List<TransactionModel> = transactionsFirestore.get()
-    suspend fun getGastosPorCategoria(): List<GastosPorCategoriaModel> = gastosPorCategoriaFirestore.get()
-    suspend fun getUserCategoryGastos(): List<UserCreateCategoryModel> = userCategoryGastosFirestore.get()
-    suspend fun getUserCategoryIngresos(): List<UserCreateCategoryModel> = userCategoryIngresosFirestore.get()
-    suspend fun getGastosProgramados(): List<GastosProgramadosModel> = gastosProgramadosFirestore.get()
+    suspend fun getGastosPorCategoria(): List<GastosPorCategoriaModel> =
+        gastosPorCategoriaFirestore.get()
+
+    suspend fun getUserCategoryGastos(): List<UserCreateCategoryModel> =
+        userCategoryGastosFirestore.get()
+
+    suspend fun getUserCategoryIngresos(): List<UserCreateCategoryModel> =
+        userCategoryIngresosFirestore.get()
+
+    suspend fun getGastosProgramados(): List<GastosProgramadosModel> =
+        gastosProgramadosFirestore.get()
     //----------------------------------------------//
 
     //FUNCION PARA LA PANTALLA DE TRANSACTIONS
@@ -66,10 +73,10 @@ class DataBaseManager @Inject constructor(
 
     //----------------------------------------------//
 
-  //  suspend fun deleteCurrentMoney() = currentMoneyFirestore.delete()
+    //  suspend fun deleteCurrentMoney() = currentMoneyFirestore.delete()
     suspend fun deleteAllTransactions() = transactionsFirestore.deleteAll()
     suspend fun deleteAllGastosPorCategory() = gastosPorCategoriaFirestore.deleteAll()
-
+    suspend fun deleteAllGastosProgramados() = gastosProgramadosFirestore.deleteAll()
 
     suspend fun deleteTransaction(item: TransactionModel) {
         transactionsFirestore.delete(item)
@@ -89,17 +96,19 @@ class DataBaseManager @Inject constructor(
     suspend fun updateCurrentMoney(currentMoney: Double, currentMoneyIsZero: Boolean) {
         userDataFirestore.updateCurrentMoney(currentMoney, currentMoneyIsZero)
     }
+
     suspend fun updateTotalGastos(totalGastos: Double) {
         userDataFirestore.updateTotalGastos(totalGastos)
     }
+
     suspend fun updateTotalIngresos(totalIngresos: Double) {
         userDataFirestore.updateTotalIngresos(totalIngresos)
     }
+
     suspend fun updateSelectedDate(selectedDate: String, isSelectedDate: Boolean) {
-        userDataFirestore.updateSelectedDate(selectedDate,isSelectedDate)
+        userDataFirestore.updateSelectedDate(selectedDate, isSelectedDate)
     }
     //-------------------------------------------------------------------------//
-
 
 
     //-----------------------USER PREFERENCES FIRESTORE-----------------------//
@@ -110,13 +119,15 @@ class DataBaseManager @Inject constructor(
     suspend fun updateBiometricSecurity(value: Boolean) {
         userPreferencesFirestore.updateBiometricSecurity(value)
     }
+
     suspend fun updateThemeMode(value: ThemeMode) {
         userPreferencesFirestore.updateThemeMode(value)
     }
 
-    suspend fun updateHourMinute(hour: Int, minute: Int){
+    suspend fun updateHourMinute(hour: Int, minute: Int) {
         userPreferencesFirestore.updateHourMinute(hour, minute)
     }
+
     //-------------------------------------------------------------------------//
 
 }

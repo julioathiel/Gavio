@@ -77,6 +77,12 @@ class ConfigurationViewModel @Inject constructor(
         }
     }
 
+    private fun deleteGastosProgramados() {
+        viewModelScope.launch(Dispatchers.IO) {
+            dbm.deleteAllGastosProgramados()
+        }
+    }
+
     fun clearDatabase() = resetData()
 
 
@@ -110,5 +116,8 @@ class ConfigurationViewModel @Inject constructor(
             "Categorías de gastos creadas",
             ::deleteUserCreaCatGastos
         ),
+        OpcionEliminarModel("Gastos programados",
+            ::deleteGastosProgramados
+        )
     )
 }
