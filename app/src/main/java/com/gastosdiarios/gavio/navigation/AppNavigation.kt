@@ -5,7 +5,6 @@ import androidx.compose.foundation.layout.fillMaxSize
 import androidx.compose.material3.Button
 import androidx.compose.material3.Text
 import androidx.compose.runtime.Composable
-import androidx.compose.runtime.LaunchedEffect
 import androidx.compose.runtime.collectAsState
 import androidx.compose.runtime.getValue
 import androidx.compose.runtime.rememberCoroutineScope
@@ -20,7 +19,6 @@ import androidx.navigation.toRoute
 import com.gastosdiarios.gavio.MainActivity
 import com.gastosdiarios.gavio.data.commons.CommonsLoadingScreen
 import com.gastosdiarios.gavio.data.commons.ConnectivityErrorScreen
-import com.gastosdiarios.gavio.domain.enums.CategoryTypeEnum
 import com.gastosdiarios.gavio.main_scaffold.scaffold.MainScaffold
 import com.gastosdiarios.gavio.presentation.biometric.BiometricScreen
 import com.gastosdiarios.gavio.presentation.configuration.acerca_de.AcercaDeScreen

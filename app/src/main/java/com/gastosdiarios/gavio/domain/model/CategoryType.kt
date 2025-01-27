@@ -1,6 +1,6 @@
 package com.gastosdiarios.gavio.domain.model
 
-import com.gastosdiarios.gavio.domain.enums.CategoryTypeEnum
+import com.gastosdiarios.gavio.domain.enums.TipoTransaccion
 
 data class CategoryDefaultModel(
     val uid: String = "",
@@ -9,6 +9,6 @@ data class CategoryDefaultModel(
     val isActivated: Boolean = false,
     val isSelectedEditItem: Boolean = false,
     val errorConectionInternet: Boolean = false,
-    val categoryType: CategoryTypeEnum? = null,
+    val categoryType: TipoTransaccion? = null,
     val selectedCategory: CategoryCreate? = null,
 )

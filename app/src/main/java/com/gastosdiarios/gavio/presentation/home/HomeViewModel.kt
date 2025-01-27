@@ -12,6 +12,7 @@ import com.gastosdiarios.gavio.bar_graph_custom.CircularBuffer
 import com.gastosdiarios.gavio.data.constants.Constants.LIMIT_MONTH
 import com.gastosdiarios.gavio.data.ui_state.HomeUiState
 import com.gastosdiarios.gavio.data.ui_state.ListUiState
+import com.gastosdiarios.gavio.domain.enums.TipoTransaccion
 import com.gastosdiarios.gavio.domain.model.CategoryGastos
 import com.gastosdiarios.gavio.domain.model.CategoryIngresos
 import com.gastosdiarios.gavio.domain.model.RefreshDataModel
@@ -68,6 +69,9 @@ class HomeViewModel @Inject constructor(
 
     private val tag = "homeViewModel"
 
+    private val _snackbarMessage = MutableStateFlow<Int?>(null)
+    val snackbarMessage: StateFlow<Int?> get() = _snackbarMessage
+
     private val _homeUiState = MutableStateFlow(HomeUiState())
     val homeUiState: StateFlow<HomeUiState> = _homeUiState.asStateFlow()
 
@@ -87,7 +91,7 @@ class HomeViewModel @Inject constructor(
     }.stateIn(viewModelScope, SharingStarted.WhileSubscribed(5000L), false)
 
 
-     private fun calculandoInit() {
+    private fun calculandoInit() {
         viewModelScope.launch {
             _isLoading.update { true }
             try {
@@ -130,7 +134,7 @@ class HomeViewModel @Inject constructor(
                                     categoryName = getString(R.string.saldo_restante),
                                     description = "",
                                     categoryIcon = R.drawable.ic_sueldo,
-                                    isChecked = true
+                                    tipo = TipoTransaccion.INGRESOS
                                 )
                                 //actualizando con el nuevo valor maximo del progress
                                 _homeUiState.update {
@@ -170,13 +174,9 @@ class HomeViewModel @Inject constructor(
     }
 
     private fun reseteandoProgress() {
-        //si el usuario gasto el dinero antes del dia de la fecha elegida
         viewModelScope.launch {
-            dbm.deleteAllTransactions()
-            gastosPorCategoriaFirestore.deleteAll()
-            updateIngresos(0.0)
-            dbm.updateTotalGastos(0.0)
-            dbm.updateCurrentMoney(0.0, false)
+            //si el usuario gasto el dinero antes del dia de la fecha elegida
+            dbm.updateAllApp()
         }
     }
 
@@ -186,7 +186,7 @@ class HomeViewModel @Inject constructor(
             updateDate(nuevoMes.toString())
             // Eliminar la lista solo si no estamos en el último día del mes actual
             if (nuevoMes > fechaActual) {
-                gastosPorCategoriaFirestore.deleteAll()
+                dbm.deleteAllGastosPorCategory()
             }
         }
     }
@@ -303,7 +303,7 @@ class HomeViewModel @Inject constructor(
     private fun getMaxDate() {
         viewModelScope.launch {
             //obteniendo fecha guardada maxima por el usuario
-            val data:Int = dbm.getUserPreferences()?.limitMonth ?: 0
+            val data: Int = dbm.getUserPreferences()?.limitMonth ?: 0
             _homeUiState.update { it.copy(limitMonth = data) }
         }
     }
@@ -320,15 +320,15 @@ class HomeViewModel @Inject constructor(
     }
 
     //...FUNCION QUE SE USA CUANDO SE CREA UNA TRANSACTION
-    fun cantidadIngresada(cantidadIngresada: String, userSelected: Boolean) {
+    fun cantidadIngresada(cantidadIngresada: String, tipoTransaccion: TipoTransaccion) {
         _homeUiState.update { _homeUiState.value.copy(cantidadIngresada = cantidadIngresada) }
-        calulatorDialog(cantidadIngresada.toDouble(), userSelected)
+        calulatorDialog(cantidadIngresada.toDouble(), tipoTransaccion)
     }
 
     //...FUNCION QUE SE USA PARA CALCULAR TOTALiNGRESOS, TOTALgASTOS, CURRENTMONEY
     private fun calulatorDialog(
         cantidadIngresada: Double,
-        userSelected: Boolean
+        tipoTransaccion: TipoTransaccion
     ) {
         viewModelScope.launch {
             val data = dbm.getUserData()
@@ -338,13 +338,13 @@ class HomeViewModel @Inject constructor(
             val isCurrentMoneyChecked = data?.isCurrentMoneyChecked ?: false
             val date = data?.selectedDate ?: ""
 
-            val nuevoTotal = when (userSelected) {
-                true -> addDiner(cantidadIngresada, totalIngresos)
+            val nuevoTotal = when (tipoTransaccion) {
+                TipoTransaccion.INGRESOS -> addDiner(cantidadIngresada, totalIngresos)
                 else -> addDiner(cantidadIngresada, totalGastos)
             }
 
-            val dinerActual = when (userSelected) {
-                true -> addDiner(cantidadIngresada, currentMoney)
+            val dinerActual = when (tipoTransaccion) {
+                TipoTransaccion.INGRESOS -> addDiner(cantidadIngresada, currentMoney)
                 else -> maxOf(
                     restarDinero(cantidadIngresada.toString(), currentMoney),
                     0.0
@@ -352,18 +352,19 @@ class HomeViewModel @Inject constructor(
             }
 
             //si el usuario eligio ingresos
-            when (userSelected) {
-                true -> if (isCurrentMoneyChecked) {
+            when (tipoTransaccion) {
+                TipoTransaccion.INGRESOS -> if (isCurrentMoneyChecked) {
                     //data.checked es true entonces significa que no hay nada aun guardado
                     insertPrimerTotalIngresos(nuevoTotal)
-                } else {
+                }
+                else {
                     //Si el usuario eligio Ingresos pero en data.isChecked es false
                     // significa que ya hay datos guardados, por ende se actualizaran los ingresos
                     // Si ya hay datos en db se actualiza el totalIngresos
                     updateIngresos(nuevoTotal)
                 }
                 //Si el usuario eligio Gastos
-                false -> {
+                TipoTransaccion.GASTOS -> {
                     //si el usuario eligio gastos
                     if (dinerActual == 0.0 && nuevoTotal > 0.0) {
                         //reseteando el progress
@@ -425,7 +426,7 @@ class HomeViewModel @Inject constructor(
 
     private fun insertDate(fecha: String) {
         viewModelScope.launch {
-           dbm.updateSelectedDate(fecha, false)
+            dbm.updateSelectedDate(fecha, false)
             _homeUiState.update { _homeUiState.value.copy(fechaElegida = fecha) }
             mostrandoAlUsuario(fecha)
             mostrarDiasRestantes(fecha)
@@ -547,7 +548,7 @@ class HomeViewModel @Inject constructor(
         categoryName: String,
         description: String,
         categoryIcon: Int,
-        isChecked: Boolean
+        tipo: TipoTransaccion,
     ) {
 
         viewModelScope.launch {
@@ -559,7 +560,7 @@ class HomeViewModel @Inject constructor(
                     title = categoryName,
                     subTitle = description,
                     cash = cantidad,
-                    select = isChecked,
+                    tipo = tipo,
                     date = obtenerFechaActual().toString(),
                     icon = categoryIcon.toString(),
                     index = newIndex
@@ -590,7 +591,7 @@ class HomeViewModel @Inject constructor(
                 _homeUiState.update {
                     _homeUiState.value.copy(
                         buttonIngresosActivated = 1,// el boton ingreso esta activado
-                        isChecked = true,// el menu de ingresos esta activado
+                        tipoTransaccion = TipoTransaccion.INGRESOS,// el menu de ingresos esta activado
                         enabledButtonGastos = false //el boton de gastos esta desactivado
                     )
                 }
@@ -598,7 +599,7 @@ class HomeViewModel @Inject constructor(
                 _homeUiState.update {
                     _homeUiState.value.copy(
                         buttonIngresosActivated = 0,// el boton gastos esta activado
-                        isChecked = false,// el menu de gastos esta activado
+                        tipoTransaccion = TipoTransaccion.GASTOS,// el menu de gastos esta activado = false,// el menu de gastos esta activado
                         enabledButtonGastos = true //el boton de gastos esta activado
                     )
                 }
@@ -616,12 +617,12 @@ class HomeViewModel @Inject constructor(
         }
     }
 
-    fun setIsChecked(value: Boolean) {
-        _homeUiState.update { _homeUiState.value.copy(isChecked = value) }
+    fun setIsChecked(value: TipoTransaccion) {
+        _homeUiState.update { it.copy(tipoTransaccion = value) }
     }
 
     fun setShowNuevoMes(value: Boolean) {
-        _homeUiState.update { _homeUiState.value.copy(showNuevoMes = value) }
+        _homeUiState.update { it.copy(showNuevoMes = value) }
     }
 
     private fun getString(idRecurso: Int): String {
@@ -634,17 +635,24 @@ class HomeViewModel @Inject constructor(
     fun pagarItem(item: GastosProgramadosModel) {
         viewModelScope.launch {
             try {
-                clearItem(item)
-                crearTransaction(
-                    cantidad = item.cash ?: "",
-                    categoryName = item.title ?: "",
-                    description = item.subTitle ?: "",
-                    categoryIcon = item.icon?.toInt() ?: 0,
-                    isChecked = false
-                )
-                val nuevoMes: String =
-                    DateUtils.toLocalDate(item.date ?: "").plusMonths(1).toString()
-                gastosProgramadosFirestore.update(item.copy(date = nuevoMes))
+                val data = dbm.getUserData()
+                val totalIngresos: Double = data?.totalIngresos ?: 0.0
+                val cash: Double = item.cash?.toDouble() ?: 0.0
+
+                if (totalIngresos == 0.0) {
+                    _snackbarMessage.value = R.string.no_hay_dinero_para_un_gasto
+                } else if (totalIngresos < cash) {
+                    _snackbarMessage.value = R.string.agrega_mas_dinero_antes_de_pagar
+                } else {
+                    clearItem(item)
+                    crearTransaction(
+                        cantidad = item.cash ?: "",
+                        categoryName = item.title ?: "",
+                        description = item.subTitle ?: "",
+                        categoryIcon = item.icon?.toInt() ?: 0,
+                        tipo = TipoTransaccion.GASTOS
+                    )
+                }
             } catch (e: Exception) {
                 Toast.makeText(context, "Error en pagarItem", Toast.LENGTH_SHORT).show()
                 Log.e(tag, "Error en pagarItem", e)

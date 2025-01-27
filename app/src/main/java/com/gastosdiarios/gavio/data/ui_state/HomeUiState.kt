@@ -1,6 +1,7 @@
 package com.gastosdiarios.gavio.data.ui_state
 
 import android.net.Uri
+import com.gastosdiarios.gavio.domain.enums.TipoTransaccion
 
 data class HomeUiState(
     val selectedImageUri: Uri? = null,
@@ -17,7 +18,7 @@ data class HomeUiState(
     val limitePorDia:Double = 0.0,
     val enabledButtonGastos: Boolean = false,
     val showTransaction:Boolean = false,
-    val isChecked: Boolean = false,
+    val tipoTransaccion: TipoTransaccion? = null,
     val agregar: Boolean = false,
     val editar: Boolean = false,
     val showNuevoMes: Boolean = false,

@@ -35,7 +35,7 @@ import androidx.hilt.navigation.compose.hiltViewModel
 import com.gastosdiarios.gavio.data.commons.CommonsEmptyFloating
 import com.gastosdiarios.gavio.data.commons.CommonsLoadingData
 import com.gastosdiarios.gavio.data.commons.CommonsLoadingScreen
-import com.gastosdiarios.gavio.domain.enums.CategoryTypeEnum
+import com.gastosdiarios.gavio.domain.enums.TipoTransaccion
 import com.gastosdiarios.gavio.domain.model.CategoryDefaultModel
 import com.gastosdiarios.gavio.domain.model.UserCreateCategoryModel
 import com.gastosdiarios.gavio.presentation.configuration.categorias_creadas.components.ContentBottomSheet
@@ -67,7 +67,7 @@ fun CategoryScreen(
         uiStateDefault = uiStateDefault,
         viewModel = viewModel,
         sheetState = sheetState,
-        categoryTypes = if (pagerState.currentPage == 0) CategoryTypeEnum.INGRESOS else CategoryTypeEnum.GASTOS,
+        categoryTypes = if (pagerState.currentPage == 0) TipoTransaccion.INGRESOS else TipoTransaccion.GASTOS,
         onBack = { onBack() },
         content = { paddingValues ->
 
@@ -106,7 +106,7 @@ fun CategoryScreen(
                                 override fun onDeleteClick(item: UserCreateCategoryModel) {
                                     viewModel.eliminarItemSelected(
                                         item,
-                                        typeCategory = CategoryTypeEnum.INGRESOS
+                                        typeCategory = TipoTransaccion.INGRESOS
                                     )
                                 }
                             }
@@ -129,7 +129,7 @@ fun CategoryScreen(
                                 override fun onDeleteClick(item: UserCreateCategoryModel) {
                                     viewModel.eliminarItemSelected(
                                         item,
-                                        typeCategory = CategoryTypeEnum.GASTOS
+                                        typeCategory = TipoTransaccion.GASTOS
                                     )
                                 }
                             }
@@ -229,7 +229,7 @@ fun PantallaDeCategoriasCreadas(
     uiStateDefault: CategoryDefaultModel,
     viewModel: CategoryViewModel,
     sheetState: SheetState,
-    categoryTypes: CategoryTypeEnum,
+    categoryTypes: TipoTransaccion,
     onBack: () -> Unit,
     content: @Composable (PaddingValues) -> Unit = {},
 ) {

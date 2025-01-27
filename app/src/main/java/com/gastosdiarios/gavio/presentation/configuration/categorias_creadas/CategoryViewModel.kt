@@ -4,7 +4,7 @@ import android.content.Context
 import androidx.lifecycle.ViewModel
 import androidx.lifecycle.viewModelScope
 import com.gastosdiarios.gavio.data.ui_state.ListUiState
-import com.gastosdiarios.gavio.domain.enums.CategoryTypeEnum
+import com.gastosdiarios.gavio.domain.enums.TipoTransaccion
 import com.gastosdiarios.gavio.domain.model.CategoryCreate
 import com.gastosdiarios.gavio.domain.model.CategoryDefaultModel
 import com.gastosdiarios.gavio.domain.model.CategoryGastos
@@ -73,9 +73,9 @@ class CategoryViewModel @Inject constructor(
         }
     }
 
-    fun borrandoLista(typeCategory: CategoryTypeEnum) {
+    fun borrandoLista(typeCategory: TipoTransaccion) {
         viewModelScope.launch {
-            if (typeCategory == CategoryTypeEnum.INGRESOS) {
+            if (typeCategory == TipoTransaccion.INGRESOS) {
                 val lista = dbm.getUserCategoryIngresos()
                 // Elimina todas las categorias de la base de datos
                 for (item in lista) {
@@ -98,12 +98,12 @@ class CategoryViewModel @Inject constructor(
 
     fun selectedParaEditar(item: UserCreateCategoryModel, iconSelect: Int) {
         viewModelScope.launch {
-            if (item.categoryType == CategoryTypeEnum.INGRESOS) {
+            if (item.categoryType == TipoTransaccion.INGRESOS) {
                 _uiStateDefault.update {
                     it.copy(
                         uid = item.uid!!,
                         titleBottomSheet = item.categoryName!!,
-                        categoryType = CategoryTypeEnum.INGRESOS,
+                        categoryType = TipoTransaccion.INGRESOS,
                         selectedCategory = CategoryCreate(name = "", iconSelect),
                         isSelectedEditItem = true, onDismiss = true
                     )
@@ -114,7 +114,7 @@ class CategoryViewModel @Inject constructor(
                         onDismiss = true,
                         uid = item.uid!!,
                         titleBottomSheet = item.categoryName!!,
-                        categoryType = CategoryTypeEnum.GASTOS,
+                        categoryType = TipoTransaccion.GASTOS,
                         selectedCategory = CategoryCreate(name = "", iconSelect),
                         isSelectedEditItem = true,
                     )
@@ -123,9 +123,9 @@ class CategoryViewModel @Inject constructor(
         }
     }
 
-    fun eliminarItemSelected(item: UserCreateCategoryModel, typeCategory: CategoryTypeEnum) {
+    fun eliminarItemSelected(item: UserCreateCategoryModel, typeCategory: TipoTransaccion) {
         viewModelScope.launch {
-            if (item.categoryType == CategoryTypeEnum.INGRESOS) {
+            if (item.categoryType == TipoTransaccion.INGRESOS) {
                 repositoryIngresos.delete(item)
                 limpiandoElementoViejo(item)
                 cargandoListaActualizada(typeCategory)
@@ -140,7 +140,7 @@ class CategoryViewModel @Inject constructor(
 
     fun actualizandoItem(item: UserCreateCategoryModel) {
         viewModelScope.launch {
-            if (item.categoryType == CategoryTypeEnum.INGRESOS) {
+            if (item.categoryType == TipoTransaccion.INGRESOS) {
                 val data = withContext(Dispatchers.IO) { dbm.getUserCategoryIngresos() }
                 val itemExisting = data.find { it.uid == item.uid }
                 if (itemExisting != null) repositoryIngresos.update(item)
@@ -156,7 +156,7 @@ class CategoryViewModel @Inject constructor(
     }
 
     private fun limpiandoElementoViejo(itemViejo: UserCreateCategoryModel) {
-        if (itemViejo.categoryType == CategoryTypeEnum.INGRESOS) {
+        if (itemViejo.categoryType == TipoTransaccion.INGRESOS) {
             val categoriaEliminar =
                 CategoryIngresos(itemViejo.categoryName!!, itemViejo.categoryIcon!!.toInt())
             defaultCategoriesIngresosList.removeAll { it == categoriaEliminar }
@@ -170,10 +170,10 @@ class CategoryViewModel @Inject constructor(
 
     fun createNewCategory(item: UserCreateCategoryModel) {
         viewModelScope.launch {
-            if (item.categoryType == CategoryTypeEnum.INGRESOS) {
+            if (item.categoryType == TipoTransaccion.INGRESOS) {
                 repositoryIngresos.create(item)
                 isActivatedTrue()//activa el boton creado para borrar todoo
-                cargandoListaActualizada(CategoryTypeEnum.INGRESOS)
+                cargandoListaActualizada(TipoTransaccion.INGRESOS)
             } else {
                 repositoryGastos.create(item)
                 isActivatedTrue()//activa el boton creado para borrar todoo
@@ -183,9 +183,9 @@ class CategoryViewModel @Inject constructor(
         limpiandoCampoBottomSheet()
     }
 
-    private fun cargandoListaActualizada(typeCategory: CategoryTypeEnum) {
+    private fun cargandoListaActualizada(typeCategory: TipoTransaccion) {
         viewModelScope.launch {
-            if (typeCategory == CategoryTypeEnum.INGRESOS) {
+            if (typeCategory == TipoTransaccion.INGRESOS) {
                 _uiStateIngresos.update { it.copy(isUpdateItem = true) }
                 val data = withContext(Dispatchers.IO) { dbm.getUserCategoryIngresos() }
                 _uiStateIngresos.update { it.copy(items = data, isUpdateItem = false) }

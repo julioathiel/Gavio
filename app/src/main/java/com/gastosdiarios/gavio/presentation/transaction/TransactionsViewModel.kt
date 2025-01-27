@@ -3,10 +3,12 @@ package com.gastosdiarios.gavio.presentation.transaction
 import android.content.Context
 import android.util.Log
 import android.widget.Toast
+import androidx.core.database.sqlite.transaction
 import androidx.lifecycle.ViewModel
 import androidx.lifecycle.viewModelScope
 import com.gastosdiarios.gavio.R
 import com.gastosdiarios.gavio.data.ui_state.ListUiState
+import com.gastosdiarios.gavio.domain.enums.TipoTransaccion
 import com.gastosdiarios.gavio.domain.model.RefreshDataModel
 import com.gastosdiarios.gavio.domain.model.modelFirebase.TransactionModel
 import com.gastosdiarios.gavio.domain.repository.DataBaseManager
@@ -49,6 +51,20 @@ class TransactionsViewModel @Inject constructor(
     private val _isRefreshing = MutableStateFlow(RefreshDataModel(isRefreshing = false))
     val isRefreshing: StateFlow<RefreshDataModel> = _isRefreshing.asStateFlow()
 
+    private val _selectedItems = MutableStateFlow<List<TransactionModel>>(emptyList())
+    val selectedItems: StateFlow<List<TransactionModel>> = _selectedItems
+
+    private val _expandedItem = MutableStateFlow<TransactionModel?>(null)
+    val expandedItem: StateFlow<TransactionModel?> = _expandedItem
+
+    private val _selectionMode = MutableStateFlow(false)
+    val selectionMode: StateFlow<Boolean> = _selectionMode
+
+    private val _isCreate = MutableStateFlow(false)
+    val isCreate: StateFlow<Boolean> = _isCreate.asStateFlow()
+
+    private val _isDelete = MutableStateFlow(false)
+    val isDelete: StateFlow<Boolean> = _isDelete.asStateFlow()
 
     private val _isLoading = MutableStateFlow(false)
     val isLoading = _isLoading.onStart {
@@ -81,48 +97,83 @@ class TransactionsViewModel @Inject constructor(
     }
 
 
-    fun onItemRemoveMov(
-        list: List<TransactionModel>,
-        item: TransactionModel
-    ) {
-        // Obtener el tipo de transacción (ingreso o gasto)
-        val tipoTransaction = item.select
-        val cash = item.cash?.toDouble() ?: 0.0
+    private fun onItemRemoveMov(list: List<TransactionModel>) {
         viewModelScope.launch {
-            // Verificar si es el último elemento de la lista
-            val esUltimoItem = list.size == 1
-            // Verificar si es el primer elemento de la lista
-            val esPrimerItem = item.index == 0
+            val currentMoney = dbm.getUserData()?.currentMoney ?: 0.0
+            val totalIngresos = _selectedItems.value.filter { it.tipo == TipoTransaccion.INGRESOS }
+                .sumOf { it.cash?.toDouble() ?: 0.0 }
+            val totalGastos = _selectedItems.value.filter { it.tipo == TipoTransaccion.GASTOS }
+                .sumOf { it.cash?.toDouble() ?: 0.0 }
 
-            // Eliminar la transacción
-            if (esUltimoItem || esPrimerItem) {
-                // Si es el último elemento, update el saldo a 0 y eliminar la transacción
-                dbm.deleteAllScreenTransactions()
-            } else {
-                //actualizando el gastos por categorias
-                deleteGastosPorCategoria(item.title.orEmpty())
-                // Si no es el último elemento, eliminar la transacción y update el saldo según el tipo
+
+            val updatedMoney = currentMoney - totalIngresos + totalGastos
+            dbm.updateCurrentMoney(updatedMoney,false)
+
+            _selectedItems.value.forEach { item ->
+                val esPrimerItem = item.index == 0
+                if (esPrimerItem) {
+                    dbm.deleteAllScreenTransactions()
+                    cargandoListaActualizada()
+                    return@launch
+                }
                 dbm.deleteTransaction(item)
-
-                when (tipoTransaction) {
-                    //si la transaccion fue de ingresos, se volvera a
-                    // update el dinero total, restandolo de nuevo
-                    true -> {
-                        updateCurrentMoneyList(list, cash = -cash, false)
-                    }
-                    //si la transaccion fue de gastos, se volvera a
-                    // actualizar  el dinero total, sumandolo de nuevo
-                    false -> {
-                        updateCurrentMoneyList(list, cash = cash, false)
-                        updateGastos(totalGastos = cash)
-                    }
-
-                    null -> {
-                        Toast.makeText(context, "null", Toast.LENGTH_SHORT).show()
-                    }
+                if (item.tipo == TipoTransaccion.GASTOS) {
+                    deleteGastosPorCategoria(item.title.orEmpty())
                 }
             }
             cargandoListaActualizada()
+            // Obtener el tipo de transacción (ingreso o gasto)
+//                val tipoTransaction = item.select
+//                val cash = item.cash?.toDouble() ?: 0.0
+//                // Verificar si es el primer elemento de la lista
+
+
+
+            // Eliminar la transacción
+//                if (esPrimerItem) {
+//                    // Si es el último elemento, update el saldo a 0 y eliminar la transacción
+//                    dbm.deleteAllScreenTransactions()
+//                    cargandoListaActualizada()
+//                    Log.d("tagss", "onItemRemoveMov: es el ultimo elemento")
+//                    return@launch
+//                } else {
+//                    //actualizando el gastos por categorias
+//                    deleteGastosPorCategoria(item.title.orEmpty())
+//                    // Si no es el último elemento, eliminar la transacción y update el saldo según el tipo
+//                    //   dbm.deleteTransaction(item)
+//
+//            when (selectedItems.value.firstOrNull()?.tipo) {
+//                //si la transaccion fue de ingresos, se volvera a
+//                // actualizar el dinero total, restandolo de nuevo
+//                TipoTransaccion.INGRESOS -> {
+//                    updateCurrentMoneyList(list, cash = -cash, false)
+//                }
+//                //si la transaccion fue de gastos, se volvera a
+//                // actualizar  el dinero total, sumandolo de nuevo
+//                TipoTransaccion.GASTOS -> {
+//                    //  updateCurrentMoneyList(list, cash = cash, false)
+//                    val currentMoney = userDataFirestore.get()?.currentMoney ?: 0.0
+//                    if (esPrimerItem) {
+//                        // Si es el último elemento, establecer el saldo directamente a 0.0
+//                        userDataFirestore.updateCurrentMoney(0.0, false)
+//                        val newValue = currentMoney + cash
+//                        userDataFirestore.updateCurrentMoney(maxOf(newValue, 0.0), false)
+//                    } else {
+//                        Log.d("tagss", "updateCurrentMoneyList: $cash")
+//                        val newValue = currentMoney + cash
+//                        userDataFirestore.updateCurrentMoney(newValue, false)
+//                    }
+//                    updateGastos(totalGastos = cash)
+//                    dbm.deleteTransaction(item)
+//                    cargandoListaActualizada()
+//                    return@launch
+//                }
+//
+//                null -> {
+//                    Toast.makeText(context, "null", Toast.LENGTH_SHORT).show()
+//                }
+//            }
+
         }
     }
 
@@ -149,15 +200,14 @@ class TransactionsViewModel @Inject constructor(
                     return@launch // Salir de la función después de eliminar las transacciones
                 }
 
-                if (valorViejo.select == false && nuevoValor.toDouble() > dataTotalIngresos) {
+                if (valorViejo.tipo == TipoTransaccion.GASTOS && nuevoValor.toDouble() > dataTotalIngresos) {
                     _snackbarMessage.value =
                         R.string.error_el_gasto_no_puede_ser_superior_a_los_ingresos
 
                 } else if (dataTotalGastos == dataTotalIngresos) {
                     dbm.deleteAllScreenTransactions()
                     cargandoListaActualizada()
-                }
-                else {
+                } else {
                     // Actualiza el valor en la lista
                     // si es un ingreso o si el nuevo valor no es superior al total de ingresos
                     updateItemList(
@@ -166,7 +216,7 @@ class TransactionsViewModel @Inject constructor(
                             title = title,
                             subTitle = description,
                             cash = nuevoValor,
-                            select = valorViejo.select,
+                            tipo = valorViejo.tipo,
                             date = valorViejo.date,
                             icon = valorViejo.icon,
                             index = valorViejo.index
@@ -175,11 +225,11 @@ class TransactionsViewModel @Inject constructor(
                     //actualizando el gastos por categorias
                     updateGastosCategory(title, nuevoValor, valorViejo)
 
-                    when (valorViejo.select) {
+                    when (valorViejo.tipo) {
                         //si es true estamos actualizando dinero de tipo ingresos
-                        true -> {
+                        TipoTransaccion.INGRESOS -> {
                             // Ajustar el total de ingresos según si el nuevo valor es mayor o menor al anterior.
-                            if (nuevoValor > valorViejo.cash!!) {
+                            if (nuevoValor > valorViejo.cash) {
                                 val diferencia =
                                     nuevoValor.toDouble().minus(valorViejo.cash.toDouble())
                                 val nuevoTotalIngresos = dataTotalIngresos.plus(diferencia)
@@ -211,9 +261,9 @@ class TransactionsViewModel @Inject constructor(
                             }
                         }
 
-                        false -> {
+                        TipoTransaccion.GASTOS -> {
                             //si es false estamos actualizando dinero de tipo gastos
-                            if (nuevoValor > valorViejo.cash!!) {
+                            if (nuevoValor > valorViejo.cash) {
                                 val diferencia =
                                     nuevoValor.toDouble().minus(valorViejo.cash.toDouble())
                                 val totalGastos =
@@ -293,7 +343,7 @@ class TransactionsViewModel @Inject constructor(
         listTransactions: List<TransactionModel>,
         cash: Double, isCurrentMoneyIngresos: Boolean,
     ) {
-        viewModelScope.launch(Dispatchers.IO) {
+        viewModelScope.launch {
             val currentMoney = userDataFirestore.get()?.currentMoney ?: 0.0
             if (listTransactions.size == 1) {
                 // Si es el último elemento, establecer el saldo directamente a 0.0
@@ -301,6 +351,7 @@ class TransactionsViewModel @Inject constructor(
                 val newValue = currentMoney + cash
                 userDataFirestore.updateCurrentMoney(maxOf(newValue, 0.0), isCurrentMoneyIngresos)
             } else {
+                Log.d("tagss", "updateCurrentMoneyList: $cash")
                 val newValue = currentMoney + cash
                 userDataFirestore.updateCurrentMoney(newValue, isCurrentMoneyIngresos)
             }
@@ -387,5 +438,83 @@ class TransactionsViewModel @Inject constructor(
 
     fun resetSnackbarMessage() {
         _snackbarMessage.value = null
+    }
+
+    fun onClick(item: TransactionModel) {
+        if (_selectionMode.value) {
+            _selectedItems.update { currentList ->
+                val newList = currentList.toMutableList()
+                if (newList.any { it.uid == item.uid }) {
+                    newList.removeAll { it.uid == item.uid }
+                } else {
+                    newList.add(item)
+                }
+                newList.toList() // Convertir de nuevo a List<GastosProgramadosModel>
+            }
+            if (_selectedItems.value.isEmpty()) {
+                _selectionMode.value = false
+            }
+        } else {
+            _expandedItem.value = if (_expandedItem.value == item) null else item
+        }
+    }
+
+    fun onLongClick(item: TransactionModel) {
+        _selectionMode.update { true }
+        _selectedItems.update { currentList ->
+            val newList = currentList.toMutableList()
+            if (newList.any { it.uid == item.uid }) {
+                newList.removeAll { it.uid == item.uid }
+            } else {
+                newList.add(item)
+            }
+            newList.toList() // Convertir de nuevo a List<GastosProgramadosModel>
+        }
+    }
+
+    fun isCreateTrue() {
+        _isCreate.value = true
+    }
+
+    fun isCreateFalse() {
+        _isCreate.value = false
+    }
+
+    fun isDeleteTrue() {
+        _isDelete.value = true
+    }
+
+    fun isDeleteFalse() {
+        _isDelete.value = false
+    }
+
+    fun deleteItemSelected() {
+        viewModelScope.launch {
+            //  _selectedItems.value = emptyList()
+            _selectionMode.value = false
+            val list = dbm.getTransactions()
+            onItemRemoveMov(list)
+        }
+    }
+
+    private fun updateSelectedItems(item: TransactionModel, isSelected: Boolean) {
+        val currentList = _selectedItems.value.toMutableList()
+        if (isSelected) {
+            currentList.add(item)
+        } else {
+            currentList.remove(item)
+        }
+        _selectedItems.value = currentList
+    }
+
+    fun delete(item: TransactionModel) {
+        viewModelScope.launch(Dispatchers.IO) {
+            try {
+                transactionsFirestore.delete(item)
+            } catch (e: Exception) {
+                Toast.makeText(context, "Error al eliminar", Toast.LENGTH_SHORT).show()
+                Log.e("Error", e.message.toString())
+            }
+        }
     }
 }

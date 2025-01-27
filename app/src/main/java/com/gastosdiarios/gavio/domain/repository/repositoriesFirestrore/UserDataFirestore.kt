@@ -43,13 +43,13 @@ class UserDataFirestore @Inject constructor(
 
     suspend fun updateCurrentMoney(
         valueCurrentMoney: Double,
-        valueIsCurrentMoneyIngresos: Boolean
+        currentMoneyIsZero: Boolean
     ) {
         try {
             val uidUser = authFirebaseImp.getCurrentUser()?.uid ?: return
             val item = hashMapOf<String, Any>(
                 "currentMoney" to valueCurrentMoney,
-                "isCurrentMoneyIngresos" to valueIsCurrentMoneyIngresos
+                "currentMoneyIsZero" to currentMoneyIsZero
             )
             cloudFirestore.getUserData().document(uidUser).update(item).await()
         } catch (e: Exception) {

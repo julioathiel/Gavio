@@ -16,38 +16,38 @@ import androidx.compose.ui.graphics.Color
 import androidx.compose.ui.res.colorResource
 import androidx.compose.ui.unit.dp
 import com.gastosdiarios.gavio.R
-import com.gastosdiarios.gavio.domain.enums.CategoryTypeEnum
+import com.gastosdiarios.gavio.domain.enums.TipoTransaccion
 
 @Composable
 fun BotonGastosIngresos(
     modifier: Modifier = Modifier,
     enabledBotonGastos: Boolean,
     botonActivado: Int,
-    onTipoSeleccionado: (CategoryTypeEnum) -> Unit
+    onTipoSeleccionado: (TipoTransaccion) -> Unit
 ) {
     var selectedIndex by remember { mutableIntStateOf(botonActivado) }
-    val options = listOf(CategoryTypeEnum.GASTOS, CategoryTypeEnum.INGRESOS)
+    val options = listOf(TipoTransaccion.GASTOS, TipoTransaccion.INGRESOS)
     SingleChoiceSegmentedButtonRow (modifier = modifier){
         options.forEachIndexed { index, label ->
             val isSelected = index == selectedIndex
             val color = if (isSelected) {
                 when (label) {
-                    CategoryTypeEnum.GASTOS -> Color(0xFFFFEBEE)
-                    CategoryTypeEnum.INGRESOS -> colorResource(id = R.color.fondoVerdeDinero)
+                    TipoTransaccion.GASTOS -> Color(0xFFFFEBEE)
+                    TipoTransaccion.INGRESOS -> colorResource(id = R.color.fondoVerdeDinero)
                 }
             } else {
                 MaterialTheme.colorScheme.onSurfaceVariant
             }
             val colorText = if (isSelected) {
                 when (label) {
-                    CategoryTypeEnum.GASTOS -> colorResource(id = R.color.rojoDinero)
-                    CategoryTypeEnum.INGRESOS -> colorResource(id = R.color.verdeDinero)
+                    TipoTransaccion.GASTOS -> colorResource(id = R.color.rojoDinero)
+                    TipoTransaccion.INGRESOS -> colorResource(id = R.color.verdeDinero)
                 }
             } else {
                 Color.Transparent //los bordes no se veran
             }
 
-            val enabledButton = enabledBotonGastos || label != CategoryTypeEnum.GASTOS
+            val enabledButton = enabledBotonGastos || label != TipoTransaccion.GASTOS
 
             SegmentedButton(
                 modifier = modifier,

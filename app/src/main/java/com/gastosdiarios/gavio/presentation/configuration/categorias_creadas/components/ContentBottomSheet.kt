@@ -20,7 +20,7 @@ import androidx.compose.ui.res.stringResource
 import androidx.compose.ui.text.input.KeyboardCapitalization
 import androidx.compose.ui.unit.dp
 import com.gastosdiarios.gavio.R
-import com.gastosdiarios.gavio.domain.enums.CategoryTypeEnum
+import com.gastosdiarios.gavio.domain.enums.TipoTransaccion
 import com.gastosdiarios.gavio.domain.model.CategoryDefaultModel
 import com.gastosdiarios.gavio.domain.model.UserCreateCategoryModel
 import com.gastosdiarios.gavio.presentation.configuration.categorias_creadas.CategoryViewModel
@@ -28,7 +28,7 @@ import com.gastosdiarios.gavio.presentation.configuration.categorias_creadas.Cat
 @Composable
 fun ContentBottomSheet(
     onDismiss: () -> Unit,
-    categoryTypes: CategoryTypeEnum,
+    categoryTypes: TipoTransaccion,
     uiStateDefault: CategoryDefaultModel,
     viewModel: CategoryViewModel,
 ) {
@@ -78,14 +78,14 @@ fun ContentBottomSheet(
         Button(
             onClick = {
                 when(categoryTypes){
-                    CategoryTypeEnum.INGRESOS ->{
+                    TipoTransaccion.INGRESOS ->{
                         if (uiStateDefault.isSelectedEditItem) {
                             viewModel.actualizandoItem(
                                 UserCreateCategoryModel(
                                     uid = uiStateDefault.uid,
                                     categoryName = uiStateDefault.titleBottomSheet,
                                     categoryIcon = uiStateDefault.selectedCategory!!.icon.toString(),
-                                    categoryType = CategoryTypeEnum.INGRESOS
+                                    categoryType = TipoTransaccion.INGRESOS
                                 )
                             )
                         } else {
@@ -94,19 +94,19 @@ fun ContentBottomSheet(
                                 UserCreateCategoryModel(
                                     categoryName = uiStateDefault.titleBottomSheet,
                                     categoryIcon = uiStateDefault.selectedCategory!!.icon.toString(),
-                                    categoryType = CategoryTypeEnum.INGRESOS
+                                    categoryType = TipoTransaccion.INGRESOS
                                 )
                             )
                         }
                     }
-                    CategoryTypeEnum.GASTOS ->{
+                    TipoTransaccion.GASTOS ->{
                         if (uiStateDefault.isSelectedEditItem) {
                             viewModel.actualizandoItem(
                                 UserCreateCategoryModel(
                                     uid = uiStateDefault.uid,
                                     categoryName = uiStateDefault.titleBottomSheet,
                                     categoryIcon = uiStateDefault.selectedCategory!!.icon.toString(),
-                                    categoryType = CategoryTypeEnum.GASTOS
+                                    categoryType = TipoTransaccion.GASTOS
                                 )
                             )
                         } else {
@@ -115,7 +115,7 @@ fun ContentBottomSheet(
                                 UserCreateCategoryModel(
                                     categoryName = uiStateDefault.titleBottomSheet,
                                     categoryIcon = uiStateDefault.selectedCategory!!.icon.toString(),
-                                    categoryType = CategoryTypeEnum.GASTOS
+                                    categoryType = TipoTransaccion.GASTOS
                                 )
                             )
                         }

@@ -1,225 +1,99 @@
 package com.gastosdiarios.gavio.presentation.transaction.components
 
+import androidx.compose.foundation.ExperimentalFoundationApi
 import androidx.compose.foundation.background
-import androidx.compose.foundation.gestures.detectTapGestures
-import androidx.compose.foundation.layout.Box
+import androidx.compose.foundation.combinedClickable
 import androidx.compose.foundation.layout.Column
 import androidx.compose.foundation.layout.Row
-import androidx.compose.foundation.layout.Spacer
+import androidx.compose.foundation.layout.fillMaxSize
 import androidx.compose.foundation.layout.fillMaxWidth
-import androidx.compose.foundation.layout.height
 import androidx.compose.foundation.layout.padding
-import androidx.compose.foundation.layout.size
 import androidx.compose.foundation.shape.CircleShape
-import androidx.compose.material3.Button
-import androidx.compose.material3.ExperimentalMaterial3Api
-import androidx.compose.material3.Icon
 import androidx.compose.material3.MaterialTheme
-import androidx.compose.material3.ModalBottomSheet
 import androidx.compose.material3.Text
-import androidx.compose.material3.rememberModalBottomSheetState
 import androidx.compose.runtime.Composable
-import androidx.compose.runtime.LaunchedEffect
+import androidx.compose.runtime.collectAsState
 import androidx.compose.runtime.getValue
-import androidx.compose.runtime.mutableStateOf
-import androidx.compose.runtime.remember
-import androidx.compose.runtime.setValue
-import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
-import androidx.compose.ui.focus.FocusRequester
-import androidx.compose.ui.graphics.Color
-import androidx.compose.ui.input.pointer.pointerInput
+import androidx.compose.ui.draw.clip
 import androidx.compose.ui.res.colorResource
-import androidx.compose.ui.res.painterResource
-import androidx.compose.ui.res.stringResource
 import androidx.compose.ui.text.style.TextOverflow
 import androidx.compose.ui.unit.dp
 import com.gastosdiarios.gavio.R
-import com.gastosdiarios.gavio.data.commons.EditDeleteAlertDialog
-import com.gastosdiarios.gavio.data.commons.TextFieldDescription
+import com.gastosdiarios.gavio.data.commons.ProfileIcon
+import com.gastosdiarios.gavio.domain.enums.TipoTransaccion
 import com.gastosdiarios.gavio.domain.model.modelFirebase.TransactionModel
-import com.gastosdiarios.gavio.presentation.home.components.TextFieldDinero
 import com.gastosdiarios.gavio.presentation.transaction.TransactionsViewModel
 import com.gastosdiarios.gavio.utils.CurrencyUtils
 
-@OptIn(ExperimentalMaterial3Api::class)
+@OptIn(ExperimentalFoundationApi::class)
 @Composable
 fun ItemTransactions(
     item: TransactionModel,
-    itemList: List<TransactionModel>,
-    viewModel: TransactionsViewModel
+    viewModel: TransactionsViewModel,
+    isSelect: Boolean,
+    onClick: () -> Unit,
+    onLongClick: () -> Unit
 ) {
-    var showConfirmationDialog by remember { mutableStateOf(false) }
-    var showConfirmationEditar by remember { mutableStateOf(false) }
-    var isClicked by remember { mutableStateOf(false) }
-    var isLongPressed by remember { mutableStateOf(false) }
-    var isExpanded by remember { mutableStateOf(false) }
-    val focusRequester = remember { FocusRequester() }
-
-    val textColor = if (item.select == true) {
+    val expandedItem by viewModel.expandedItem.collectAsState()
+    val textColor = if (item.tipo == TipoTransaccion.INGRESOS) {
         //si el usuario eligio ingreso, el color de los numeros sera verde
         colorResource(id = R.color.verdeDinero)
     } else MaterialTheme.colorScheme.onSurfaceVariant//sin color
 
-    LaunchedEffect(isClicked) {
-        isClicked = false
-        isLongPressed = false
-    }
 
-    Row(
-        verticalAlignment = Alignment.CenterVertically,
-        modifier = Modifier
-            .background(
-                when {
-                    isLongPressed -> Color.LightGray // Color de fondo cuando se produce un clic prolongado
-                    isClicked -> Color.Gray // Color de fondo cuando se produce un clic normal
-                    else -> MaterialTheme.colorScheme.surface
-                }
-            )
-            .pointerInput(Unit) {
-                detectTapGestures(
-                    onPress = { isExpanded = !isExpanded },
-                    onLongPress = {
-                        // Manejar el clic prolongado
-                        isClicked = true
-                        isLongPressed = true
-                        showConfirmationDialog = true
-
-                    })
+    Row(modifier = Modifier.fillMaxWidth()
+        .combinedClickable(
+            onClick = { onClick() },
+            onLongClick = { onLongClick() }
+        )
+        .background(
+            if (isSelect) {
+                MaterialTheme.colorScheme.tertiaryContainer
+            } else {
+                MaterialTheme.colorScheme.surface
             }
+        )
+        .padding(start = 16.dp, end = 16.dp, top = 5.dp, bottom = 20.dp)
     ) {
 
-        Spacer(modifier = Modifier.padding(start = 16.dp))
-
         //contenedor de icono
-        Box(
-            modifier = Modifier
-                .size(48.dp)
-                .background(
-                    color = MaterialTheme.colorScheme.secondaryContainer,
-                    shape = CircleShape
-                ),
-            contentAlignment = Alignment.Center
-        ) {
-            // Icono dentro del círculo
-            Icon(
-                painter = painterResource(id = item.icon.orEmpty().toInt()),
-                contentDescription = null,
-                modifier = Modifier.align(Alignment.Center),
-                tint = MaterialTheme.colorScheme.primary
-            )
-        }
+        ProfileIcon(
+            drawableResource = item.icon.orEmpty().toInt(),
+            description = item.title.orEmpty(),
+            modifier = Modifier.clip(CircleShape),
+            sizeBox = 48,
+            sizeIcon = 30,
+            colorCircle = MaterialTheme.colorScheme.surfaceContainer,
+            colorIcon = MaterialTheme.colorScheme.onSurface
+        )
 
-        Spacer(modifier = Modifier.padding(start = 16.dp))
+        //   Spacer(modifier = Modifier.padding(start = 16.dp))
         //contenedor de titulo y subtitulo
-        Row(verticalAlignment = Alignment.CenterVertically) {
-            Column(modifier = Modifier.weight(1f)) {
-                Text(
-                    text = item.title.toString(),
-                    style = MaterialTheme.typography.titleMedium,
-                    maxLines = if (isExpanded) Int.MAX_VALUE else 1,
-                    // Mostrar "..." si el texto excede una línea
-                    overflow = if (isExpanded) TextOverflow.Clip else TextOverflow.Ellipsis,
-                )
-                if (item.subTitle?.isNotEmpty() == true) {
-                    Text(
-                        text = item.subTitle,
-                        style = MaterialTheme.typography.bodyLarge,
-                        maxLines = if (isExpanded) Int.MAX_VALUE else 1,
-                        // Mostrar "..." si el texto excede una línea
-                        overflow = if (isExpanded) TextOverflow.Clip else TextOverflow.Ellipsis,
-                    )
-                }
-            }
-            //contenedor de dinero y fecha
-            Column(Modifier.padding(end = 8.dp), horizontalAlignment = Alignment.End) {
-                Text(
-                    text = CurrencyUtils.formattedCurrency(item.cash?.toDouble()),
-                    color = textColor,
-                    style = MaterialTheme.typography.titleMedium
-                )
-            }
-        }
-        Spacer(modifier = Modifier.padding(36.dp))
+        Row(modifier = Modifier.fillMaxSize()) {
+            Column(
+                modifier = Modifier
+                    .weight(1f)
+                    .padding(horizontal = 12.dp)
+            ) {
+                Text(text = item.title ?: "")
 
-        if (showConfirmationDialog) {
-            EditDeleteAlertDialog(
-                onEditClick = {
-                    //se vuelve true para mostrar el dialogo
-                    showConfirmationEditar = true
+                Text(
+                    text = if (item.subTitle?.isEmpty() == true) "sin descripcion" else item.subTitle
+                        ?: "",
+                    style = MaterialTheme.typography.bodySmall,
+                    maxLines = if (expandedItem?.uid == item.uid) Int.MAX_VALUE else 1,
+                    overflow = TextOverflow.Ellipsis
+                )
 
-                },
-                onDeleteClick = { viewModel.onItemRemoveMov(itemList, item) },
-                onDismiss = {
-                    isLongPressed = false
-                    showConfirmationDialog = false
-                }
+            }
+
+            Text(
+                text = CurrencyUtils.formattedCurrency(item.cash?.toDouble()),
+                color = textColor,
+                style = MaterialTheme.typography.titleMedium
             )
 
-        }
-        //si presiona editar se abrira otro dialogo para editar
-        if (showConfirmationEditar) {
-            val sheetState = rememberModalBottomSheetState(skipPartiallyExpanded = true)
-            ModalBottomSheet(
-                onDismissRequest = {
-                    showConfirmationEditar = false
-                    showConfirmationDialog = false
-                },
-                sheetState = sheetState,
-                content = {
-
-                    var cantidadIngresada by remember { mutableStateOf(item.cash.toString()) }
-                    var description by remember { mutableStateOf(item.subTitle.toString()) }
-
-                    val spaciness = 16.dp
-                    Column(
-                        Modifier
-                            .fillMaxWidth()
-                            .padding(horizontal = 16.dp)
-                    ) {
-                        Spacer(modifier = Modifier.padding(spaciness))
-
-                        TextFieldDinero(
-                            cantidadIngresada,
-                            Modifier.fillMaxWidth(),
-                            focusRequester = focusRequester
-                        ) { nuevoValor ->
-                            cantidadIngresada = nuevoValor
-                        }
-                        Spacer(modifier = Modifier.padding(spaciness))
-                        Text(text = stringResource(id = R.string.descripcion))
-                        //Description
-                        TextFieldDescription(
-                            description = description,
-                            modifier = Modifier.fillMaxWidth()
-                        ) { newDescription ->
-                            description = newDescription
-                        }
-                        Spacer(modifier = Modifier.size(150.dp))
-
-                        Button(
-                            onClick = {
-                                // Actualizar dinero y descripción
-                                viewModel.updateItem(
-                                    title = item.title.orEmpty(),
-                                    nuevoValor = cantidadIngresada,
-                                    description = description,
-                                    valorViejo = item
-                                )
-                                showConfirmationEditar = false
-                                cantidadIngresada = ""
-                                description = ""
-                            }, modifier = Modifier
-                                .fillMaxWidth()
-                                .height(50.dp),
-                            enabled = cantidadIngresada.isNotEmpty()
-                        ) {
-                            Text(text = stringResource(id = R.string.guardar))
-                        }
-                        Spacer(modifier = Modifier.size(24.dp))
-                    }
-                }
-            )
         }
     }
 }

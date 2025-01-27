@@ -27,7 +27,7 @@ import androidx.compose.ui.Modifier
 import androidx.compose.ui.focus.FocusRequester
 import androidx.compose.ui.res.dimensionResource
 import com.gastosdiarios.gavio.R
-import com.gastosdiarios.gavio.domain.enums.CategoryTypeEnum
+import com.gastosdiarios.gavio.domain.enums.TipoTransaccion
 import com.gastosdiarios.gavio.domain.enums.Modo
 import com.gastosdiarios.gavio.domain.model.CategoriesModel
 import com.gastosdiarios.gavio.domain.model.modelFirebase.GastosProgramadosModel
@@ -40,7 +40,7 @@ import kotlinx.coroutines.launch
 fun ContentBottomSheetGastosProgramados(
     item: GastosProgramadosModel,
     onDismiss: () -> Unit,
-    categoryTypes: CategoryTypeEnum,
+    categoryTypes: TipoTransaccion,
     viewModel: CreateGastosProgramadosViewModel,
     modo: Modo,
 ) {

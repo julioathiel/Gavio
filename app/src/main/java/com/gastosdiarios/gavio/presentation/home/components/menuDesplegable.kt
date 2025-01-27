@@ -32,6 +32,7 @@ import androidx.compose.ui.semantics.contentDescription
 import androidx.compose.ui.semantics.semantics
 import androidx.compose.ui.unit.dp
 import com.gastosdiarios.gavio.data.ui_state.HomeUiState
+import com.gastosdiarios.gavio.domain.enums.TipoTransaccion
 import com.gastosdiarios.gavio.domain.model.CategoriesModel
 import com.gastosdiarios.gavio.domain.model.categoriaDefault
 import com.gastosdiarios.gavio.domain.model.defaultCategoriesGastosList
@@ -47,11 +48,11 @@ fun menuDesplegable(homeUiState: HomeUiState, modifier: Modifier): CategoriesMod
 
     // Recordar la lista de categorías para evitar la recomposición innecesaria
     val categories: List<CategoriesModel> = remember(
-        homeUiState.isChecked,
+        homeUiState.tipoTransaccion,
         userCategoriesIngresosList,
         userCategoriesGastosList
     ) {
-        if (homeUiState.isChecked) {
+        if (homeUiState.tipoTransaccion == TipoTransaccion.INGRESOS) {
             categoriaDefault +
                     userCategoriesIngresosList +
                     defaultCategoriesIngresosList

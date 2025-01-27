@@ -1,6 +1,6 @@
 package com.gastosdiarios.gavio.domain.model.modelFirebase
 
-import com.gastosdiarios.gavio.domain.enums.CategoryTypeEnum
+import com.gastosdiarios.gavio.domain.enums.TipoTransaccion
 
 data class GastosProgramadosModel(
     val uid: String? = null,
@@ -11,5 +11,5 @@ data class GastosProgramadosModel(
     val date: String? = null,
     val icon: String? = null,
     val index: Int? = null,
-    val categoryType: CategoryTypeEnum? = null
+    val categoryType: TipoTransaccion? = null
 )

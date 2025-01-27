@@ -18,48 +18,45 @@ import com.gastosdiarios.gavio.domain.repository.repositoriesFirestrore.UserCate
 import com.gastosdiarios.gavio.domain.repository.repositoriesFirestrore.UserCategoryIngresosFirestore
 import com.gastosdiarios.gavio.domain.repository.repositoriesFirestrore.UserDataFirestore
 import com.gastosdiarios.gavio.domain.repository.repositoriesFirestrore.UserPreferencesFirestore
-import kotlinx.coroutines.flow.Flow
-import kotlinx.coroutines.flow.emptyFlow
 import javax.inject.Inject
 
 class DataBaseManager @Inject constructor(
-    private val barDataFirestore: BarDataFirestore,
-    private val transactionsFirestore: TransactionsFirestore,
-    private val gastosPorCategoriaFirestore: GastosPorCategoriaFirestore,
-    private val userCategoryIngresosFirestore: UserCategoryIngresosFirestore,
-    private val userCategoryGastosFirestore: UserCategoryGastosFirestore,
-    private val gastosProgramadosFirestore: GastosProgramadosFirestore,
-    private val userPreferencesFirestore: UserPreferencesFirestore,
-    private val userDataFirestore: UserDataFirestore,
-    private val sharedLinkFirestore: SharedLinkFirestore
+    private val barDataRepo: BarDataFirestore,
+    private val transactionsRepo: TransactionsFirestore,
+    private val gastosPorCategoriaRepo: GastosPorCategoriaFirestore,
+    private val userCategoryIngresosRepo: UserCategoryIngresosFirestore,
+    private val userCategoryGastosRepo: UserCategoryGastosFirestore,
+    private val gastosProgramadosRepo: GastosProgramadosFirestore,
+    private val userPreferencesRepo: UserPreferencesFirestore,
+    private val userDataRepo: UserDataFirestore,
+    private val sharedLinkRepo: SharedLinkFirestore
 ) {
     //----------------------------------------------//
 
-    suspend fun getSharedLink(): ShareDataModel? = sharedLinkFirestore.get()
-    suspend fun getUserData(): UserData? = userDataFirestore.get()
-    suspend fun getUserPreferences(): UserPreferences? = userPreferencesFirestore.get()
-    suspend fun getBarDataGraph(): List<BarDataModel> = barDataFirestore.get()
-    suspend fun getTransactions(): List<TransactionModel> = transactionsFirestore.get()
+    suspend fun getSharedLink(): ShareDataModel = sharedLinkRepo.get()
+    suspend fun getUserData(): UserData? = userDataRepo.get()
+    suspend fun getUserPreferences(): UserPreferences? = userPreferencesRepo.get()
+    suspend fun getBarDataGraph(): List<BarDataModel> = barDataRepo.get()
+    suspend fun getTransactions(): List<TransactionModel> = transactionsRepo.get()
     suspend fun getGastosPorCategoria(): List<GastosPorCategoriaModel> =
-        gastosPorCategoriaFirestore.get()
+        gastosPorCategoriaRepo.get()
 
     suspend fun getUserCategoryGastos(): List<UserCreateCategoryModel> =
-        userCategoryGastosFirestore.get()
+        userCategoryGastosRepo.get()
 
     suspend fun getUserCategoryIngresos(): List<UserCreateCategoryModel> =
-        userCategoryIngresosFirestore.get()
+        userCategoryIngresosRepo.get()
 
-    suspend fun getGastosProgramados(): List<GastosProgramadosModel> =
-        gastosProgramadosFirestore.get()
+    suspend fun getGastosProgramados(): List<GastosProgramadosModel> = gastosProgramadosRepo.get()
     //----------------------------------------------//
 
     //FUNCION PARA LA PANTALLA DE TRANSACTIONS
     suspend fun deleteAllScreenTransactions() {
-        userDataFirestore.deleteCurrentMoneyData()
-        userDataFirestore.deleteTotalGastos()
-        userDataFirestore.deleteTotalIngresos()
-        transactionsFirestore.deleteAll()
-        gastosPorCategoriaFirestore.deleteAll()
+        userDataRepo.deleteCurrentMoneyData()
+        userDataRepo.deleteTotalGastos()
+        userDataRepo.deleteTotalIngresos()
+        transactionsRepo.deleteAll()
+        gastosPorCategoriaRepo.deleteAll()
     }
 
 
@@ -67,65 +64,73 @@ class DataBaseManager @Inject constructor(
 
     //  *... funciones opcionales para eliminar las tablas completas de la base de datos *  //
 
-    suspend fun deleteAllGraphBar() = barDataFirestore.deleteAll()
-    suspend fun deleteAllUserCreaCatGastos() = userCategoryGastosFirestore.deleteAll()
-    suspend fun deleteAllUserCreaCatIngresos() = userCategoryIngresosFirestore.deleteAll()
+    suspend fun deleteAllGraphBar() = barDataRepo.deleteAll()
+    suspend fun deleteAllUserCreaCatGastos() = userCategoryGastosRepo.deleteAll()
+    suspend fun deleteAllUserCreaCatIngresos() = userCategoryIngresosRepo.deleteAll()
 
     //----------------------------------------------//
 
-    //  suspend fun deleteCurrentMoney() = currentMoneyFirestore.delete()
-    suspend fun deleteAllTransactions() = transactionsFirestore.deleteAll()
-    suspend fun deleteAllGastosPorCategory() = gastosPorCategoriaFirestore.deleteAll()
-    suspend fun deleteAllGastosProgramados() = gastosProgramadosFirestore.deleteAll()
+    //  suspend fun deleteCurrentMoney() = currentMoneyRepo.delete()
+    suspend fun deleteAllTransactions() = transactionsRepo.deleteAll()
+    suspend fun deleteAllGastosPorCategory() = gastosPorCategoriaRepo.deleteAll()
+    suspend fun deleteAllGastosProgramados() = gastosProgramadosRepo.deleteAll()
 
     suspend fun deleteTransaction(item: TransactionModel) {
-        transactionsFirestore.delete(item)
+        transactionsRepo.delete(item)
     }
 
     suspend fun resetAllApp() {
-        userDataFirestore.deleteSelectedDateData()
+        userDataRepo.deleteSelectedDateData()
         deleteAllTransactions()
         deleteAllGastosPorCategory()
-        userDataFirestore.updateTotalGastos(0.0)
-        userDataFirestore.updateTotalIngresos(0.0)
-        userDataFirestore.updateCurrentMoney(0.0, true)
+        userDataRepo.updateTotalGastos(0.0)
+        userDataRepo.updateTotalIngresos(0.0)
+        userDataRepo.updateCurrentMoney(0.0, true)
+    }
+
+    suspend fun updateAllApp() {
+        deleteAllTransactions()
+        deleteAllGastosPorCategory()
+        updateTotalIngresos(0.0)
+        updateTotalGastos(0.0)
+        updateCurrentMoney(0.0, true)
     }
 
 
-    //-----------------------USER DATA FIRESTORE-----------------------//
+    //-----------------------USER DATA Repo-----------------------//
     suspend fun updateCurrentMoney(currentMoney: Double, currentMoneyIsZero: Boolean) {
-        userDataFirestore.updateCurrentMoney(currentMoney, currentMoneyIsZero)
+        userDataRepo.updateCurrentMoney(currentMoney, currentMoneyIsZero)
     }
 
     suspend fun updateTotalGastos(totalGastos: Double) {
-        userDataFirestore.updateTotalGastos(totalGastos)
+        userDataRepo.updateTotalGastos(totalGastos)
     }
 
     suspend fun updateTotalIngresos(totalIngresos: Double) {
-        userDataFirestore.updateTotalIngresos(totalIngresos)
+        userDataRepo.updateTotalIngresos(totalIngresos)
     }
 
     suspend fun updateSelectedDate(selectedDate: String, isSelectedDate: Boolean) {
-        userDataFirestore.updateSelectedDate(selectedDate, isSelectedDate)
+        userDataRepo.updateSelectedDate(selectedDate, isSelectedDate)
     }
     //-------------------------------------------------------------------------//
 
 
-    //-----------------------USER PREFERENCES FIRESTORE-----------------------//
+    //-----------------------USER PREFERENCES Repo-----------------------//
     suspend fun updateLimitMonth(limitMonth: Int) {
-        userPreferencesFirestore.updateLimitMonth(limitMonth)
+        userPreferencesRepo.updateLimitMonth(limitMonth)
     }
 
     suspend fun updateBiometricSecurity(value: Boolean) {
-        userPreferencesFirestore.updateBiometricSecurity(value)
+        userPreferencesRepo.updateBiometricSecurity(value)
     }
 
     suspend fun updateThemeMode(value: ThemeMode) {
-        userPreferencesFirestore.updateThemeMode(value)
+        userPreferencesRepo.updateThemeMode(value)
     }
 
     suspend fun updateHourMinute(hour: Int, minute: Int) {
-        userPreferencesFirestore.updateHourMinute(hour, minute)
+        userPreferencesRepo.updateHourMinute(hour, minute)
     }
 
     //-------------------------------------------------------------------------//
