@@ -87,7 +87,7 @@ class TransactionsViewModel @Inject constructor(
     ) {
         // Obtener el tipo de transacción (ingreso o gasto)
         val tipoTransaction = item.select
-
+        val cash = item.cash?.toDouble() ?: 0.0
         viewModelScope.launch {
             // Verificar si es el último elemento de la lista
             val esUltimoItem = list.size == 1
@@ -108,14 +108,13 @@ class TransactionsViewModel @Inject constructor(
                     //si la transaccion fue de ingresos, se volvera a
                     // update el dinero total, restandolo de nuevo
                     true -> {
-                        updateCurrentMoneyList(list,cash = -item.cash?.toDouble()!!,false)
+                        updateCurrentMoneyList(list, cash = -cash, false)
                     }
                     //si la transaccion fue de gastos, se volvera a
                     // actualizar  el dinero total, sumandolo de nuevo
                     false -> {
-                        updateCurrentMoneyList(list,cash = item.cash?.toDouble()!!,false)
-                       // updateGastos(TotalGastosModel(totalGastos = item.cash.toDouble()))
-                        updateGastos(totalGastos = item.cash.toDouble() ?: 0.0)
+                        updateCurrentMoneyList(list, cash = cash, false)
+                        updateGastos(totalGastos = cash)
                     }
 
                     null -> {
@@ -136,16 +135,29 @@ class TransactionsViewModel @Inject constructor(
         viewModelScope.launch {
             try {
                 //obteniendo el total de ingresos y gastos
-
                 val data = userDataFirestore.get()
+                val cashViejo = valorViejo.cash?.toDouble()!!
                 val dataTotalIngresos = data?.totalIngresos ?: 0.0
                 val dataTotalGastos = data?.totalGastos ?: 0.0
+
+                val totalGastosSinElementoActual = dataTotalGastos - cashViejo
+
+                // Verificar si el nuevo valor del gasto más el total de los demás gastos iguala al total de ingresos
+                if (nuevoValor.toDouble() + totalGastosSinElementoActual == dataTotalIngresos) {
+                    dbm.deleteAllScreenTransactions()
+                    cargandoListaActualizada()
+                    return@launch // Salir de la función después de eliminar las transacciones
+                }
 
                 if (valorViejo.select == false && nuevoValor.toDouble() > dataTotalIngresos) {
                     _snackbarMessage.value =
                         R.string.error_el_gasto_no_puede_ser_superior_a_los_ingresos
 
-                } else {
+                } else if (dataTotalGastos == dataTotalIngresos) {
+                    dbm.deleteAllScreenTransactions()
+                    cargandoListaActualizada()
+                }
+                else {
                     // Actualiza el valor en la lista
                     // si es un ingreso o si el nuevo valor no es superior al total de ingresos
                     updateItemList(
@@ -236,11 +248,9 @@ class TransactionsViewModel @Inject constructor(
 
     private fun cargandoListaActualizada() {
         viewModelScope.launch(Dispatchers.IO) {
-            _transactionUiState.update { _transactionUiState.value.copy(isUpdateItem = true) }
+            _transactionUiState.update { it.copy(isUpdateItem = true) }
             val data = dbm.getTransactions()
-            _transactionUiState.update {
-                _transactionUiState.value.copy(items = data, isUpdateItem = false)
-            }
+            _transactionUiState.update { it.copy(items = data, isUpdateItem = false) }
         }
     }
 
@@ -281,16 +291,18 @@ class TransactionsViewModel @Inject constructor(
 
     private fun updateCurrentMoneyList(
         listTransactions: List<TransactionModel>,
-        cash:Double,isCurrentMoneyIngresos:Boolean,
+        cash: Double, isCurrentMoneyIngresos: Boolean,
     ) {
         viewModelScope.launch(Dispatchers.IO) {
+            val currentMoney = userDataFirestore.get()?.currentMoney ?: 0.0
             if (listTransactions.size == 1) {
                 // Si es el último elemento, establecer el saldo directamente a 0.0
-                userDataFirestore.updateCurrentMoney(0.0, true)
-                val currentMoney = userDataFirestore.get()?.currentMoney ?: 0.0
+                userDataFirestore.updateCurrentMoney(0.0, isCurrentMoneyIngresos)
                 val newValue = currentMoney + cash
-                Log.d(tag, "updateCurrentMoneyList newValue =: $newValue")
-                userDataFirestore.updateCurrentMoney(maxOf(newValue, 0.0), true)
+                userDataFirestore.updateCurrentMoney(maxOf(newValue, 0.0), isCurrentMoneyIngresos)
+            } else {
+                val newValue = currentMoney + cash
+                userDataFirestore.updateCurrentMoney(newValue, isCurrentMoneyIngresos)
             }
         }
     }
@@ -299,7 +311,6 @@ class TransactionsViewModel @Inject constructor(
         viewModelScope.launch {
             try {
                 userDataFirestore.updateCurrentMoney(nuevoDinero, false)
-                cargandoListaActualizada()
             } catch (e: Exception) {
                 Log.e(tag, " Error en updateCurrentMoney: ${e.message}")
             }
