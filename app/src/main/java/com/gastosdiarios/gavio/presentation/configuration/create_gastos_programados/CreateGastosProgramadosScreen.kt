@@ -5,6 +5,7 @@ import androidx.compose.foundation.background
 import androidx.compose.foundation.combinedClickable
 import androidx.compose.foundation.layout.Box
 import androidx.compose.foundation.layout.Column
+import androidx.compose.foundation.layout.PaddingValues
 import androidx.compose.foundation.layout.Row
 import androidx.compose.foundation.layout.fillMaxSize
 import androidx.compose.foundation.layout.fillMaxWidth
@@ -40,9 +41,11 @@ import androidx.compose.ui.unit.dp
 import androidx.hilt.navigation.compose.hiltViewModel
 import com.gastosdiarios.gavio.R
 import com.gastosdiarios.gavio.data.commons.CommonsEmptyFloating
+import com.gastosdiarios.gavio.data.commons.CommonsLoadingData
 import com.gastosdiarios.gavio.data.commons.CommonsLoadingScreen
 import com.gastosdiarios.gavio.data.commons.ProfileIcon
 import com.gastosdiarios.gavio.data.commons.TopAppBarOnBack
+import com.gastosdiarios.gavio.data.ui_state.ListUiState
 import com.gastosdiarios.gavio.domain.enums.CategoryTypeEnum
 import com.gastosdiarios.gavio.domain.enums.Modo
 import com.gastosdiarios.gavio.domain.model.modelFirebase.GastosProgramadosModel
@@ -68,14 +71,14 @@ fun CreateGastosProgramadosScreen(
         topBar = {
             TopAppBarOnBack(
                 title = "Gastos programados",
-                containerColor = MaterialTheme.colorScheme.secondaryContainer,
+                containerColor = MaterialTheme.colorScheme.surface,
                 onBack = onBack,
                 actions = {
                     if (selectionMode && selectedItems.size > 1) {
                         IconButton(onClick = {
-                           selectedItems.forEach { item ->
-                               viewModel.deleteItemSelected(item)
-                           }
+                            selectedItems.forEach { item ->
+                                viewModel.deleteItemSelected(item)
+                            }
                         }) {
                             Icon(imageVector = Icons.Default.Delete, contentDescription = "delete")
                         }
@@ -130,50 +133,24 @@ fun CreateGastosProgramadosScreen(
                     )
                 }
 
-                else -> {
-                    // Estado para almacenar los elementos seleccionados
-                    val selectedItem by viewModel.selectedItems.collectAsState()
-                    Box(
-                        modifier = Modifier
-                            .fillMaxSize()
-                            .padding(paddingValues)
-                    ) {
-                        val expandedItem by viewModel.expandedItem.collectAsState()
-                        LazyColumn(modifier = Modifier.fillMaxSize()) {
-                            items(uiState.items, key = { it.uid ?: it.hashCode() }) { item ->
-                                val isSelected = selectedItem.any { it.uid == item.uid }
-                                ReplyEmailListItem(
-                                    item = item,
-                                    isSelected = isSelected,
-                                    expandedItem,
-                                    onClick = {
-                                        viewModel.onClickGastosProgramados(item)
-                                    },
-                                    onLongClick = {
-                                        viewModel.onLongClickGastosProgramados(item)
-                                    }
-                                )
-                            }
-                        }
-                        //si ahy un elemento seleccionado, desaparece el boton de agregar
-                        if (!selectionMode) {
-                            FloatingActionButton(
-                                onClick = { viewModel.isCreateTrue() },
-                                Modifier
-                                    .align(Alignment.BottomEnd)
-                                    .padding(
-                                        dimensionResource(id = R.dimen.padding_medium)
-                                    ),
-                                containerColor = MaterialTheme.colorScheme.primary
-                            ) {
-                                Icon(
-                                    imageVector = Icons.Default.Add,
-                                    contentDescription = "agregar"
-                                )
-                            }
-                        }
-                    }
+                uiState.isUpdateItem -> {
+                    GastosProgramadosListContent(
+                        uiState,
+                        viewModel,
+                        paddingValues,
+                        selectionMode,
+                        showCommonsLoadingData = true
+                    )
+                }
 
+                else -> {
+                    GastosProgramadosListContent(
+                        uiState,
+                        viewModel,
+                        paddingValues,
+                        selectionMode,
+                        showCommonsLoadingData = false
+                    )
                 }
             }
         }
@@ -285,5 +262,59 @@ fun ReplyEmailListItem(
             )
 
         }
+    }
+}
+
+@Composable
+fun GastosProgramadosListContent(
+    uiState: ListUiState<GastosProgramadosModel>,
+    viewModel: CreateGastosProgramadosViewModel,
+    paddingValues: PaddingValues,
+    selectionMode: Boolean,
+    showCommonsLoadingData: Boolean
+) {
+    val selectedItem by viewModel.selectedItems.collectAsState()
+    Box(
+        modifier = Modifier
+            .fillMaxSize()
+            .padding(paddingValues)
+    ) {
+        val expandedItem by viewModel.expandedItem.collectAsState()
+        LazyColumn(modifier = Modifier.fillMaxSize()) {
+            items(uiState.items, key = { it.uid ?: it.hashCode() }) { item ->
+                val isSelected = selectedItem.any { it.uid == item.uid }
+                ReplyEmailListItem(
+                    item = item,
+                    isSelected = isSelected,
+                    expandedItem,
+                    onClick = {
+                        viewModel.onClickGastosProgramados(item)
+                    },
+                    onLongClick = {
+                        viewModel.onLongClickGastosProgramados(item)
+                    }
+                )
+            }
+        }
+        //si ahy un elemento seleccionado, desaparece el boton de agregar
+        if (!selectionMode) {
+            FloatingActionButton(
+                onClick = { viewModel.isCreateTrue() },
+                Modifier
+                    .align(Alignment.BottomEnd)
+                    .padding(
+                        dimensionResource(id = R.dimen.padding_medium)
+                    ),
+                containerColor = MaterialTheme.colorScheme.primary
+            ) {
+                Icon(
+                    imageVector = Icons.Default.Add,
+                    contentDescription = "agregar"
+                )
+            }
+        }
+    }
+    if (showCommonsLoadingData) {
+        CommonsLoadingData()
     }
 }

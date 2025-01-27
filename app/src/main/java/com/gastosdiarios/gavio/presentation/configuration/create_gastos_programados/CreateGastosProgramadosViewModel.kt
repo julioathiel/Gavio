@@ -1,12 +1,15 @@
 package com.gastosdiarios.gavio.presentation.configuration.create_gastos_programados
 
+import android.content.Context
 import android.util.Log
+import android.widget.Toast
 import androidx.lifecycle.ViewModel
 import androidx.lifecycle.viewModelScope
 import com.gastosdiarios.gavio.data.ui_state.ListUiState
 import com.gastosdiarios.gavio.domain.model.modelFirebase.GastosProgramadosModel
 import com.gastosdiarios.gavio.domain.repository.repositoriesFirestrore.GastosProgramadosFirestore
 import dagger.hilt.android.lifecycle.HiltViewModel
+import dagger.hilt.android.qualifiers.ApplicationContext
 import kotlinx.coroutines.Dispatchers
 import kotlinx.coroutines.flow.MutableStateFlow
 import kotlinx.coroutines.flow.SharingStarted
@@ -20,6 +23,7 @@ import javax.inject.Inject
 
 @HiltViewModel
 class CreateGastosProgramadosViewModel @Inject constructor(
+    @ApplicationContext private val context: Context,
     private val gastosProgramadosFirestore: GastosProgramadosFirestore
 ) : ViewModel() {
 
@@ -27,10 +31,11 @@ class CreateGastosProgramadosViewModel @Inject constructor(
     val gastosProgramadosUiState: StateFlow<ListUiState<GastosProgramadosModel>> =
         _gastosProgramadosUiState.asStateFlow()
 
+
     private val _isCreate = MutableStateFlow(false)
     val isCreate: StateFlow<Boolean> = _isCreate.asStateFlow()
 
-    private val _isDelete= MutableStateFlow(false)
+    private val _isDelete = MutableStateFlow(false)
     val isDelete: StateFlow<Boolean> = _isDelete.asStateFlow()
 
     private val _selectionMode = MutableStateFlow(false)
@@ -39,15 +44,21 @@ class CreateGastosProgramadosViewModel @Inject constructor(
     private val _selectedItems = MutableStateFlow<List<GastosProgramadosModel>>(emptyList())
     val selectedItems: StateFlow<List<GastosProgramadosModel>> = _selectedItems
 
+    private val _expandedItem = MutableStateFlow<GastosProgramadosModel?>(null)
+    val expandedItem: StateFlow<GastosProgramadosModel?> = _expandedItem
+
+
     private val _isLoading = MutableStateFlow(false)
     val isLoading = _isLoading.onStart {
         getAllGastosProgramados()
-    }.stateIn(viewModelScope, SharingStarted.WhileSubscribed(5000L), false)
+    }.stateIn(
+        viewModelScope,
+        SharingStarted.WhileSubscribed(5000L), false
+    )
 
     private fun getAllGastosProgramados() {
         viewModelScope.launch(Dispatchers.IO) {
             _isLoading.value = true
-            _gastosProgramadosUiState.update { it.copy(isLoading = true) }
             val data: List<GastosProgramadosModel> = gastosProgramadosFirestore.get()
             _gastosProgramadosUiState.update {
                 it.copy(items = data, isLoading = false)
@@ -55,6 +66,7 @@ class CreateGastosProgramadosViewModel @Inject constructor(
             _isLoading.value = false
         }
     }
+
 
     fun create(item: GastosProgramadosModel) {
         viewModelScope.launch(Dispatchers.IO) {
@@ -75,19 +87,18 @@ class CreateGastosProgramadosViewModel @Inject constructor(
             try {
                 gastosProgramadosFirestore.delete(item)
             } catch (e: Exception) {
+                Toast.makeText(context, "Error al eliminar", Toast.LENGTH_SHORT).show()
                 Log.e("Error", e.message.toString())
             }
-
         }
     }
 
     fun deleteItemSelected(item: GastosProgramadosModel) {
         delete(item)
-        cargandoListaActualizada()
         _selectedItems.value = emptyList()
         _selectionMode.value = false
+        cargandoListaActualizada()
     }
-
 
     fun deleteAll() {
         viewModelScope.launch(Dispatchers.IO) {
@@ -95,8 +106,6 @@ class CreateGastosProgramadosViewModel @Inject constructor(
         }
     }
 
-    private val _expandedItem = MutableStateFlow<GastosProgramadosModel?>(null)
-    val expandedItem: StateFlow<GastosProgramadosModel?> = _expandedItem
 
     fun onClickGastosProgramados(item: GastosProgramadosModel) {
         if (_selectionMode.value) {
@@ -117,8 +126,9 @@ class CreateGastosProgramadosViewModel @Inject constructor(
         }
     }
 
+
     fun onLongClickGastosProgramados(item: GastosProgramadosModel) {
-        _selectionMode.update { true }
+         _selectionMode.update { true }
         _selectedItems.update { currentList ->
             val newList = currentList.toMutableList()
             if (newList.any { it.uid == item.uid }) {
@@ -128,11 +138,12 @@ class CreateGastosProgramadosViewModel @Inject constructor(
             }
             newList.toList() // Convertir de nuevo a List<GastosProgramadosModel>
         }
+
     }
 
     private fun cargandoListaActualizada() {
         viewModelScope.launch(Dispatchers.IO) {
-            _gastosProgramadosUiState.update { it.copy(isUpdateItem = true) }
+              _gastosProgramadosUiState.update { it.copy(isUpdateItem = true) }
             val data = gastosProgramadosFirestore.get()
             _gastosProgramadosUiState.update {
                 it.copy(items = data, isUpdateItem = false)
@@ -140,22 +151,10 @@ class CreateGastosProgramadosViewModel @Inject constructor(
         }
     }
 
-
-    fun isCreateTrue() {
-        _isCreate.value = true
-    }
-
-    fun isCreateFalse() {
-        _isCreate.value = false
-    }
-
-    fun isDeleteTrue() {
-        _isDelete.value = true
-    }
-
-    fun isDeleteFalse() {
-        _isDelete.value = false
-    }
+    fun isCreateTrue() { _isCreate.value = true }
+    fun isCreateFalse() { _isCreate.value = false }
+    fun isDeleteTrue() { _isDelete.value = true }
+    fun isDeleteFalse() { _isDelete.value = false }
 
     // funcion que se usa cuando se edita y se guarda el item
     fun clearSelection(item: GastosProgramadosModel) {
