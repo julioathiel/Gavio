@@ -18,6 +18,8 @@ import androidx.compose.material3.Icon
 import androidx.compose.material3.MaterialTheme
 import androidx.compose.material3.Text
 import androidx.compose.runtime.Composable
+import androidx.compose.runtime.collectAsState
+import androidx.compose.runtime.getValue
 import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.draw.clip
@@ -27,6 +29,7 @@ import androidx.compose.ui.unit.dp
 import com.gastosdiarios.gavio.R
 import com.gastosdiarios.gavio.data.commons.ProfileIcon
 import com.gastosdiarios.gavio.domain.model.modelFirebase.GastosProgramadosModel
+import com.gastosdiarios.gavio.presentation.configuration.create_gastos_programados.CreateGastosProgramadosViewModel
 import com.gastosdiarios.gavio.utils.CurrencyUtils
 import com.gastosdiarios.gavio.utils.DateUtils
 
@@ -35,10 +38,11 @@ import com.gastosdiarios.gavio.utils.DateUtils
 fun ReplyListItem(
     item: GastosProgramadosModel,
     isSelected: Boolean,
-    expandedItem: GastosProgramadosModel?,
+    viewModel: CreateGastosProgramadosViewModel,
     onClick: () -> Unit,
     onLongClick: () -> Unit,
 ) {
+    val data by viewModel.dataList.collectAsState()
     val cash = CurrencyUtils.formattedCurrency(item.cash?.toDouble() ?: 0.0)
     val date = item.date ?: ""
     val title = item.title ?: ""
@@ -57,7 +61,7 @@ fun ReplyListItem(
             )
             .background(
                 if (isSelected) {
-                    MaterialTheme.colorScheme.tertiaryContainer
+                    MaterialTheme.colorScheme.surfaceBright
                 } else {
                     MaterialTheme.colorScheme.surface
                 }
@@ -81,10 +85,10 @@ fun ReplyListItem(
             )
 
             Box(
-                Modifier
-                    .background(MaterialTheme.colorScheme.secondaryContainer)
-                    .clip(CircleShape)
-                    .align(Alignment.BottomEnd)
+                Modifier.align(Alignment.BottomEnd)
+                    .background(MaterialTheme.colorScheme.tertiaryContainer,
+                        shape = CircleShape
+                    )
             ) {
                 if (isSelected) {
                     Icon(
@@ -110,7 +114,7 @@ fun ReplyListItem(
                 Text(
                     text = if (subtitle.isEmpty()) "sin descripcion" else item.subTitle ?: "",
                     style = MaterialTheme.typography.bodySmall,
-                    maxLines = if (expandedItem?.uid == item.uid) Int.MAX_VALUE else 1,
+                    maxLines = if (data.expandedItem?.uid == item.uid) Int.MAX_VALUE else 1,
                     overflow = TextOverflow.Ellipsis
                 )
 

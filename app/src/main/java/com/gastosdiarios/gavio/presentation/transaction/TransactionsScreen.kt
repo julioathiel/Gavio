@@ -3,38 +3,55 @@ package com.gastosdiarios.gavio.presentation.transaction
 import android.util.Log
 import androidx.activity.compose.BackHandler
 import androidx.compose.foundation.ExperimentalFoundationApi
+import androidx.compose.foundation.layout.Column
+import androidx.compose.foundation.layout.Spacer
 import androidx.compose.foundation.layout.fillMaxSize
+import androidx.compose.foundation.layout.fillMaxWidth
+import androidx.compose.foundation.layout.height
 import androidx.compose.foundation.layout.padding
+import androidx.compose.foundation.layout.size
 import androidx.compose.foundation.lazy.LazyColumn
 import androidx.compose.foundation.lazy.items
 import androidx.compose.foundation.lazy.rememberLazyListState
 import androidx.compose.material.icons.Icons
 import androidx.compose.material.icons.filled.Create
 import androidx.compose.material.icons.filled.Delete
+import androidx.compose.material3.BottomSheetScaffold
+import androidx.compose.material3.Button
 import androidx.compose.material3.ExperimentalMaterial3Api
 import androidx.compose.material3.Icon
 import androidx.compose.material3.IconButton
 import androidx.compose.material3.MaterialTheme
-import androidx.compose.material3.Scaffold
+import androidx.compose.material3.ModalBottomSheet
 import androidx.compose.material3.SnackbarHost
 import androidx.compose.material3.SnackbarHostState
+import androidx.compose.material3.Text
 import androidx.compose.material3.pulltorefresh.PullToRefreshBox
 import androidx.compose.material3.pulltorefresh.rememberPullToRefreshState
+import androidx.compose.material3.rememberModalBottomSheetState
 import androidx.compose.runtime.Composable
 import androidx.compose.runtime.LaunchedEffect
 import androidx.compose.runtime.collectAsState
 import androidx.compose.runtime.getValue
+import androidx.compose.runtime.mutableStateOf
 import androidx.compose.runtime.remember
+import androidx.compose.runtime.setValue
 import androidx.compose.ui.Modifier
+import androidx.compose.ui.focus.FocusRequester
 import androidx.compose.ui.platform.LocalContext
 import androidx.compose.ui.res.stringResource
+import androidx.compose.ui.unit.dp
 import androidx.hilt.navigation.compose.hiltViewModel
 import com.gastosdiarios.gavio.R
 import com.gastosdiarios.gavio.data.commons.CommonsIsEmpty
 import com.gastosdiarios.gavio.data.commons.CommonsLoadingData
 import com.gastosdiarios.gavio.data.commons.CommonsLoadingScreen
+import com.gastosdiarios.gavio.data.commons.TextFieldDescription
 import com.gastosdiarios.gavio.data.commons.TopAppBarOnBack
+import com.gastosdiarios.gavio.domain.enums.Modo
+import com.gastosdiarios.gavio.domain.model.modelFirebase.TransactionModel
 import com.gastosdiarios.gavio.presentation.configuration.create_gastos_programados.components.DialogDelete
+import com.gastosdiarios.gavio.presentation.home.components.TextFieldDinero
 import com.gastosdiarios.gavio.presentation.transaction.components.ItemFecha
 import com.gastosdiarios.gavio.presentation.transaction.components.ItemTransactions
 import com.gastosdiarios.gavio.utils.DateUtils
@@ -62,26 +79,26 @@ fun TransactionsScreen(
         }
     }
 
-    Scaffold(
+    BottomSheetScaffold(
         topBar = {
             TopAppBarOnBack(
-                title = if (data.selectionMode && data.selectedItems.size == 1) {
-                    stringResource(id = R.string.toolbar_registro_gastos)
-                } else if (data.selectionMode && data.selectedItems.size > 1) {
-                    "${data.selectedItems.size}"
-                } else {
+                title = if (data.selectionMode && data.selectedItems.size > 1) "${data.selectedItems.size}"
+                else {
                     stringResource(id = R.string.toolbar_registro_gastos)
                 },
-                containerColor = MaterialTheme.colorScheme.secondaryContainer,
+                containerColor = MaterialTheme.colorScheme.surface,
                 onBack = onBack,
                 actions = {
                     if (data.selectionMode && data.selectedItems.size > 1) {
                         IconButton(onClick = { viewModel.deleteItemSelected() }) {
-                            Icon(imageVector = Icons.Default.Delete, contentDescription = "delete")
+                            Icon(
+                                imageVector = Icons.Default.Delete,
+                                contentDescription = "delete items"
+                            )
                         }
                     } else if (data.selectionMode && data.selectedItems.size == 1) {
                         IconButton(onClick = { viewModel.isCreateTrue() }) {
-                            Icon(imageVector = Icons.Default.Create, contentDescription = "delete")
+                            Icon(imageVector = Icons.Default.Create, contentDescription = "editar")
                         }
 
                         IconButton(onClick = {
@@ -92,6 +109,25 @@ fun TransactionsScreen(
                     }
                 }
             )
+        },
+        sheetMaxWidth = 0.dp,
+        sheetContent = {
+            when {
+                data.isCreate -> {
+                    val item = data.selectedItems.firstOrNull() ?: TransactionModel()
+
+                    ModalBottomSheet(onDismissRequest = { viewModel.isCreateFalse() },
+                        sheetState = rememberModalBottomSheetState(skipPartiallyExpanded = true),
+                        content = {
+                            ContentBottomSheetTransaction(
+                                item = item,
+                                onDismiss = { viewModel.clearSelection(item) },
+                                viewModel
+                            )
+                        }
+                    )
+                }
+            }
         },
         content = { paddingValues ->
             PullToRefreshBox(
@@ -109,71 +145,6 @@ fun TransactionsScreen(
     DialogDelete(data.isDelete, onDismiss = { viewModel.isDeleteFalse() },
         onConfirm = { viewModel.deleteItemSelected() }
     )
-
-    //        //si presiona editar se abrira otro dialogo para editar
-//        if (showConfirmationEditar) {
-//            val sheetState = rememberModalBottomSheetState(skipPartiallyExpanded = true)
-//            ModalBottomSheet(
-//                onDismissRequest = {
-//                    showConfirmationEditar = false
-//                    showConfirmationDialog = false
-//                },
-//                sheetState = sheetState,
-//                content = {
-//
-//                    var cantidadIngresada by remember { mutableStateOf(item.cash.toString()) }
-//                    var description by remember { mutableStateOf(item.subTitle.toString()) }
-//
-//                    val spaciness = 16.dp
-//                    Column(
-//                        Modifier
-//                            .fillMaxWidth()
-//                            .padding(horizontal = 16.dp)
-//                    ) {
-//                        Spacer(modifier = Modifier.padding(spaciness))
-//
-//                        TextFieldDinero(
-//                            cantidadIngresada,
-//                            Modifier.fillMaxWidth(),
-//                            focusRequester = focusRequester
-//                        ) { nuevoValor ->
-//                            cantidadIngresada = nuevoValor
-//                        }
-//                        Spacer(modifier = Modifier.padding(spaciness))
-//                        Text(text = stringResource(id = R.string.descripcion))
-//                        //Description
-//                        TextFieldDescription(
-//                            description = description,
-//                            modifier = Modifier.fillMaxWidth()
-//                        ) { newDescription ->
-//                            description = newDescription
-//                        }
-//                        Spacer(modifier = Modifier.size(150.dp))
-//
-//                        Button(
-//                            onClick = {
-//                                // Actualizar dinero y descripción
-//                                viewModel.updateItem(
-//                                    title = item.title.orEmpty(),
-//                                    nuevoValor = cantidadIngresada,
-//                                    description = description,
-//                                    valorViejo = item
-//                                )
-//                                showConfirmationEditar = false
-//                                cantidadIngresada = ""
-//                                description = ""
-//                            }, modifier = Modifier
-//                                .fillMaxWidth()
-//                                .height(50.dp),
-//                            enabled = cantidadIngresada.isNotEmpty()
-//                        ) {
-//                            Text(text = stringResource(id = R.string.guardar))
-//                        }
-//                        Spacer(modifier = Modifier.size(24.dp))
-//                    }
-//                }
-//            )
-//        }
 }
 
 @Composable
@@ -188,7 +159,9 @@ fun Content(
             CommonsLoadingScreen(modifier = modifier.fillMaxSize())
         }
 
-        uiState.empty -> { CommonsIsEmpty() }
+        uiState.items.isEmpty() -> {
+            CommonsIsEmpty()
+        }
 
         uiState.update -> {
             ContentList(viewModel)
@@ -230,12 +203,8 @@ fun ContentList(viewModel: TransactionsViewModel) {
                     item,
                     viewModel,
                     isSelect = isSelect,
-                    onClick = {
-                        viewModel.onClick(item)
-                    },
-                    onLongClick = {
-                        viewModel.onLongClick(item)
-                    }
+                    onClick = { viewModel.onClick(item) },
+                    onLongClick = { viewModel.onLongClick(item) }
                 )
             }
         }
@@ -246,4 +215,63 @@ fun ContentList(viewModel: TransactionsViewModel) {
         listState.scrollToItem(index = 0)
     }
 
+}
+
+@Composable
+fun ContentBottomSheetTransaction(
+    item: TransactionModel,
+    onDismiss: () -> Unit,
+    viewModel: TransactionsViewModel
+) {
+    var cantidadIngresada by remember { mutableStateOf(item.cash.toString()) }
+    var description by remember { mutableStateOf(item.subTitle.toString()) }
+    val focusRequester = remember { FocusRequester() }
+
+    val spaciness = 16.dp
+    Column(
+        Modifier
+            .fillMaxWidth()
+            .padding(horizontal = 16.dp)
+    ) {
+        Spacer(modifier = Modifier.padding(spaciness))
+
+        TextFieldDinero(
+            cantidadIngresada,
+            Modifier.fillMaxWidth(),
+            focusRequester = focusRequester
+        ) { nuevoValor ->
+            cantidadIngresada = nuevoValor
+        }
+        Spacer(modifier = Modifier.padding(spaciness))
+        Text(text = stringResource(id = R.string.descripcion))
+        //Description
+        TextFieldDescription(
+            description = description,
+            modifier = Modifier.fillMaxWidth()
+        ) { newDescription ->
+            description = newDescription
+        }
+        Spacer(modifier = Modifier.size(150.dp))
+
+        Button(
+            onClick = {
+                // Actualizar dinero y descripción
+                viewModel.updateItem(
+                    title = item.title.orEmpty(),
+                    nuevoValor = cantidadIngresada,
+                    description = description,
+                    valorViejo = item
+                )
+                onDismiss()
+                cantidadIngresada = ""
+                description = ""
+            }, modifier = Modifier
+                .fillMaxWidth()
+                .height(50.dp),
+            enabled = cantidadIngresada.isNotEmpty()
+        ) {
+            Text(text = stringResource(id = R.string.guardar))
+        }
+        Spacer(modifier = Modifier.size(24.dp))
+    }
 }

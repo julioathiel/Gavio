@@ -20,8 +20,11 @@ import dagger.hilt.android.lifecycle.HiltViewModel
 import dagger.hilt.android.qualifiers.ApplicationContext
 import kotlinx.coroutines.Dispatchers
 import kotlinx.coroutines.flow.MutableStateFlow
+import kotlinx.coroutines.flow.SharingStarted
 import kotlinx.coroutines.flow.StateFlow
 import kotlinx.coroutines.flow.asStateFlow
+import kotlinx.coroutines.flow.onStart
+import kotlinx.coroutines.flow.stateIn
 import kotlinx.coroutines.flow.update
 import kotlinx.coroutines.launch
 import kotlinx.coroutines.withContext
@@ -46,30 +49,45 @@ class CategoryViewModel @Inject constructor(
     val uiStateIngresos: StateFlow<ListUiState<UserCreateCategoryModel>> =
         _uiStateIngresos.asStateFlow()
 
-    init {
+    private val _uiState = MutableStateFlow(false)
+    val uiState = _uiState.onStart {
+        getAllCategories()
+    }.stateIn(viewModelScope,
+        SharingStarted.WhileSubscribed(5000L),
+        false
+    )
+
+
+    private fun getAllCategories() {
         getAllGastos()
         getAllIngresos()
     }
 
-    fun getAllGastos() {
+    private fun getAllGastos() {
         viewModelScope.launch {
-            if(IsInternetAvailableUtils.isInternetAvailable(appContext)){
-                _uiStateGastos.update { it.copy(isLoading = true) }
+            if (IsInternetAvailableUtils.isInternetAvailable(appContext)) {
+                _uiState.update { true }
                 val data: List<UserCreateCategoryModel> =
                     withContext(Dispatchers.IO) { dbm.getUserCategoryGastos() }
-                _uiStateGastos.update { it.copy(items = data, isLoading = false) }
-            }else{
+                _uiStateGastos.update { it.copy(items = data) }
+                _uiState.update{false}
+            } else {
                 _uiStateDefault.update { it.copy(errorConectionInternet = true) }
             }
         }
     }
 
-    fun getAllIngresos() {
+    private fun getAllIngresos() {
         viewModelScope.launch {
-            _uiStateIngresos.update { it.copy(isLoading = true) }
-            val data: List<UserCreateCategoryModel> =
-                withContext(Dispatchers.IO) { dbm.getUserCategoryIngresos() }
-            _uiStateIngresos.update { it.copy(items = data, isLoading = false) }
+            if (IsInternetAvailableUtils.isInternetAvailable(appContext)) {
+                _uiState.update { true }
+                val data: List<UserCreateCategoryModel> =
+                    withContext(Dispatchers.IO) { dbm.getUserCategoryIngresos() }
+                _uiStateIngresos.update { it.copy(items = data) }
+                _uiState.update { false }
+            }else{
+                _uiStateDefault.update { it.copy(errorConectionInternet = true) }
+            }
         }
     }
 
@@ -83,7 +101,7 @@ class CategoryViewModel @Inject constructor(
                     limpiandoElementoViejo(item)
                 }
                 cargandoListaActualizada(typeCategory)
-            }else{
+            } else {
                 val lista = dbm.getUserCategoryGastos()
                 // Elimina todas las categorias de la base de datos
                 for (item in lista) {
@@ -108,7 +126,7 @@ class CategoryViewModel @Inject constructor(
                         isSelectedEditItem = true, onDismiss = true
                     )
                 }
-            }else{
+            } else {
                 _uiStateDefault.update {
                     it.copy(
                         onDismiss = true,
@@ -210,15 +228,19 @@ class CategoryViewModel @Inject constructor(
     fun isActivatedTrue() {
         _uiStateDefault.update { it.copy(isActivated = true) }
     }
+
     fun isActivatedFalse() {
         _uiStateDefault.update { it.copy(isActivated = false) }
     }
+
     fun onDismissSet(value: Boolean) {
         _uiStateDefault.update { it.copy(onDismiss = value) }
     }
+
     fun actualizarTitulo(title: String) {
         _uiStateDefault.update { it.copy(titleBottomSheet = title) }
     }
+
     fun selectedIcon(selectedIcon: CategoryCreate) {
         _uiStateDefault.update { it.copy(selectedCategory = selectedIcon) }
     }

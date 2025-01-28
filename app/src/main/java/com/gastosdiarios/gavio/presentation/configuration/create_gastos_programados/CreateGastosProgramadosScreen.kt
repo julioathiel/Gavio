@@ -49,28 +49,25 @@ fun CreateGastosProgramadosScreen(
     onBack: () -> Unit
 ) {
     val uiState by viewModel.gastosProgramadosUiState.collectAsState()
-    val isLoading: Boolean by viewModel.isLoading.collectAsState()
-    val selectionMode: Boolean by viewModel.selectionMode.collectAsState()
-    val selectedItems: List<GastosProgramadosModel> by viewModel.selectedItems.collectAsState()
-    val isCreate by viewModel.isCreate.collectAsState()
-    val isDelete by viewModel.isDelete.collectAsState()
+    val data by viewModel.dataList.collectAsState()
+    val loading by viewModel.loading.collectAsState()
 
     BottomSheetScaffold(
         topBar = {
             TopAppBarOnBack(
-                title = "Gastos programados",
+                title = if(data.selectedItems.size >1) "${data.selectedItems.size}" else "Gastos programados",
                 containerColor = MaterialTheme.colorScheme.surface,
                 onBack = onBack,
                 actions = {
-                    if (selectionMode && selectedItems.size > 1) {
+                    if (data.selectionMode && data.selectedItems.size > 1) {
                         IconButton(onClick = {
-                            selectedItems.forEach { item ->
+                            data.selectedItems.forEach { item ->
                                 viewModel.deleteItemSelected(item)
                             }
                         }) {
                             Icon(imageVector = Icons.Default.Delete, contentDescription = "delete")
                         }
-                    } else if (selectionMode && selectedItems.size == 1) {
+                    } else if (data.selectionMode && data.selectedItems.size == 1) {
                         IconButton(onClick = { viewModel.isCreateTrue() }) {
                             Icon(imageVector = Icons.Default.Create, contentDescription = "delete")
                         }
@@ -87,11 +84,11 @@ fun CreateGastosProgramadosScreen(
         sheetMaxWidth = 0.dp,
         sheetContent = {
             when {
-                isCreate -> {
+                data.isCreate -> {
 
-                    val item = selectedItems.firstOrNull() ?: GastosProgramadosModel()
+                    val item = data.selectedItems.firstOrNull() ?: GastosProgramadosModel()
                     val modo =
-                        if (selectedItems.size == 1) Modo.EDITAR else Modo.AGREGAR
+                        if (data.selectedItems.size == 1) Modo.EDITAR else Modo.AGREGAR
                     ModalBottomSheet(onDismissRequest = { viewModel.isCreateFalse() },
                         sheetState = rememberModalBottomSheetState(skipPartiallyExpanded = true),
                         content = {
@@ -110,9 +107,7 @@ fun CreateGastosProgramadosScreen(
         content = { paddingValues ->
 
             when {
-                isLoading -> {
-                    CommonsLoadingScreen(Modifier.fillMaxSize())
-                }
+                loading -> { CommonsLoadingScreen(Modifier.fillMaxSize()) }
 
                 uiState.items.isEmpty() -> {
                     CommonsEmptyFloating(
@@ -126,7 +121,7 @@ fun CreateGastosProgramadosScreen(
                         uiState,
                         viewModel,
                         paddingValues,
-                        selectionMode,
+                        data.selectionMode,
                         showCommonsLoadingData = true
                     )
                 }
@@ -136,7 +131,7 @@ fun CreateGastosProgramadosScreen(
                         uiState,
                         viewModel,
                         paddingValues,
-                        selectionMode,
+                        data.selectionMode,
                         showCommonsLoadingData = false
                     )
                 }
@@ -144,9 +139,9 @@ fun CreateGastosProgramadosScreen(
         }
     )
 
-    DialogDelete(isDelete, onDismiss = { viewModel.isDeleteFalse() },
+    DialogDelete(data.isDelete, onDismiss = { viewModel.isDeleteFalse() },
         onConfirm = {
-            selectedItems.forEach { item ->
+            data.selectedItems.forEach { item ->
                 viewModel.deleteItemSelected(item)
             }
         }
@@ -163,26 +158,22 @@ fun GastosProgramadosListContent(
     selectionMode: Boolean,
     showCommonsLoadingData: Boolean
 ) {
-    val selectedItem by viewModel.selectedItems.collectAsState()
+    val data by viewModel.dataList.collectAsState()
     Box(
         modifier = Modifier
             .fillMaxSize()
             .padding(paddingValues)
     ) {
-        val expandedItem by viewModel.expandedItem.collectAsState()
+
         LazyColumn(modifier = Modifier.fillMaxSize()) {
             items(uiState.items, key = { it.uid ?: it.hashCode() }) { item ->
-                val isSelected = selectedItem.any { it.uid == item.uid }
+                val isSelected = data.selectedItems.any { it.uid == item.uid }
                 ReplyListItem(
                     item = item,
                     isSelected = isSelected,
-                    expandedItem,
-                    onClick = {
-                        viewModel.onClickGastosProgramados(item)
-                    },
-                    onLongClick = {
-                        viewModel.onLongClickGastosProgramados(item)
-                    }
+                    viewModel = viewModel,
+                    onClick = { viewModel.onClick(item) },
+                    onLongClick = { viewModel.onLongClick(item) }
                 )
             }
             item{

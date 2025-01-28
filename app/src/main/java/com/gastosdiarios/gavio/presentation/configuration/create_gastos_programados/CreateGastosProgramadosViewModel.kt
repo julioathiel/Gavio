@@ -8,6 +8,7 @@ import androidx.lifecycle.viewModelScope
 import com.gastosdiarios.gavio.data.ui_state.ListUiState
 import com.gastosdiarios.gavio.domain.model.modelFirebase.GastosProgramadosModel
 import com.gastosdiarios.gavio.domain.repository.repositoriesFirestrore.GastosProgramadosFirestore
+import com.gastosdiarios.gavio.presentation.transaction.TransactionsViewModel.DataList
 import dagger.hilt.android.lifecycle.HiltViewModel
 import dagger.hilt.android.qualifiers.ApplicationContext
 import kotlinx.coroutines.Dispatchers
@@ -32,24 +33,12 @@ class CreateGastosProgramadosViewModel @Inject constructor(
         _gastosProgramadosUiState.asStateFlow()
 
 
-    private val _isCreate = MutableStateFlow(false)
-    val isCreate: StateFlow<Boolean> = _isCreate.asStateFlow()
-
-    private val _isDelete = MutableStateFlow(false)
-    val isDelete: StateFlow<Boolean> = _isDelete.asStateFlow()
-
-    private val _selectionMode = MutableStateFlow(false)
-    val selectionMode: StateFlow<Boolean> = _selectionMode
-
-    private val _selectedItems = MutableStateFlow<List<GastosProgramadosModel>>(emptyList())
-    val selectedItems: StateFlow<List<GastosProgramadosModel>> = _selectedItems
-
-    private val _expandedItem = MutableStateFlow<GastosProgramadosModel?>(null)
-    val expandedItem: StateFlow<GastosProgramadosModel?> = _expandedItem
+    private val _dataList = MutableStateFlow(DataList<GastosProgramadosModel>())
+    val dataList: StateFlow<DataList<GastosProgramadosModel>> = _dataList.asStateFlow()
 
 
-    private val _isLoading = MutableStateFlow(false)
-    val isLoading = _isLoading.onStart {
+    private val _loading = MutableStateFlow(false)
+    val loading = _loading.onStart {
         getAllGastosProgramados()
     }.stateIn(
         viewModelScope,
@@ -58,12 +47,12 @@ class CreateGastosProgramadosViewModel @Inject constructor(
 
     private fun getAllGastosProgramados() {
         viewModelScope.launch(Dispatchers.IO) {
-            _isLoading.value = true
+            _loading.update { true }
             val data: List<GastosProgramadosModel> = gastosProgramadosFirestore.get()
             _gastosProgramadosUiState.update {
                 it.copy(items = data, isLoading = false)
             }
-            _isLoading.value = false
+            _loading.update { false }
         }
     }
 
@@ -95,8 +84,7 @@ class CreateGastosProgramadosViewModel @Inject constructor(
 
     fun deleteItemSelected(item: GastosProgramadosModel) {
         delete(item)
-        _selectedItems.value = emptyList()
-        _selectionMode.value = false
+        _dataList.update{ it.copy(selectedItems = emptyList(), selectionMode = false)}
         cargandoListaActualizada()
     }
 
@@ -107,38 +95,36 @@ class CreateGastosProgramadosViewModel @Inject constructor(
     }
 
 
-    fun onClickGastosProgramados(item: GastosProgramadosModel) {
-        if (_selectionMode.value) {
-            _selectedItems.update { currentList ->
-                val newList = currentList.toMutableList()
-                if (newList.any { it.uid == item.uid }) {
-                    newList.removeAll { it.uid == item.uid }
+    fun onClick(item: GastosProgramadosModel) {
+        _dataList.update { currentDataList ->
+            if (currentDataList.selectionMode) {
+                val updatedSelectedItems = currentDataList.selectedItems.toMutableList()
+                if (updatedSelectedItems.any { it.uid == item.uid }) {
+                    updatedSelectedItems.removeAll { it.uid == item.uid }
                 } else {
-                    newList.add(item)
+                    updatedSelectedItems.add(item)
                 }
-                newList.toList() // Convertir de nuevo a List<GastosProgramadosModel>
+                currentDataList.copy(
+                    selectedItems = updatedSelectedItems,
+                    selectionMode = updatedSelectedItems.isNotEmpty()
+                )
+            } else {
+                currentDataList.copy(expandedItem = if (currentDataList.expandedItem == item) null else item)
             }
-            if (_selectedItems.value.isEmpty()) {
-                _selectionMode.value = false
-            }
-        } else {
-            _expandedItem.value = if (_expandedItem.value == item) null else item
         }
     }
 
 
-    fun onLongClickGastosProgramados(item: GastosProgramadosModel) {
-         _selectionMode.update { true }
-        _selectedItems.update { currentList ->
-            val newList = currentList.toMutableList()
-            if (newList.any { it.uid == item.uid }) {
-                newList.removeAll { it.uid == item.uid }
+    fun onLongClick(item: GastosProgramadosModel) {
+        _dataList.update { currentDataList ->
+            val updatedSelectedItems = currentDataList.selectedItems.toMutableList()
+            if (updatedSelectedItems.any { it.uid == item.uid }) {
+                updatedSelectedItems.removeAll { it.uid == item.uid }
             } else {
-                newList.add(item)
+                updatedSelectedItems.add(item)
             }
-            newList.toList() // Convertir de nuevo a List<GastosProgramadosModel>
+            currentDataList.copy(selectedItems = updatedSelectedItems, selectionMode = true)
         }
-
     }
 
     private fun cargandoListaActualizada() {
@@ -151,14 +137,16 @@ class CreateGastosProgramadosViewModel @Inject constructor(
         }
     }
 
-    fun isCreateTrue() { _isCreate.value = true }
-    fun isCreateFalse() { _isCreate.value = false }
-    fun isDeleteTrue() { _isDelete.value = true }
-    fun isDeleteFalse() { _isDelete.value = false }
+    fun isCreateTrue() { _dataList.update { it.copy(isCreate = true) } }
+    fun isCreateFalse() { _dataList.update { it.copy(isCreate = false) }  }
+    fun isDeleteTrue() { _dataList.update { it.copy(isDelete = true) } }
+    fun isDeleteFalse() {_dataList.update { it.copy(isDelete = false) } }
 
     // funcion que se usa cuando se edita y se guarda el item
     fun clearSelection(item: GastosProgramadosModel) {
         isCreateFalse()
-        onClickGastosProgramados(item)
+        //hacce que se deseleccione ya que se edito y se guardo
+        _dataList.update { it.copy(selectionMode = false, selectedItems = emptyList()) }
+        onClick(item)
     }
 }

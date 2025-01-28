@@ -49,7 +49,7 @@ fun ItemTransactions(
         )
         .background(
             if (isSelect) {
-                MaterialTheme.colorScheme.tertiaryContainer
+                MaterialTheme.colorScheme.surfaceBright
             } else {
                 MaterialTheme.colorScheme.surface
             }
@@ -63,12 +63,11 @@ fun ItemTransactions(
             description = item.title.orEmpty(),
             modifier = Modifier.clip(CircleShape),
             sizeBox = 48,
-            sizeIcon = 30,
+            sizeIcon = 24,
             colorBackground = MaterialTheme.colorScheme.surfaceContainer,
-            colorIcon = MaterialTheme.colorScheme.onSurface
+            colorIcon = MaterialTheme.colorScheme.primary
         )
 
-        //   Spacer(modifier = Modifier.padding(start = 16.dp))
         //contenedor de titulo y subtitulo
         Row(modifier = Modifier.fillMaxSize()) {
             Column(

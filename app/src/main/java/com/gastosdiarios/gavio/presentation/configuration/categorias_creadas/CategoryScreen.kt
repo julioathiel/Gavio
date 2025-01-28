@@ -1,6 +1,5 @@
 package com.gastosdiarios.gavio.presentation.configuration.categorias_creadas
 
-import android.util.Log
 import androidx.activity.compose.BackHandler
 import androidx.compose.foundation.layout.Box
 import androidx.compose.foundation.layout.Column
@@ -23,7 +22,6 @@ import androidx.compose.material3.TabRow
 import androidx.compose.material3.Text
 import androidx.compose.material3.rememberModalBottomSheetState
 import androidx.compose.runtime.Composable
-import androidx.compose.runtime.LaunchedEffect
 import androidx.compose.runtime.collectAsState
 import androidx.compose.runtime.getValue
 import androidx.compose.runtime.rememberCoroutineScope
@@ -57,11 +55,6 @@ fun CategoryScreen(
     val sheetState = rememberModalBottomSheetState(skipPartiallyExpanded = true)
     val pagerState = rememberPagerState(initialPage = 0, pageCount = { 2 })
     val coroutineScope = rememberCoroutineScope()
-
-    LaunchedEffect(Unit) {
-        viewModel.getAllGastos()
-        viewModel.getAllIngresos()
-    }
 
     PantallaDeCategoriasCreadas(
         uiStateDefault = uiStateDefault,
@@ -153,8 +146,10 @@ fun StateContentCategoryIngresos(
     modifier: Modifier
 ) {
     val uiStateIngresos by viewModel.uiStateIngresos.collectAsState()
-    Log.d("StateContentCategoryIngresos", "uiStateIngresos: $uiStateIngresos")
+    val loading by viewModel.uiState.collectAsState()
     when {
+        loading -> CommonsLoadingScreen(Modifier.fillMaxSize())
+
         uiStateIngresos.items.isEmpty() -> {
             // Si la lista está vacía, mostrar
             viewModel.isActivatedFalse()
@@ -162,7 +157,6 @@ fun StateContentCategoryIngresos(
         }
 
         uiStateIngresos.update -> {
-            CommonsLoadingData()
             ListContentTypeCategory(
                 uiStateIngresos.items,
                 viewModel,
@@ -192,9 +186,9 @@ fun StateContentCategoryGastos(
 ) {
     //Contenido para la pantalla de gastos
     val uiStateGastos by viewModel.uiStateGastos.collectAsState()
-
+    val loading by viewModel.uiState.collectAsState()
     when {
-        uiStateGastos.isLoading -> CommonsLoadingScreen(Modifier.fillMaxSize())
+        loading -> CommonsLoadingScreen(Modifier.fillMaxSize())
         uiStateGastos.items.isEmpty() -> {
             // Si la lista está vacía, mostrar
             viewModel.isActivatedFalse()
@@ -202,7 +196,6 @@ fun StateContentCategoryGastos(
         }
 
         uiStateGastos.update -> {
-            CommonsLoadingData()
             ListContentTypeCategory(
                 uiStateGastos.items,
                 viewModel,

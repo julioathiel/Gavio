@@ -9,6 +9,7 @@ import com.gastosdiarios.gavio.R
 import com.gastosdiarios.gavio.data.ui_state.ListUiState
 import com.gastosdiarios.gavio.domain.enums.TipoTransaccion
 import com.gastosdiarios.gavio.domain.model.RefreshDataModel
+import com.gastosdiarios.gavio.domain.model.modelFirebase.GastosProgramadosModel
 import com.gastosdiarios.gavio.domain.model.modelFirebase.TransactionModel
 import com.gastosdiarios.gavio.domain.repository.DataBaseManager
 import com.gastosdiarios.gavio.domain.repository.repositoriesFirestrore.GastosPorCategoriaFirestore
@@ -458,5 +459,11 @@ class TransactionsViewModel @Inject constructor(
                 Log.e("Error", e.message.toString())
             }
         }
+    }
+
+    fun clearSelection(item: TransactionModel) {
+        isCreateFalse()
+        _dataList.update { it.copy(selectionMode = false, selectedItems = emptyList()) }
+        onClick(item)
     }
 }
