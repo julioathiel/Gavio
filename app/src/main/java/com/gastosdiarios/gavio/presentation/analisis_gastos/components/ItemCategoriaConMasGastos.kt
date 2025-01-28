@@ -50,7 +50,7 @@ fun ItemCategoriaConMasGastos(
                     drawableResource = icon?.toInt() ?: R.drawable.ic_info,
                     description = "icon con mas gastos",
                     sizeBox = 30,
-                    colorCircle = Color.Transparent,
+                    colorBackground = Color.Transparent,
                     colorIcon = MaterialTheme.colorScheme.primary
                 )
                 Column(

@@ -161,7 +161,7 @@ fun StateContentCategoryIngresos(
             ContentCategoryEmpty(viewModel, modifier)
         }
 
-        uiStateIngresos.isUpdateItem -> {
+        uiStateIngresos.update -> {
             CommonsLoadingData()
             ListContentTypeCategory(
                 uiStateIngresos.items,
@@ -201,7 +201,7 @@ fun StateContentCategoryGastos(
             ContentCategoryEmpty(viewModel, modifier)
         }
 
-        uiStateGastos.isUpdateItem -> {
+        uiStateGastos.update -> {
             CommonsLoadingData()
             ListContentTypeCategory(
                 uiStateGastos.items,

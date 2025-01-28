@@ -34,6 +34,7 @@ import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.draw.clip
 import androidx.compose.ui.focus.FocusRequester
+import androidx.compose.ui.graphics.Color
 import androidx.compose.ui.graphics.RectangleShape
 import androidx.compose.ui.res.dimensionResource
 import androidx.compose.ui.res.stringResource
@@ -128,7 +129,7 @@ fun CardListItem(
             }
 
         }
-
+Spacer(modifier = Modifier.padding(dimensionResource(id = R.dimen.padding_small_4dp)))
         Row(
             Modifier
                 .fillMaxWidth()
@@ -139,9 +140,9 @@ fun CardListItem(
             ProfileIcon(
                 drawableResource = item.icon.orEmpty().toInt(),
                 description = item.title ?: "",
-                sizeBox = 40,
-                modifier = Modifier.clip(RectangleShape),
-                colorCircle = MaterialTheme.colorScheme.surfaceContainer,
+                sizeBox = 50,
+                boxRounded = 10,
+                colorBackground = MaterialTheme.colorScheme.surfaceContainer,
                 colorIcon = MaterialTheme.colorScheme.primary
             )
             Spacer(modifier = Modifier.weight(1f))

@@ -2,7 +2,9 @@ package com.gastosdiarios.gavio.presentation.configuration.create_gastos_program
 
 import androidx.compose.foundation.layout.Box
 import androidx.compose.foundation.layout.PaddingValues
+import androidx.compose.foundation.layout.Spacer
 import androidx.compose.foundation.layout.fillMaxSize
+import androidx.compose.foundation.layout.height
 import androidx.compose.foundation.layout.padding
 import androidx.compose.foundation.lazy.LazyColumn
 import androidx.compose.foundation.lazy.items
@@ -13,6 +15,7 @@ import androidx.compose.material.icons.filled.Delete
 import androidx.compose.material3.BottomSheetScaffold
 import androidx.compose.material3.ExperimentalMaterial3Api
 import androidx.compose.material3.FloatingActionButton
+import androidx.compose.material3.HorizontalDivider
 import androidx.compose.material3.Icon
 import androidx.compose.material3.IconButton
 import androidx.compose.material3.MaterialTheme
@@ -118,7 +121,7 @@ fun CreateGastosProgramadosScreen(
                     )
                 }
 
-                uiState.isUpdateItem -> {
+                uiState.update -> {
                     GastosProgramadosListContent(
                         uiState,
                         viewModel,
@@ -181,6 +184,10 @@ fun GastosProgramadosListContent(
                         viewModel.onLongClickGastosProgramados(item)
                     }
                 )
+            }
+            item{
+                HorizontalDivider()
+                Spacer(modifier = Modifier.height(100.dp))
             }
         }
         //si ahy un elemento seleccionado, desaparece el boton de agregar

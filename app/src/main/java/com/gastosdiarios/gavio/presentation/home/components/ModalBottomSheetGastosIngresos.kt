@@ -65,18 +65,10 @@ fun AddTransactionDialog(
     var cantidadIngresada by remember { mutableStateOf("") }
     var description by remember { mutableStateOf("") }
     var selectedCategory by remember { mutableStateOf<CategoriesModel?>(null) }
-    // var selectedCategory: CategoriesModel
     val focusRequester = remember { FocusRequester() }
     val sheetState = rememberModalBottomSheetState(skipPartiallyExpanded = true)
     val scope = rememberCoroutineScope()
 
-    var tipoTransaccion by remember { mutableStateOf(TipoTransaccion.GASTOS) }
-
-    tipoTransaccion = if (homeUiState.mostrandoDineroTotalIngresos == 0.0) {
-        TipoTransaccion.INGRESOS
-    } else {
-        TipoTransaccion.GASTOS
-    }
 
     if (showTransaction) {
         ModalBottomSheet(onDismissRequest = { onDismiss() }, sheetState = sheetState,
@@ -121,10 +113,8 @@ fun AddTransactionDialog(
                             onTipoSeleccionado = { tipClass ->
                                 if (tipClass == TipoTransaccion.INGRESOS) {
                                     homeViewModel.setIsChecked(TipoTransaccion.INGRESOS)
-                                    tipoTransaccion = TipoTransaccion.INGRESOS
                                 } else {
                                     homeViewModel.setIsChecked(TipoTransaccion.GASTOS)
-                                    tipoTransaccion = TipoTransaccion.GASTOS
                                 }
                             }
                         )
@@ -140,7 +130,6 @@ fun AddTransactionDialog(
                                     description,
                                     it,
                                     navController,
-                                    tipoTransaccion
                                 )
                             }
 
@@ -182,25 +171,24 @@ fun onClick(
     cantidadIngresada: String,
     description: String,
     selectedCategory: CategoriesModel,
-    navController: NavController,
-    tipoTransaccion: TipoTransaccion
+    navController: NavController
 ) {
+   val tipo = homeViewModel.homeUiState.value.tipoTransaccion
+   val tipoTransaccion = tipo ?: TipoTransaccion.INGRESOS
+
     if (homeUiState.fechaElegida == null) {
         homeViewModel.onDialogClose()
         navController.navigateUp()
     } else {
         //mandar tarea
-        homeViewModel.cantidadIngresada(
-            cantidadIngresada,
-            tipoTransaccion
-        )
+        homeViewModel.cantidadIngresada(cantidadIngresada,tipoTransaccion)
         //creando una transaccion
         homeViewModel.crearTransaction(
             cantidadIngresada,
             selectedCategory.name,
             description,
             selectedCategory.icon,
-            tipoTransaccion
+            tipoTransaccion = tipoTransaccion
         )
         //si la seleccion del usuario es gastos entonces se crea el registro de gastos individuales
         if (TipoTransaccion.GASTOS == homeUiState.tipoTransaccion) {

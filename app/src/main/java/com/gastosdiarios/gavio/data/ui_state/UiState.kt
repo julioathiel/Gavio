@@ -1,11 +1,11 @@
 package com.gastosdiarios.gavio.data.ui_state
 
-sealed interface UiState<T> {
-    data object Loading : UiState<Nothing>
-    data class Success<T>(val data: List<T>) : UiState<Nothing>
-    data class Update<T>(val data: List<T>) : UiState<Nothing>
-    data class Error(val throwable: Throwable) : UiState<Nothing>
-    data object Empty : UiState<Nothing>
+sealed interface UiState {
+    data object Loading : UiState
+    data class Success<T>(val data: List<T>) : UiState
+    data object Update: UiState
+    data class Error(val throwable: Throwable) : UiState
+    data object Empty : UiState
 }
 
 sealed class Result<out T> {

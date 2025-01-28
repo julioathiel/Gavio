@@ -87,7 +87,7 @@ open class CloudFirestore @Inject constructor(
                         totalGastos = 0.0,
                         totalIngresos = 0.0,
                         currentMoney = 0.0,
-                        isCurrentMoneyChecked = true,
+                        currentMoneyIsZero = true,
                         selectedDate = "",
                         isSelectedDate = true
                     )

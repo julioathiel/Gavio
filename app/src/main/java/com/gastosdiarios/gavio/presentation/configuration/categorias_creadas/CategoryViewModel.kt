@@ -186,13 +186,13 @@ class CategoryViewModel @Inject constructor(
     private fun cargandoListaActualizada(typeCategory: TipoTransaccion) {
         viewModelScope.launch {
             if (typeCategory == TipoTransaccion.INGRESOS) {
-                _uiStateIngresos.update { it.copy(isUpdateItem = true) }
+                _uiStateIngresos.update { it.copy(update = true) }
                 val data = withContext(Dispatchers.IO) { dbm.getUserCategoryIngresos() }
-                _uiStateIngresos.update { it.copy(items = data, isUpdateItem = false) }
+                _uiStateIngresos.update { it.copy(items = data, update = false) }
             } else {
-                _uiStateGastos.update { it.copy(isUpdateItem = true) }
+                _uiStateGastos.update { it.copy(update = true) }
                 val data = withContext(Dispatchers.IO) { dbm.getUserCategoryGastos() }
-                _uiStateGastos.update { it.copy(items = data, isUpdateItem = false) }
+                _uiStateGastos.update { it.copy(items = data, update = false) }
             }
         }
     }

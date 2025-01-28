@@ -7,7 +7,7 @@ data class TransactionModel(
      val title: String? = null,
      val subTitle: String? = null,
      val cash: String? = null,
-     val tipo: TipoTransaccion? = null,
+     val tipoTransaccion: TipoTransaccion? = null,
      val date: String? = null,
      val icon: String? = null,
      val index: Int? = null,

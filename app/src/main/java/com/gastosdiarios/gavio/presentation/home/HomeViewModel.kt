@@ -88,7 +88,10 @@ class HomeViewModel @Inject constructor(
     private val _isLoading = MutableStateFlow(false)
     val isLoading = _isLoading.onStart {
         calculandoInit()
-    }.stateIn(viewModelScope, SharingStarted.WhileSubscribed(5000L), false)
+    }.stateIn(viewModelScope,
+        SharingStarted.WhileSubscribed(5000L),
+        false
+    )
 
 
     private fun calculandoInit() {
@@ -134,7 +137,7 @@ class HomeViewModel @Inject constructor(
                                     categoryName = getString(R.string.saldo_restante),
                                     description = "",
                                     categoryIcon = R.drawable.ic_sueldo,
-                                    tipo = TipoTransaccion.INGRESOS
+                                    tipoTransaccion = TipoTransaccion.INGRESOS
                                 )
                                 //actualizando con el nuevo valor maximo del progress
                                 _homeUiState.update {
@@ -335,7 +338,7 @@ class HomeViewModel @Inject constructor(
             val totalIngresos = data?.totalIngresos ?: 0.0
             val totalGastos = data?.totalGastos ?: 0.0
             val currentMoney = data?.currentMoney ?: 0.0
-            val isCurrentMoneyChecked = data?.isCurrentMoneyChecked ?: false
+            val currentMoneyIsZero = data?.currentMoneyIsZero?: false
             val date = data?.selectedDate ?: ""
 
             val nuevoTotal = when (tipoTransaccion) {
@@ -353,7 +356,8 @@ class HomeViewModel @Inject constructor(
 
             //si el usuario eligio ingresos
             when (tipoTransaccion) {
-                TipoTransaccion.INGRESOS -> if (isCurrentMoneyChecked) {
+                TipoTransaccion.INGRESOS ->
+                    if (currentMoneyIsZero) {
                     //data.checked es true entonces significa que no hay nada aun guardado
                     insertPrimerTotalIngresos(nuevoTotal)
                 }
@@ -548,7 +552,7 @@ class HomeViewModel @Inject constructor(
         categoryName: String,
         description: String,
         categoryIcon: Int,
-        tipo: TipoTransaccion,
+        tipoTransaccion: TipoTransaccion,
     ) {
 
         viewModelScope.launch {
@@ -560,7 +564,7 @@ class HomeViewModel @Inject constructor(
                     title = categoryName,
                     subTitle = description,
                     cash = cantidad,
-                    tipo = tipo,
+                    tipoTransaccion = tipoTransaccion,
                     date = obtenerFechaActual().toString(),
                     icon = categoryIcon.toString(),
                     index = newIndex
@@ -650,7 +654,7 @@ class HomeViewModel @Inject constructor(
                         categoryName = item.title ?: "",
                         description = item.subTitle ?: "",
                         categoryIcon = item.icon?.toInt() ?: 0,
-                        tipo = TipoTransaccion.GASTOS
+                        tipoTransaccion = TipoTransaccion.GASTOS
                     )
                 }
             } catch (e: Exception) {

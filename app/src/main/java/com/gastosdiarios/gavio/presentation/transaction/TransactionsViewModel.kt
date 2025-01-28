@@ -3,7 +3,6 @@ package com.gastosdiarios.gavio.presentation.transaction
 import android.content.Context
 import android.util.Log
 import android.widget.Toast
-import androidx.core.database.sqlite.transaction
 import androidx.lifecycle.ViewModel
 import androidx.lifecycle.viewModelScope
 import com.gastosdiarios.gavio.R
@@ -41,9 +40,17 @@ class TransactionsViewModel @Inject constructor(
 ) : ViewModel() {
     private val tag = "transactionViewModel"
 
-    private val _transactionUiState = MutableStateFlow(ListUiState<TransactionModel>())
-    val transactionUiState: StateFlow<ListUiState<TransactionModel>> =
-        _transactionUiState.asStateFlow()
+    data class DataList<T>(
+        val selectedItems: List<T> = emptyList(),
+        val expandedItem: T? = null,
+        val selectionMode: Boolean = false,
+        val isCreate: Boolean = false,
+        val isDelete: Boolean = false
+    )
+
+    private val _uiState = MutableStateFlow(ListUiState<TransactionModel>())
+    val uiState: StateFlow<ListUiState<TransactionModel>> =
+        _uiState.asStateFlow()
 
     private val _snackbarMessage = MutableStateFlow<Int?>(null)
     val snackbarMessage: StateFlow<Int?> get() = _snackbarMessage
@@ -51,35 +58,24 @@ class TransactionsViewModel @Inject constructor(
     private val _isRefreshing = MutableStateFlow(RefreshDataModel(isRefreshing = false))
     val isRefreshing: StateFlow<RefreshDataModel> = _isRefreshing.asStateFlow()
 
-    private val _selectedItems = MutableStateFlow<List<TransactionModel>>(emptyList())
-    val selectedItems: StateFlow<List<TransactionModel>> = _selectedItems
+    private val _dataList = MutableStateFlow(DataList<TransactionModel>())
+    val dataList: StateFlow<DataList<TransactionModel>> = _dataList.asStateFlow()
 
-    private val _expandedItem = MutableStateFlow<TransactionModel?>(null)
-    val expandedItem: StateFlow<TransactionModel?> = _expandedItem
+    private val _loading = MutableStateFlow(false)
+    val loading = _loading.onStart { getAllTransactions() }
+        .stateIn(
+            viewModelScope,
+            SharingStarted.WhileSubscribed(5000L),
+            false
+        )
 
-    private val _selectionMode = MutableStateFlow(false)
-    val selectionMode: StateFlow<Boolean> = _selectionMode
-
-    private val _isCreate = MutableStateFlow(false)
-    val isCreate: StateFlow<Boolean> = _isCreate.asStateFlow()
-
-    private val _isDelete = MutableStateFlow(false)
-    val isDelete: StateFlow<Boolean> = _isDelete.asStateFlow()
-
-    private val _isLoading = MutableStateFlow(false)
-    val isLoading = _isLoading.onStart {
-        getAllTransactions()
-    }.stateIn(viewModelScope, SharingStarted.WhileSubscribed(5000L), false)
 
     private fun getAllTransactions() {
         viewModelScope.launch(Dispatchers.IO) {
-            _isLoading.value = true
-            _transactionUiState.update { it.copy(isLoading = true) }
+            _loading.value = true
             val data: List<TransactionModel> = dbm.getTransactions()
-            _transactionUiState.update {
-                it.copy(items = data, isLoading = false)
-            }
-            _isLoading.value = false
+            _uiState.update { it.copy(items = data) }
+            _loading.value = false
         }
     }
 
@@ -89,91 +85,49 @@ class TransactionsViewModel @Inject constructor(
             isRefreshing = _isRefreshing,
             dataLoading = {
                 val data: List<TransactionModel> = dbm.getTransactions()
-                _transactionUiState.update {
-                    it.copy(items = data)
-                }
+                _uiState.update { it.copy(items = data) }
             }
         )
     }
 
 
-    private fun onItemRemoveMov(list: List<TransactionModel>) {
-        viewModelScope.launch {
-            val currentMoney = dbm.getUserData()?.currentMoney ?: 0.0
-            val totalIngresos = _selectedItems.value.filter { it.tipo == TipoTransaccion.INGRESOS }
-                .sumOf { it.cash?.toDouble() ?: 0.0 }
-            val totalGastos = _selectedItems.value.filter { it.tipo == TipoTransaccion.GASTOS }
-                .sumOf { it.cash?.toDouble() ?: 0.0 }
+    private fun onItemRemoveMov() {
+        viewModelScope.launch(Dispatchers.IO) {
+            val data = dbm.getUserData()
+            val currentMoney = data?.currentMoney ?: 0.0
+            val totalIngresos = data?.totalIngresos ?: 0.0
+            val totalGastos = data?.totalGastos ?: 0.0
 
 
-            val updatedMoney = currentMoney - totalIngresos + totalGastos
-            dbm.updateCurrentMoney(updatedMoney,false)
+            val sumTotalIngresos =
+                _dataList.value.selectedItems.filter { it.tipoTransaccion == TipoTransaccion.INGRESOS }
+                    .sumOf { it.cash?.toDouble() ?: 0.0 }
+            val sumTotalGastos =
+                _dataList.value.selectedItems.filter { it.tipoTransaccion == TipoTransaccion.GASTOS }
+                    .sumOf { it.cash?.toDouble() ?: 0.0 }
 
-            _selectedItems.value.forEach { item ->
+            //nuevo currentMoney
+            val updatedMoney = currentMoney - sumTotalIngresos + sumTotalGastos
+
+            _dataList.value.selectedItems.forEach { item ->
                 val esPrimerItem = item.index == 0
                 if (esPrimerItem) {
                     dbm.deleteAllScreenTransactions()
+                    dbm.updateCurrentMoney(updatedMoney, true)
                     cargandoListaActualizada()
                     return@launch
                 }
                 dbm.deleteTransaction(item)
-                if (item.tipo == TipoTransaccion.GASTOS) {
+                if (item.tipoTransaccion == TipoTransaccion.GASTOS) {
                     deleteGastosPorCategoria(item.title.orEmpty())
                 }
             }
+
+            dbm.updateCurrentMoney(updatedMoney, false)
+
+            updateTotalIngresos(totalIngresos.minus(sumTotalIngresos))
+            updateTotalGastos(totalGastos.minus(sumTotalGastos))
             cargandoListaActualizada()
-            // Obtener el tipo de transacción (ingreso o gasto)
-//                val tipoTransaction = item.select
-//                val cash = item.cash?.toDouble() ?: 0.0
-//                // Verificar si es el primer elemento de la lista
-
-
-
-            // Eliminar la transacción
-//                if (esPrimerItem) {
-//                    // Si es el último elemento, update el saldo a 0 y eliminar la transacción
-//                    dbm.deleteAllScreenTransactions()
-//                    cargandoListaActualizada()
-//                    Log.d("tagss", "onItemRemoveMov: es el ultimo elemento")
-//                    return@launch
-//                } else {
-//                    //actualizando el gastos por categorias
-//                    deleteGastosPorCategoria(item.title.orEmpty())
-//                    // Si no es el último elemento, eliminar la transacción y update el saldo según el tipo
-//                    //   dbm.deleteTransaction(item)
-//
-//            when (selectedItems.value.firstOrNull()?.tipo) {
-//                //si la transaccion fue de ingresos, se volvera a
-//                // actualizar el dinero total, restandolo de nuevo
-//                TipoTransaccion.INGRESOS -> {
-//                    updateCurrentMoneyList(list, cash = -cash, false)
-//                }
-//                //si la transaccion fue de gastos, se volvera a
-//                // actualizar  el dinero total, sumandolo de nuevo
-//                TipoTransaccion.GASTOS -> {
-//                    //  updateCurrentMoneyList(list, cash = cash, false)
-//                    val currentMoney = userDataFirestore.get()?.currentMoney ?: 0.0
-//                    if (esPrimerItem) {
-//                        // Si es el último elemento, establecer el saldo directamente a 0.0
-//                        userDataFirestore.updateCurrentMoney(0.0, false)
-//                        val newValue = currentMoney + cash
-//                        userDataFirestore.updateCurrentMoney(maxOf(newValue, 0.0), false)
-//                    } else {
-//                        Log.d("tagss", "updateCurrentMoneyList: $cash")
-//                        val newValue = currentMoney + cash
-//                        userDataFirestore.updateCurrentMoney(newValue, false)
-//                    }
-//                    updateGastos(totalGastos = cash)
-//                    dbm.deleteTransaction(item)
-//                    cargandoListaActualizada()
-//                    return@launch
-//                }
-//
-//                null -> {
-//                    Toast.makeText(context, "null", Toast.LENGTH_SHORT).show()
-//                }
-//            }
-
         }
     }
 
@@ -200,7 +154,7 @@ class TransactionsViewModel @Inject constructor(
                     return@launch // Salir de la función después de eliminar las transacciones
                 }
 
-                if (valorViejo.tipo == TipoTransaccion.GASTOS && nuevoValor.toDouble() > dataTotalIngresos) {
+                if (valorViejo.tipoTransaccion == TipoTransaccion.GASTOS && nuevoValor.toDouble() > dataTotalIngresos) {
                     _snackbarMessage.value =
                         R.string.error_el_gasto_no_puede_ser_superior_a_los_ingresos
 
@@ -216,7 +170,7 @@ class TransactionsViewModel @Inject constructor(
                             title = title,
                             subTitle = description,
                             cash = nuevoValor,
-                            tipo = valorViejo.tipo,
+                            tipoTransaccion = valorViejo.tipoTransaccion,
                             date = valorViejo.date,
                             icon = valorViejo.icon,
                             index = valorViejo.index
@@ -225,7 +179,7 @@ class TransactionsViewModel @Inject constructor(
                     //actualizando el gastos por categorias
                     updateGastosCategory(title, nuevoValor, valorViejo)
 
-                    when (valorViejo.tipo) {
+                    when (valorViejo.tipoTransaccion) {
                         //si es true estamos actualizando dinero de tipo ingresos
                         TipoTransaccion.INGRESOS -> {
                             // Ajustar el total de ingresos según si el nuevo valor es mayor o menor al anterior.
@@ -298,9 +252,9 @@ class TransactionsViewModel @Inject constructor(
 
     private fun cargandoListaActualizada() {
         viewModelScope.launch(Dispatchers.IO) {
-            _transactionUiState.update { it.copy(isUpdateItem = true) }
+            _uiState.update { it.copy(update = true) }
             val data = dbm.getTransactions()
-            _transactionUiState.update { it.copy(items = data, isUpdateItem = false) }
+            _uiState.update { it.copy(items = data, update = false) }
         }
     }
 
@@ -440,71 +394,59 @@ class TransactionsViewModel @Inject constructor(
         _snackbarMessage.value = null
     }
 
+
     fun onClick(item: TransactionModel) {
-        if (_selectionMode.value) {
-            _selectedItems.update { currentList ->
-                val newList = currentList.toMutableList()
-                if (newList.any { it.uid == item.uid }) {
-                    newList.removeAll { it.uid == item.uid }
+        _dataList.update { currentDataList ->
+            if (currentDataList.selectionMode) {
+                val updatedSelectedItems = currentDataList.selectedItems.toMutableList()
+                if (updatedSelectedItems.any { it.uid == item.uid }) {
+                    updatedSelectedItems.removeAll { it.uid == item.uid }
                 } else {
-                    newList.add(item)
+                    updatedSelectedItems.add(item)
                 }
-                newList.toList() // Convertir de nuevo a List<GastosProgramadosModel>
+                currentDataList.copy(
+                    selectedItems = updatedSelectedItems,
+                    selectionMode = updatedSelectedItems.isNotEmpty()
+                )
+            } else {
+                currentDataList.copy(expandedItem = if (currentDataList.expandedItem == item) null else item)
             }
-            if (_selectedItems.value.isEmpty()) {
-                _selectionMode.value = false
-            }
-        } else {
-            _expandedItem.value = if (_expandedItem.value == item) null else item
         }
     }
 
     fun onLongClick(item: TransactionModel) {
-        _selectionMode.update { true }
-        _selectedItems.update { currentList ->
-            val newList = currentList.toMutableList()
-            if (newList.any { it.uid == item.uid }) {
-                newList.removeAll { it.uid == item.uid }
+        _dataList.update { currentDataList ->
+            val updatedSelectedItems = currentDataList.selectedItems.toMutableList()
+            if (updatedSelectedItems.any { it.uid == item.uid }) {
+                updatedSelectedItems.removeAll { it.uid == item.uid }
             } else {
-                newList.add(item)
+                updatedSelectedItems.add(item)
             }
-            newList.toList() // Convertir de nuevo a List<GastosProgramadosModel>
+            currentDataList.copy(selectedItems = updatedSelectedItems, selectionMode = true)
         }
     }
 
     fun isCreateTrue() {
-        _isCreate.value = true
+        _dataList.update { it.copy(isCreate = true) }
     }
 
     fun isCreateFalse() {
-        _isCreate.value = false
+        _dataList.update { it.copy(isCreate = false) }
     }
 
     fun isDeleteTrue() {
-        _isDelete.value = true
+        _dataList.update { it.copy(isDelete = true) }
     }
 
     fun isDeleteFalse() {
-        _isDelete.value = false
+        _dataList.update { it.copy(isDelete = false) }
     }
 
     fun deleteItemSelected() {
         viewModelScope.launch {
-            //  _selectedItems.value = emptyList()
-            _selectionMode.value = false
-            val list = dbm.getTransactions()
-            onItemRemoveMov(list)
+            _dataList.update { it.copy(selectionMode = false) }
+            onItemRemoveMov()
         }
-    }
-
-    private fun updateSelectedItems(item: TransactionModel, isSelected: Boolean) {
-        val currentList = _selectedItems.value.toMutableList()
-        if (isSelected) {
-            currentList.add(item)
-        } else {
-            currentList.remove(item)
-        }
-        _selectedItems.value = currentList
     }
 
     fun delete(item: TransactionModel) {

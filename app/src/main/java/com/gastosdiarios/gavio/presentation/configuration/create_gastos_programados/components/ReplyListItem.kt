@@ -75,9 +75,9 @@ fun ReplyListItem(
                 description = title,
                 modifier = Modifier.align(Alignment.Center),
                 sizeBox = 60,
-                sizeIcon = 40,
-                colorCircle = Color.Transparent,
-                colorIcon = MaterialTheme.colorScheme.onBackground
+                sizeIcon = 30,
+                colorBackground = Color.Transparent,
+                colorIcon = MaterialTheme.colorScheme.primary
             )
 
             Box(

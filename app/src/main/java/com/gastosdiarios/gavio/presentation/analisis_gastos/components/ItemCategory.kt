@@ -119,7 +119,7 @@ fun ItemCategory(
                     drawableResource = uiState.icon!!.toInt(),
                     description = "",
                     sizeBox = 40,
-                    colorCircle = tertiaryContainer,
+                    colorBackground = tertiaryContainer,
                     colorIcon = onTertiary,
                     modifier = Modifier.padding(8.dp)
                 )

@@ -143,10 +143,10 @@ class CreateGastosProgramadosViewModel @Inject constructor(
 
     private fun cargandoListaActualizada() {
         viewModelScope.launch(Dispatchers.IO) {
-              _gastosProgramadosUiState.update { it.copy(isUpdateItem = true) }
+              _gastosProgramadosUiState.update { it.copy(update = true) }
             val data = gastosProgramadosFirestore.get()
             _gastosProgramadosUiState.update {
-                it.copy(items = data, isUpdateItem = false)
+                it.copy(items = data, update = false)
             }
         }
     }

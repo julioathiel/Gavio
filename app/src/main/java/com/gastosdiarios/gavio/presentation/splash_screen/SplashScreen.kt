@@ -68,7 +68,7 @@ fun MySplashScreen(
                 modifier = Modifier.align(Alignment.Center),
                 sizeBox = 48,
                 sizeIcon = 48,
-                colorCircle = Color.Transparent,
+                colorBackground = Color.Transparent,
                 colorIcon = MaterialTheme.colorScheme.onBackground
             )
 

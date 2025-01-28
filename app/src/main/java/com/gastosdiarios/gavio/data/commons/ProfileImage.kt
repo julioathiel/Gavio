@@ -4,6 +4,7 @@ import androidx.compose.foundation.Image
 import androidx.compose.foundation.background
 import androidx.compose.foundation.layout.Box
 import androidx.compose.foundation.layout.size
+import androidx.compose.foundation.shape.RoundedCornerShape
 import androidx.compose.runtime.Composable
 import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
@@ -18,15 +19,19 @@ fun ProfileIcon(
     drawableResource: Int,
     description: String,
     modifier: Modifier = Modifier,
-    sizeBox:Int = 40,
-    sizeIcon:Int = 24,
-    colorCircle:Color,
-    colorIcon:Color
+    sizeBox: Int = 40,
+    boxRounded: Int = 1,
+    sizeIcon: Int = 24,
+    colorBackground: Color,
+    colorIcon: Color
 ) {
     Box(
         modifier = modifier
             .size(sizeBox.dp)
-            .background(color = colorCircle),
+            .background(
+                color = colorBackground,
+                shape = RoundedCornerShape(boxRounded.dp)
+            ),
         contentAlignment = Alignment.Center
     ) {
 

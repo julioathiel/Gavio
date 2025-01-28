@@ -35,8 +35,8 @@ fun ItemTransactions(
     onClick: () -> Unit,
     onLongClick: () -> Unit
 ) {
-    val expandedItem by viewModel.expandedItem.collectAsState()
-    val textColor = if (item.tipo == TipoTransaccion.INGRESOS) {
+    val data by viewModel.dataList.collectAsState()
+    val textColor = if (item.tipoTransaccion == TipoTransaccion.INGRESOS) {
         //si el usuario eligio ingreso, el color de los numeros sera verde
         colorResource(id = R.color.verdeDinero)
     } else MaterialTheme.colorScheme.onSurfaceVariant//sin color
@@ -64,7 +64,7 @@ fun ItemTransactions(
             modifier = Modifier.clip(CircleShape),
             sizeBox = 48,
             sizeIcon = 30,
-            colorCircle = MaterialTheme.colorScheme.surfaceContainer,
+            colorBackground = MaterialTheme.colorScheme.surfaceContainer,
             colorIcon = MaterialTheme.colorScheme.onSurface
         )
 
@@ -82,7 +82,7 @@ fun ItemTransactions(
                     text = if (item.subTitle?.isEmpty() == true) "sin descripcion" else item.subTitle
                         ?: "",
                     style = MaterialTheme.typography.bodySmall,
-                    maxLines = if (expandedItem?.uid == item.uid) Int.MAX_VALUE else 1,
+                    maxLines = if (data.expandedItem?.uid == item.uid) Int.MAX_VALUE else 1,
                     overflow = TextOverflow.Ellipsis
                 )
 

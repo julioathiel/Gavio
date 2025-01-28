@@ -1,18 +1,11 @@
 package com.gastosdiarios.gavio.presentation.transaction
 
+import android.util.Log
 import androidx.activity.compose.BackHandler
 import androidx.compose.foundation.ExperimentalFoundationApi
-import androidx.compose.foundation.background
-import androidx.compose.foundation.layout.Box
-import androidx.compose.foundation.layout.Column
-import androidx.compose.foundation.layout.Spacer
 import androidx.compose.foundation.layout.fillMaxSize
-import androidx.compose.foundation.layout.fillMaxWidth
-import androidx.compose.foundation.layout.height
 import androidx.compose.foundation.layout.padding
-import androidx.compose.foundation.layout.size
 import androidx.compose.foundation.lazy.LazyColumn
-import androidx.compose.foundation.lazy.LazyListState
 import androidx.compose.foundation.lazy.items
 import androidx.compose.foundation.lazy.rememberLazyListState
 import androidx.compose.material.icons.Icons
@@ -22,38 +15,29 @@ import androidx.compose.material3.ExperimentalMaterial3Api
 import androidx.compose.material3.Icon
 import androidx.compose.material3.IconButton
 import androidx.compose.material3.MaterialTheme
-import androidx.compose.material3.ModalBottomSheet
 import androidx.compose.material3.Scaffold
 import androidx.compose.material3.SnackbarHost
 import androidx.compose.material3.SnackbarHostState
 import androidx.compose.material3.pulltorefresh.PullToRefreshBox
 import androidx.compose.material3.pulltorefresh.rememberPullToRefreshState
-import androidx.compose.material3.rememberModalBottomSheetState
 import androidx.compose.runtime.Composable
 import androidx.compose.runtime.LaunchedEffect
 import androidx.compose.runtime.collectAsState
 import androidx.compose.runtime.getValue
-import androidx.compose.runtime.mutableStateOf
 import androidx.compose.runtime.remember
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.platform.LocalContext
 import androidx.compose.ui.res.stringResource
-import androidx.compose.ui.unit.dp
 import androidx.hilt.navigation.compose.hiltViewModel
 import com.gastosdiarios.gavio.R
 import com.gastosdiarios.gavio.data.commons.CommonsIsEmpty
 import com.gastosdiarios.gavio.data.commons.CommonsLoadingData
 import com.gastosdiarios.gavio.data.commons.CommonsLoadingScreen
-import com.gastosdiarios.gavio.data.commons.TextFieldDescription
 import com.gastosdiarios.gavio.data.commons.TopAppBarOnBack
-import com.gastosdiarios.gavio.data.ui_state.ListUiState
-import com.gastosdiarios.gavio.domain.model.modelFirebase.TransactionModel
 import com.gastosdiarios.gavio.presentation.configuration.create_gastos_programados.components.DialogDelete
-import com.gastosdiarios.gavio.presentation.home.components.TextFieldDinero
 import com.gastosdiarios.gavio.presentation.transaction.components.ItemFecha
 import com.gastosdiarios.gavio.presentation.transaction.components.ItemTransactions
 import com.gastosdiarios.gavio.utils.DateUtils
-import kotlinx.serialization.json.JsonNull.content
 
 @OptIn(ExperimentalMaterial3Api::class)
 @Composable
@@ -64,16 +48,11 @@ fun TransactionsScreen(
     //al presion el boton fisico de retoceso, se dirige a la pantalla de configuracion
     BackHandler { onBack() }
 
-    val uiState by viewModel.transactionUiState.collectAsState()
     val snackbarMessage by viewModel.snackbarMessage.collectAsState()
     val isShowSnackbar = remember { SnackbarHostState() }
     val isRefreshing by viewModel.isRefreshing.collectAsState()
     val statePullToRefresh = rememberPullToRefreshState()
-    val isLoading by viewModel.isLoading.collectAsState()
-    val selectionMode: Boolean by viewModel.selectionMode.collectAsState()
-    val selectedItems: List<TransactionModel> by viewModel.selectedItems.collectAsState()
-    val isDelete: Boolean by viewModel.isDelete.collectAsState()
-    val isCreate: Boolean by viewModel.isCreate.collectAsState()
+    val data by viewModel.dataList.collectAsState()
 
     snackbarMessage?.let { messageResId ->
         val context = LocalContext.current
@@ -86,23 +65,21 @@ fun TransactionsScreen(
     Scaffold(
         topBar = {
             TopAppBarOnBack(
-                title = if(selectionMode && selectedItems.size == 1){
+                title = if (data.selectionMode && data.selectedItems.size == 1) {
                     stringResource(id = R.string.toolbar_registro_gastos)
-                }
-                else if (selectionMode && selectedItems.size > 1){
-                   "${selectedItems.size}"
-                }else{
+                } else if (data.selectionMode && data.selectedItems.size > 1) {
+                    "${data.selectedItems.size}"
+                } else {
                     stringResource(id = R.string.toolbar_registro_gastos)
-                }
-               ,
+                },
                 containerColor = MaterialTheme.colorScheme.secondaryContainer,
                 onBack = onBack,
                 actions = {
-                    if (selectionMode && selectedItems.size > 1) {
+                    if (data.selectionMode && data.selectedItems.size > 1) {
                         IconButton(onClick = { viewModel.deleteItemSelected() }) {
                             Icon(imageVector = Icons.Default.Delete, contentDescription = "delete")
                         }
-                    } else if (selectionMode && selectedItems.size == 1) {
+                    } else if (data.selectionMode && data.selectedItems.size == 1) {
                         IconButton(onClick = { viewModel.isCreateTrue() }) {
                             Icon(imageVector = Icons.Default.Create, contentDescription = "delete")
                         }
@@ -123,13 +100,13 @@ fun TransactionsScreen(
                 onRefresh = { viewModel.refreshData() },
                 modifier = Modifier.padding(paddingValues)
             ) {
-                Content(isLoading, uiState, viewModel, Modifier.padding(paddingValues))
+                Content(viewModel, Modifier.padding(paddingValues))
             }
         },
         snackbarHost = { SnackbarHost(hostState = isShowSnackbar) }
     )
 
-    DialogDelete(isDelete, onDismiss = { viewModel.isDeleteFalse() },
+    DialogDelete(data.isDelete, onDismiss = { viewModel.isDeleteFalse() },
         onConfirm = { viewModel.deleteItemSelected() }
     )
 
@@ -201,37 +178,39 @@ fun TransactionsScreen(
 
 @Composable
 fun Content(
-    isLoading: Boolean,
-    uiState: ListUiState<TransactionModel>,
     viewModel: TransactionsViewModel,
     modifier: Modifier
 ) {
+    val loading by viewModel.loading.collectAsState()
+    val uiState by viewModel.uiState.collectAsState()
     when {
-        isLoading -> CommonsLoadingScreen(modifier = modifier.fillMaxSize())
-        uiState.items.isEmpty() -> CommonsIsEmpty()
-        uiState.isUpdateItem -> {
-            ContentList(uiState, viewModel)
+        loading -> {
+            CommonsLoadingScreen(modifier = modifier.fillMaxSize())
+        }
+
+        uiState.empty -> { CommonsIsEmpty() }
+
+        uiState.update -> {
+            ContentList(viewModel)
             CommonsLoadingData()
         }
 
         else -> {
-            ContentList(uiState, viewModel)
+            ContentList(viewModel)
         }
     }
 }
 
 @OptIn(ExperimentalFoundationApi::class)
 @Composable
-fun ContentList(
-    uiState: ListUiState<TransactionModel>,
-    viewModel: TransactionsViewModel
-) {
-    val selectedItem by viewModel.selectedItems.collectAsState()
+fun ContentList(viewModel: TransactionsViewModel) {
+    val data by viewModel.dataList.collectAsState()
+    val list by viewModel.uiState.collectAsState()
     val listState = rememberLazyListState()
 
     LazyColumn(modifier = Modifier.fillMaxSize()) {
         //Agrupa los elementos de uiState.items por fecha.
-        val groupItems = uiState.items.groupBy { it.date }.entries.sortedByDescending { it.key }
+        val groupItems = list.items.groupBy { it.date }.entries.sortedByDescending { it.key }
         groupItems.forEach { (date, itemsForDate) ->
             // Encabezado para cada grupo de fecha
             stickyHeader {
@@ -245,8 +224,8 @@ fun ContentList(
                 items = sortedItems,
                 key = { it.uid ?: it.hashCode() }
             ) { item ->
-                val isSelect = selectedItem.any { it.uid == item.uid }
-
+                val isSelect = data.selectedItems.any { it.uid == item.uid }
+                Log.d("tagss", "ContentList: $item")
                 ItemTransactions(
                     item,
                     viewModel,
@@ -262,7 +241,7 @@ fun ContentList(
         }
     }
 
-    LaunchedEffect(uiState.items.lastOrNull()) {
+    LaunchedEffect(list.items.lastOrNull()) {
         // muestra el ultimo elemento agregado en la parte superior
         listState.scrollToItem(index = 0)
     }
