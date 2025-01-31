@@ -1,14 +1,10 @@
 package com.gastosdiarios.gavio.navigation
 
-import androidx.compose.foundation.layout.Box
 import androidx.compose.foundation.layout.fillMaxSize
-import androidx.compose.material3.Button
-import androidx.compose.material3.Text
 import androidx.compose.runtime.Composable
 import androidx.compose.runtime.collectAsState
 import androidx.compose.runtime.getValue
 import androidx.compose.runtime.rememberCoroutineScope
-import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
 import androidx.core.splashscreen.SplashScreen
 import androidx.hilt.navigation.compose.hiltViewModel
@@ -28,7 +24,7 @@ import com.gastosdiarios.gavio.presentation.configuration.categorias_creadas.Cat
 import com.gastosdiarios.gavio.presentation.configuration.components.CongratulationsScreen
 import com.gastosdiarios.gavio.presentation.configuration.create_gastos_programados.CreateGastosProgramadosScreen
 import com.gastosdiarios.gavio.presentation.configuration.exportar_datos.ExportarDatosScreen
-import com.gastosdiarios.gavio.presentation.configuration.notifications.RecordatorioScreen
+import com.gastosdiarios.gavio.presentation.configuration.notifications.NotificationsScreen
 import com.gastosdiarios.gavio.presentation.configuration.user_profile.UserProfileScreen
 import com.gastosdiarios.gavio.presentation.splash_screen.MySplashScreen
 import com.gastosdiarios.gavio.presentation.transaction.TransactionsScreen
@@ -54,36 +50,6 @@ fun MyAppContent(
     if (isLoading) {
         CommonsLoadingScreen(Modifier.fillMaxSize())
     } else if (isInternet) {
-
-//        LaunchedEffect(Unit) {
-//            viewModel.navigationAction.collect { action ->
-//                when (action) {
-//                    NavigationAction.ToSplash -> navController.navigate(SplashScreens)
-//                    NavigationAction.ToLoginInit -> navController.navigate(LoginInitScreen)
-//                    NavigationAction.ToLogin -> navController.navigate(LoginScreen)
-//                    NavigationAction.ToForgotPassword -> navController.navigate(ForgotPasswordScreen)
-//                    NavigationAction.ToRegister -> navController.navigate(RegisterScreen)
-//                    NavigationAction.ToHome -> navController.navigate(HomeScreen)
-//                    NavigationAction.ToAcercaDe -> navController.navigate(AcercaDeScreens)
-//                    NavigationAction.ToActualizarMaximoFecha -> navController.navigate(ActualizarMaximoFechaScreen)
-//                    NavigationAction.ToAjustes -> navController.navigate(AjustesScreen)
-//                    NavigationAction.ToAnalisisGastos -> navController.navigate(AnalisisGastosScreen)
-//                    NavigationAction.ToBiometric -> navController.navigate(BiometricScreen)
-//                    NavigationAction.ToCategory -> navController.navigate(CategoryScreen)
-//                    NavigationAction.ToCongratulations -> navController.navigate(CongratulationsScreen)
-//                    NavigationAction.ToCreateGastosProgramados -> navController.navigate(CreateGastosProgramadosScreen)
-//                    NavigationAction.ToExportarDatos -> navController.navigate(ExportarDatosScreen)
-//                    NavigationAction.ToMenu -> navController.navigate(MenuScreen)
-//                    NavigationAction.ToRecordatorio -> navController.navigate(RecordatorioScreen)
-//                    NavigationAction.ToTransactions -> navController.navigate(TransactionsScreen)
-//                    NavigationAction.ToUserProfile -> navController.navigate(UserProfileScreen)
-//                    NavigationAction.ToPantallaDos -> navController.navigate(PantallasDos.route)
-//                    NavigationAction.ToPantallaUno -> navController.navigate(PantallasUno.route)
-//                    null -> {}
-//                }
-//                viewModel.resetNavigationAction()
-//            }
-//        }
 
         //OTRAS RUTAS PRINCIPALES
         NavHost(
@@ -177,8 +143,8 @@ fun MyAppContent(
                 CongratulationsScreen(onToHomeScreen = { navController.navigate(HomeScreen) })
             }
 
-            composable<RecordatorioScreen> {
-                RecordatorioScreen(onBack = { navController.popBackStack() })
+            composable<NotificationsScreen> {
+                NotificationsScreen(onBack = { navController.popBackStack() })
             }
             composable<ExportarDatosScreen> {
                 ExportarDatosScreen(onBack = { navController.popBackStack() })
@@ -193,26 +159,4 @@ fun MyAppContent(
         }
         )
     }
-}
-
-@Composable
-fun PantallaDos(viewModel: MyAppContentViewmodel) {
-    Box(Modifier.fillMaxSize(), contentAlignment = Alignment.Center){
-        Button(onClick = {
-            viewModel.navigateToPantallaUno()
-        }) {
-            Text(text = "Navegar a pantallaUno")
-        }
-    }
-}
-
-@Composable
-fun PantallaUno(viewModel: MyAppContentViewmodel) {
-Box(Modifier.fillMaxSize(), contentAlignment = Alignment.Center){
-    Button(onClick = {
-        viewModel.navigateToPantallaDos()
-    }) {
-        Text(text = "Navegar a pantallaDos")
-    }
-}
 }

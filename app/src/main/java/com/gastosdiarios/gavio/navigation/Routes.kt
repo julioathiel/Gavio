@@ -21,7 +21,7 @@ object MenuScreen
 @Serializable
 object AnalisisGastosScreen
 @Serializable
-object RecordatorioScreen
+object NotificationsScreen
 @Serializable
 object CategoryScreen
 @Serializable

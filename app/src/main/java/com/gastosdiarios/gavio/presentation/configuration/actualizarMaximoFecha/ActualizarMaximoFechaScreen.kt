@@ -2,7 +2,6 @@ package com.gastosdiarios.gavio.presentation.configuration.actualizarMaximoFecha
 
 import androidx.compose.foundation.background
 import androidx.compose.foundation.layout.Column
-import androidx.compose.foundation.layout.PaddingValues
 import androidx.compose.foundation.layout.Spacer
 import androidx.compose.foundation.layout.fillMaxSize
 import androidx.compose.foundation.layout.fillMaxWidth
@@ -53,15 +52,15 @@ fun ActualizarMaximoFechaScreen(
         topBar = {
             TopAppBarOnBack(
                 title = stringResource(id = R.string.toolbar_cambio_fecha),
-                containerColor = MaterialTheme.colorScheme.secondaryContainer,
+                containerColor = MaterialTheme.colorScheme.surface,
                 onBack = { onBack() },
             )
         },
         snackbarHost = {
             SnackbarHost(hostState = isShowSnackbar)
         },
-        content = { padding ->
-            Content(padding, viewModel, isShowSnackbar)
+        content = { innerPadding ->
+            Content(Modifier.padding(innerPadding), viewModel, isShowSnackbar)
         }
     )
 }
@@ -69,15 +68,14 @@ fun ActualizarMaximoFechaScreen(
 
 @Composable
 fun Content(
-    paddingValues: PaddingValues,
+    modifier: Modifier,
     viewModel: ActualizarMaximoFechaViewModel,
-    isShowSnackbar: SnackbarHostState,
-
+    isShowSnackbar: SnackbarHostState
     ) {
     val scope = rememberCoroutineScope()
     val uiState by viewModel.uiState.collectAsState()
 
-    var isPrueba by remember { mutableStateOf(false) }
+    var isOptionSelected by remember { mutableStateOf(false) }
     var selectedSwitchNumber by remember { mutableIntStateOf(0) }
 
     LaunchedEffect(uiState.selectedOption) {
@@ -85,12 +83,11 @@ fun Content(
     }
 
     Column(
-        Modifier
+        modifier
             .fillMaxSize()
             .background(MaterialTheme.colorScheme.surface)
-            .padding(paddingValues)
-            .padding(horizontal = dimensionResource(id = R.dimen.padding_medium))
     ) {
+        HorizontalDivider()
         Spacer(modifier = Modifier.padding(10.dp))
         Text(
             text = stringResource(R.string.elige_una_opcion),
@@ -129,9 +126,8 @@ fun Content(
             selectedSwitchNumber
         ) { isActivated ->
             if (isActivated) {
-                //usando el nuevo valor para guardarlo al presaionar un boton
                 selectedSwitchNumber = 15
-                isPrueba = true
+                isOptionSelected = true
             }
         }
         SwitchWithText(
@@ -141,7 +137,7 @@ fun Content(
         ) { isActivated ->
             if (isActivated) {
                 selectedSwitchNumber = 31
-                isPrueba = true
+                isOptionSelected = true
             }
         }
 
@@ -152,7 +148,7 @@ fun Content(
         ) { isActivated ->
             if (isActivated) {
                 selectedSwitchNumber = 60
-                isPrueba = true
+                isOptionSelected = true
             }
         }
 
@@ -163,7 +159,7 @@ fun Content(
         ) { isActivated ->
             if (isActivated) {
                 selectedSwitchNumber = 90
-                isPrueba = true
+                isOptionSelected = true
             }
         }
 
@@ -175,7 +171,7 @@ fun Content(
 
         Button(
             onClick = {
-                if (isPrueba) {
+                if (isOptionSelected) {
                     viewModel.updateFechaMaxima(selectedSwitchNumber)
                     scope.launch {
                         isShowSnackbar.showSnackbar("Opción guardada correctamente")
@@ -184,7 +180,7 @@ fun Content(
             },
             modifier = Modifier
                 .fillMaxWidth()
-                .height(51.dp)
+                .height(dimensionResource(R.dimen.padding_altura_boton))
         ) {
             Text(text = stringResource(R.string.confirmar))
         }

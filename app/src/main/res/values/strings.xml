@@ -156,4 +156,9 @@
     <string name="empty_screen_subtitle">Esta pantalla aún está en construcción.</string>
     <string name="seguridad_title">Bloqueo</string>
     <string name="seguridad_description">Abrir con la huella o patron</string>
+    <string name="title_notification_programada">Gavio</string>
+    <string name="textLarge_notification_programada">No olvides agregar tus gastos de hoy!</string>
+    <string name="recordatorio_titulo">recordatorio</string>
+    <string name="recordatorio_body">Sabemos que adquirir el hábito de acompañar sus gastos a diario es complicado, y podemos ayudarlo con eso. ¿Cuándo le gustaria recibir nuestro recordatorio?</string>
+    <string name="resetear">Resetear</string>
 </resources>

@@ -6,7 +6,6 @@ import androidx.compose.foundation.layout.padding
 import androidx.compose.material3.MaterialTheme
 import androidx.compose.runtime.Composable
 import androidx.compose.ui.Modifier
-import androidx.compose.ui.graphics.Color
 import androidx.navigation.NavHostController
 import com.gastosdiarios.gavio.R
 import com.gastosdiarios.gavio.main_scaffold.data_class.Screen
@@ -17,7 +16,7 @@ import com.gastosdiarios.gavio.navigation.CategoryScreen
 import com.gastosdiarios.gavio.navigation.CongratulationsScreen
 import com.gastosdiarios.gavio.navigation.CreateGastosProgramadosScreen
 import com.gastosdiarios.gavio.navigation.ExportarDatosScreen
-import com.gastosdiarios.gavio.navigation.RecordatorioScreen
+import com.gastosdiarios.gavio.navigation.NotificationsScreen
 import com.gastosdiarios.gavio.navigation.TransactionsScreen
 import com.gastosdiarios.gavio.navigation.UserProfileScreen
 import com.gastosdiarios.gavio.presentation.analisis_gastos.AnalisisGastosScreen
@@ -69,7 +68,7 @@ fun createScreens(navController: NavHostController): List<Screen> {
                     onToActualizarMaximoFechaScreen = {
                         navController.navigate(ActualizarMaximoFechaScreen)
                     },
-                    onToRecordatorioScreen = { navController.navigate(RecordatorioScreen) },
+                    onToRecordatorioScreen = { navController.navigate(NotificationsScreen) },
                     onToAcercaDeScreen = { navController.navigate(AcercaDeScreens) },
                     onToAjustesScreen = { navController.navigate(AjustesScreen) },
                     onToExportarDatosScreen = { navController.navigate(ExportarDatosScreen) },

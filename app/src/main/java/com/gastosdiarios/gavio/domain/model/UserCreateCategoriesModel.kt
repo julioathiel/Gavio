@@ -1,7 +1,7 @@
 package com.gastosdiarios.gavio.domain.model
 
 data class UserCreateCategoriesModel(
-    val id: Int = System.currentTimeMillis().hashCode(),
+    val uid: String? = null,
     var nameCategory: String? = null,
     var categoryIcon: String? = null
 )

@@ -35,8 +35,8 @@ class ConfigurationViewModel @Inject constructor(
 
     private fun getShareLink() {
         viewModelScope.launch(Dispatchers.IO) {
-            val data: ShareDataModel? = dbm.getSharedLink()
-            if (data?.shareUrl != null) {
+            val data: ShareDataModel = dbm.getSharedLink()
+            if (data.shareUrl != null) {
                 _configurationUiState.update { it.copy(sharedLink = data.shareUrl) }
             }
         }

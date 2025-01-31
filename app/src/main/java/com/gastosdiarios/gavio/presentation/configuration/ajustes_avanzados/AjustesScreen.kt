@@ -32,7 +32,10 @@ import androidx.compose.ui.res.stringResource
 import androidx.compose.ui.unit.dp
 import androidx.hilt.navigation.compose.hiltViewModel
 import com.gastosdiarios.gavio.R
+import com.gastosdiarios.gavio.data.commons.CommonsLoadingData
+import com.gastosdiarios.gavio.data.commons.CommonsLoadingScreen
 import com.gastosdiarios.gavio.data.commons.TopAppBarOnBack
+import com.gastosdiarios.gavio.data.ui_state.UiStateSimple
 import com.gastosdiarios.gavio.domain.enums.ItemConfAvanzada
 import com.gastosdiarios.gavio.domain.enums.ThemeMode
 import com.gastosdiarios.gavio.domain.model.modelFirebase.UserPreferences
@@ -42,13 +45,20 @@ fun AjustesScreen(
     viewModel: AjustesViewModel = hiltViewModel(),
     onBack: () -> Unit
 ) {
-    val uiState: UserPreferences by viewModel.uiState.collectAsState()
-    var isSecurity:Boolean by remember { mutableStateOf(uiState.biometricSecurity ?: false) }
-    var checkButton:ThemeMode by remember { mutableStateOf(uiState.themeMode ?: ThemeMode.MODE_AUTO) }
+    val uiState by viewModel.uiState.collectAsState()
+    val data = (uiState as UiStateSimple.Success<UserPreferences?>).data
+    var isSecurity: Boolean by remember {
+        mutableStateOf(data?.biometricSecurity ?: false)
+    }
+    var checkButton: ThemeMode by remember {
+        mutableStateOf(
+            data?.themeMode ?: ThemeMode.MODE_AUTO
+        )
+    }
 
     LaunchedEffect(key1 = uiState) {
-        isSecurity = uiState.biometricSecurity ?: false
-        checkButton = uiState.themeMode ?: ThemeMode.MODE_AUTO
+        isSecurity = data?.biometricSecurity ?: false
+        checkButton = data?.themeMode ?: ThemeMode.MODE_AUTO
     }
 
 
@@ -61,14 +71,14 @@ fun AjustesScreen(
                 actions = {
                     Icon(
                         painter = painterResource(
-                            id = when (uiState.themeMode) {
+                            id = when (data?.themeMode) {
                                 ThemeMode.MODE_AUTO -> R.drawable.ic_rounded_routine
                                 ThemeMode.MODE_DAY -> R.drawable.ic_light_mode
                                 ThemeMode.MODE_NIGHT -> R.drawable.ic_dark_mode
                                 null -> R.drawable.ic_rounded_routine
                             }
                         ),
-                        contentDescription = when (uiState.themeMode) {
+                        contentDescription = when (data?.themeMode) {
                             ThemeMode.MODE_AUTO -> stringResource(id = R.string.mode_auto)
                             ThemeMode.MODE_DAY -> stringResource(id = R.string.mode_day)
                             ThemeMode.MODE_NIGHT -> stringResource(id = R.string.mode_night)
@@ -79,56 +89,21 @@ fun AjustesScreen(
             )
         }
     ) { paddingValues ->
-        Box(
-            modifier = Modifier
-                .padding(paddingValues)
-                .background(MaterialTheme.colorScheme.surface)
-        ) {
-            Column(
-                Modifier
-                    .fillMaxSize()
-                    .padding(horizontal = dimensionResource(id = R.dimen.padding_medium))
-            ) {
 
-                ThemeMode.entries.forEach { option ->
-                    Row(verticalAlignment = Alignment.CenterVertically) {
-                        val title = when (option) {
-                            ThemeMode.MODE_AUTO -> stringResource(id = R.string.mode_auto)
-                            ThemeMode.MODE_DAY -> stringResource(id = R.string.mode_day)
-                            ThemeMode.MODE_NIGHT -> stringResource(id = R.string.mode_night)
-                        }
-                        Text(text = title, modifier = Modifier.weight(1f))
-                        RadioButton(
-                            selected = option == checkButton,
-                            onClick = {
-                                checkButton = option
-                                viewModel.updateThemeMode(checkButton) }
-                        )
-                    }
-                }
+        when (uiState) {
+            UiStateSimple.Loading -> CommonsLoadingScreen()
+            is UiStateSimple.Success -> {
+               // val data = (uiState as UiStateSimple.Success<UserPreferences?>).data
 
-                Spacer(modifier = Modifier.size(20.dp))
+                ContentAjustesAvanzados(modifier = Modifier.padding(paddingValues), viewModel, data)
+            }
 
-                HorizontalDivider()
-
-                Spacer(modifier = Modifier.size(20.dp))
-                ItemConfAvanzada.entries.forEach { item ->
-                    when (item) {
-                        ItemConfAvanzada.SEGURIDAD -> {
-                            SwitchWith(
-                                switchText = "Seguridad",
-                                isChecked = isSecurity,
-                                onCheckedChange = { newState ->
-                                    isSecurity = newState
-                                    viewModel.updateBiometricSecurity(isSecurity)
-                                }
-                            )
-                        }
-                    }
-                }
-
+            is UiStateSimple.Error -> {
+                val errorMessage = (uiState as UiStateSimple.Error).message
+                Text(text = "Error: $errorMessage")
             }
         }
+
     }
 }
 
@@ -153,3 +128,74 @@ fun SwitchWith(
     HorizontalDivider()
     Spacer(modifier = Modifier.size(20.dp))
 }
+
+@Composable
+fun ContentAjustesAvanzados(
+    modifier: Modifier,
+    viewModel: AjustesViewModel,
+    data: UserPreferences?
+) {
+    val uiState by viewModel.uiState.collectAsState()
+
+    var isSecurity: Boolean by remember { mutableStateOf(data?.biometricSecurity ?: false) }
+    var checkButton: ThemeMode by remember {
+        mutableStateOf(
+            data?.themeMode ?: ThemeMode.MODE_AUTO
+        )
+    }
+
+    LaunchedEffect(key1 = uiState) {
+        isSecurity = data?.biometricSecurity ?: false
+        checkButton = data?.themeMode ?: ThemeMode.MODE_AUTO
+    }
+    Box(
+        modifier = modifier.background(MaterialTheme.colorScheme.surface)
+    ) {
+        Column(
+            Modifier
+                .fillMaxSize()
+                .padding(horizontal = dimensionResource(id = R.dimen.padding_medium))
+        ) {
+
+            ThemeMode.entries.forEach { option ->
+                Row(verticalAlignment = Alignment.CenterVertically) {
+                    val title = when (option) {
+                        ThemeMode.MODE_AUTO -> stringResource(id = R.string.mode_auto)
+                        ThemeMode.MODE_DAY -> stringResource(id = R.string.mode_day)
+                        ThemeMode.MODE_NIGHT -> stringResource(id = R.string.mode_night)
+                    }
+                    Text(text = title, modifier = Modifier.weight(1f))
+                    RadioButton(
+                        selected = option == checkButton,
+                        onClick = {
+                            checkButton = option
+                            viewModel.updateThemeMode(checkButton)
+                        }
+                    )
+                }
+            }
+
+            Spacer(modifier = Modifier.size(20.dp))
+
+            HorizontalDivider()
+
+            Spacer(modifier = Modifier.size(20.dp))
+            ItemConfAvanzada.entries.forEach { item ->
+                when (item) {
+                    ItemConfAvanzada.SEGURIDAD -> {
+                        SwitchWith(
+                            switchText = "Seguridad",
+                            isChecked = isSecurity,
+                            onCheckedChange = { newState ->
+                                isSecurity = newState
+                                viewModel.updateBiometricSecurity(isSecurity)
+                            }
+                        )
+                    }
+                }
+            }
+
+        }
+    }
+}
+
