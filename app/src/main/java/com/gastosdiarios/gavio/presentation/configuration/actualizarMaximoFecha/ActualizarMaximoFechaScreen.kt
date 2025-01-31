@@ -82,6 +82,13 @@ fun Content(
         selectedSwitchNumber = uiState.selectedOption
     }
 
+
+    val switchOptions = listOf(
+        SwitchOption(R.string.quincena, 15),
+        SwitchOption(R.string.primer_mes, 31),
+        SwitchOption(R.string.dos_meses, 60)
+    )
+
     Column(
         modifier
             .fillMaxSize()
@@ -120,46 +127,14 @@ fun Content(
         HorizontalDivider()
         Spacer(modifier = Modifier.size(20.dp))
 
-        SwitchWithText(
-            stringResource(id = R.string.quincena),
-            numberSwitch = 15,
-            selectedSwitchNumber
-        ) { isActivated ->
-            if (isActivated) {
-                selectedSwitchNumber = 15
+        switchOptions.forEach { option ->
+            SwitchWithText(
+                stringResource(id = option.labelResId),
+                numberSwitch = option.numberSwitch,
+                selectedSwitchNumber
+            ){
                 isOptionSelected = true
-            }
-        }
-        SwitchWithText(
-            stringResource(R.string.primer_mes),
-            numberSwitch = 31,
-            selectedSwitchNumber
-        ) { isActivated ->
-            if (isActivated) {
-                selectedSwitchNumber = 31
-                isOptionSelected = true
-            }
-        }
-
-        SwitchWithText(
-            stringResource(R.string.dos_meses),
-            numberSwitch = 60,
-            selectedSwitchNumber,
-        ) { isActivated ->
-            if (isActivated) {
-                selectedSwitchNumber = 60
-                isOptionSelected = true
-            }
-        }
-
-        SwitchWithText(
-            stringResource(R.string.tres_meses),
-            numberSwitch = 90,
-            selectedSwitchNumber,
-        ) { isActivated ->
-            if (isActivated) {
-                selectedSwitchNumber = 90
-                isOptionSelected = true
+                selectedSwitchNumber = option.numberSwitch
             }
         }
 
@@ -187,3 +162,8 @@ fun Content(
         Spacer(modifier = Modifier.size(30.dp))
     }
 }
+
+data class SwitchOption(
+    val labelResId: Int, // ID del recurso de string para la etiqueta
+    val numberSwitch: Int // El número asociado al interruptor (15, 31, 60)
+)

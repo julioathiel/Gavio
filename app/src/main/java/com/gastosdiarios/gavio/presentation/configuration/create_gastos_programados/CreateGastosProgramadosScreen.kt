@@ -1,6 +1,7 @@
 package com.gastosdiarios.gavio.presentation.configuration.create_gastos_programados
 
 import androidx.compose.foundation.layout.Box
+import androidx.compose.foundation.layout.Column
 import androidx.compose.foundation.layout.PaddingValues
 import androidx.compose.foundation.layout.Spacer
 import androidx.compose.foundation.layout.fillMaxSize
@@ -55,7 +56,7 @@ fun CreateGastosProgramadosScreen(
     BottomSheetScaffold(
         topBar = {
             TopAppBarOnBack(
-                title = if(data.selectedItems.size >1) "${data.selectedItems.size}" else "Gastos programados",
+                title = if (data.selectedItems.isNotEmpty()) "${data.selectedItems.size}" else "Gastos programados",
                 containerColor = MaterialTheme.colorScheme.surface,
                 onBack = onBack,
                 actions = {
@@ -107,7 +108,9 @@ fun CreateGastosProgramadosScreen(
         content = { paddingValues ->
 
             when {
-                loading -> { CommonsLoadingScreen(Modifier.fillMaxSize()) }
+                loading -> {
+                    CommonsLoadingScreen(Modifier.fillMaxSize())
+                }
 
                 uiState.items.isEmpty() -> {
                     CommonsEmptyFloating(
@@ -164,8 +167,9 @@ fun GastosProgramadosListContent(
             .fillMaxSize()
             .padding(paddingValues)
     ) {
-
-        LazyColumn(modifier = Modifier.fillMaxSize()) {
+        Column {
+        HorizontalDivider()
+        LazyColumn {
             items(uiState.items, key = { it.uid ?: it.hashCode() }) { item ->
                 val isSelected = data.selectedItems.any { it.uid == item.uid }
                 ReplyListItem(
@@ -176,12 +180,13 @@ fun GastosProgramadosListContent(
                     onLongClick = { viewModel.onLongClick(item) }
                 )
             }
-            item{
+            item {
                 HorizontalDivider()
                 Spacer(modifier = Modifier.height(100.dp))
             }
         }
-        //si ahy un elemento seleccionado, desaparece el boton de agregar
+    }
+        //si hay un elemento seleccionado, desaparece el boton de agregar
         if (!selectionMode) {
             FloatingActionButton(
                 onClick = { viewModel.isCreateTrue() },

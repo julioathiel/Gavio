@@ -6,8 +6,8 @@
 
   <!--splashScreen para api menor a android 12 -->
     <style name="Theme.App.Starting"  parent="Theme.SplashScreen" >
-        <item name="windowSplashScreenBackground" >@color/white</item>
-        <item name="windowSplashScreenAnimatedIcon" >@drawable/ic_splash_screen</item>
+        <item name="windowSplashScreenBackground" >@color/transparent</item>
+        <item name="windowSplashScreenAnimatedIcon" >@drawable/ic_ahorro</item>
         <item name="windowSplashScreenAnimationDuration" >300</item>
         <item name="postSplashScreenTheme">@style/Theme.Gavio</item>
     </style>
