@@ -1,5 +1,6 @@
 package com.gastosdiarios.gavio.data
 
+import android.app.NotificationChannel
 import android.app.NotificationManager
 import android.app.PendingIntent
 import android.content.BroadcastReceiver
@@ -13,12 +14,13 @@ import com.gastosdiarios.gavio.MainActivity
 import com.gastosdiarios.gavio.R
 import com.gastosdiarios.gavio.data.constants.Constants.MY_CHANNEL_ID
 import com.gastosdiarios.gavio.data.constants.Constants.NOTIFICATION_ID
-import com.gastosdiarios.gavio.domain.model.NotificationProgramadaModel
+import com.gastosdiarios.gavio.domain.model.NotificationProgrammedModel
 
 class NotificationProgrammed : BroadcastReceiver() {
     override fun onReceive(context: Context, intent: Intent) {
         Log.d("alarma", "¡Alarma disparada!")
-        val notification = NotificationProgramadaModel(
+
+        val notification = NotificationProgrammedModel(
             id = NOTIFICATION_ID,
             smallIcon = R.drawable.ic_ahorro,
             title = context.getString(R.string.title_notification_programada),
@@ -30,17 +32,22 @@ class NotificationProgrammed : BroadcastReceiver() {
         createNotification(context, notification)
     }
 
-    private fun createNotification(context: Context, notification: NotificationProgramadaModel) {
+
+    private fun createNotification(context: Context, notification: NotificationProgrammedModel) {
         val notificationManager = context.getSystemService(NotificationManager::class.java)
 
         //esta parte sirve para abrir la app al presionar la notification
         val intent = Intent(context, MainActivity::class.java).apply {
-            //crea una nueva bandera y elimina otra existente antes de iniicar la nueva
+            //crea una nueva bandera y elimina otra existente antes de iniciar la nueva
             flags = Intent.FLAG_ACTIVITY_NEW_TASK or Intent.FLAG_ACTIVITY_CLEAR_TASK
         }
 
-        val flag = if (Build.VERSION.SDK_INT >= Build.VERSION_CODES.S)
-            PendingIntent.FLAG_IMMUTABLE else 0
+        val flag = if (Build.VERSION.SDK_INT >= Build.VERSION_CODES.S) {
+            // Usa IMMUTABLE si no necesitas modificar el intent
+            PendingIntent.FLAG_IMMUTABLE
+        } else {
+            0
+        }
 
         val pendingIntent: PendingIntent =
             PendingIntent.getActivity(context, 0, intent, flag)
@@ -60,11 +67,6 @@ class NotificationProgrammed : BroadcastReceiver() {
             .setPriority(notification.priority)
             .build()
 
-//        notificationManager.notify(idNotification,notification)
-
-        val manager = context.getSystemService(Context.NOTIFICATION_SERVICE) as NotificationManager
-        manager.notify(notification.id, notifications)
-
-
+        notificationManager.notify(notification.id, notifications)
     }
 }

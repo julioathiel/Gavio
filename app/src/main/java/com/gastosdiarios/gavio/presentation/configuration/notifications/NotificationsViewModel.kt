@@ -74,7 +74,7 @@ class NotificationsViewModel @Inject constructor(
 
         val (selectedCalendar) = adjustSelectedTime(hour, minute)
 
-        if (Build.VERSION.SDK_INT >= Build.VERSION_CODES.S && !alarmManager.canScheduleExactAlarms()) {
+        if (Build.VERSION.SDK_INT >= Build.VERSION_CODES.TIRAMISU && !alarmManager.canScheduleExactAlarms()) {
             //
         } else {
             try {
@@ -116,7 +116,8 @@ class NotificationsViewModel @Inject constructor(
         minute: Int
     ) {
         //guardando hora y minuto
-        setHoraMinuto(hour, minute)
+        val newHour = String.format(Locale.US, "%02d", hour)
+        setHoraMinuto(newHour.toInt(), minute)
         // Obtener la hora y el minuto de selectedTime
         notificationProgrammed(hour, minute)
 
@@ -130,9 +131,6 @@ class NotificationsViewModel @Inject constructor(
         val remainingMinutes: Long = minutes % 60
         val remainingSeconds: Long = seconds % 60
 
-        Log.d("alarma", "Horas: $hours")
-        Log.d("alarma", "Minutos: $remainingMinutes")
-        Log.d("alarma", "Segundos: $remainingSeconds")
 
         val message: String =
             when {

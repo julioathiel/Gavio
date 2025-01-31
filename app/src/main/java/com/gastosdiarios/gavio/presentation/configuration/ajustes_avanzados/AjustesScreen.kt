@@ -32,7 +32,6 @@ import androidx.compose.ui.res.stringResource
 import androidx.compose.ui.unit.dp
 import androidx.hilt.navigation.compose.hiltViewModel
 import com.gastosdiarios.gavio.R
-import com.gastosdiarios.gavio.data.commons.CommonsLoadingData
 import com.gastosdiarios.gavio.data.commons.CommonsLoadingScreen
 import com.gastosdiarios.gavio.data.commons.TopAppBarOnBack
 import com.gastosdiarios.gavio.data.ui_state.UiStateSimple
@@ -46,21 +45,28 @@ fun AjustesScreen(
     onBack: () -> Unit
 ) {
     val uiState by viewModel.uiState.collectAsState()
-    val data = (uiState as UiStateSimple.Success<UserPreferences?>).data
-    var isSecurity: Boolean by remember {
-        mutableStateOf(data?.biometricSecurity ?: false)
-    }
-    var checkButton: ThemeMode by remember {
-        mutableStateOf(
-            data?.themeMode ?: ThemeMode.MODE_AUTO
-        )
-    }
 
-    LaunchedEffect(key1 = uiState) {
-        isSecurity = data?.biometricSecurity ?: false
-        checkButton = data?.themeMode ?: ThemeMode.MODE_AUTO
-    }
+    when (uiState) {
+        UiStateSimple.Loading -> {}
+        is UiStateSimple.Success -> {
+            val data = (uiState as UiStateSimple.Success<UserPreferences?>).data
+            var isSecurity: Boolean by remember {
+                mutableStateOf(data?.biometricSecurity ?: false)
+            }
+            var checkButton: ThemeMode by remember {
+                mutableStateOf(
+                    data?.themeMode ?: ThemeMode.MODE_AUTO
+                )
+            }
 
+            LaunchedEffect(key1 = uiState) {
+                isSecurity = data?.biometricSecurity ?: false
+                checkButton = data?.themeMode ?: ThemeMode.MODE_AUTO
+            }
+        }
+
+        is UiStateSimple.Error -> {}
+    }
 
     Scaffold(
         topBar = {
@@ -69,32 +75,39 @@ fun AjustesScreen(
                 containerColor = MaterialTheme.colorScheme.secondaryContainer,
                 onBack = { onBack() },
                 actions = {
-                    Icon(
-                        painter = painterResource(
-                            id = when (data?.themeMode) {
-                                ThemeMode.MODE_AUTO -> R.drawable.ic_rounded_routine
-                                ThemeMode.MODE_DAY -> R.drawable.ic_light_mode
-                                ThemeMode.MODE_NIGHT -> R.drawable.ic_dark_mode
-                                null -> R.drawable.ic_rounded_routine
-                            }
-                        ),
-                        contentDescription = when (data?.themeMode) {
-                            ThemeMode.MODE_AUTO -> stringResource(id = R.string.mode_auto)
-                            ThemeMode.MODE_DAY -> stringResource(id = R.string.mode_day)
-                            ThemeMode.MODE_NIGHT -> stringResource(id = R.string.mode_night)
-                            null -> stringResource(id = R.string.mode_auto)
-                        }.toString(), modifier = Modifier.padding(end = 16.dp)
-                    )
+                    when (uiState) {
+                        UiStateSimple.Loading -> {}
+                        is UiStateSimple.Success -> {
+                            val data = (uiState as UiStateSimple.Success<UserPreferences?>).data
+                            Icon(
+                                painter = painterResource(
+                                    id = when (data?.themeMode) {
+                                        ThemeMode.MODE_AUTO -> R.drawable.ic_rounded_routine
+                                        ThemeMode.MODE_DAY -> R.drawable.ic_light_mode
+                                        ThemeMode.MODE_NIGHT -> R.drawable.ic_dark_mode
+                                        null -> R.drawable.ic_rounded_routine
+                                    }
+                                ),
+                                contentDescription = when (data?.themeMode) {
+                                    ThemeMode.MODE_AUTO -> stringResource(id = R.string.mode_auto)
+                                    ThemeMode.MODE_DAY -> stringResource(id = R.string.mode_day)
+                                    ThemeMode.MODE_NIGHT -> stringResource(id = R.string.mode_night)
+                                    null -> stringResource(id = R.string.mode_auto)
+                                }.toString(), modifier = Modifier.padding(end = 16.dp)
+                            )
+                        }
+
+                        is UiStateSimple.Error -> {}
+                    }
                 }
             )
         }
     ) { paddingValues ->
 
         when (uiState) {
-            UiStateSimple.Loading -> CommonsLoadingScreen()
+            UiStateSimple.Loading -> CommonsLoadingScreen(Modifier.fillMaxSize())
             is UiStateSimple.Success -> {
-               // val data = (uiState as UiStateSimple.Success<UserPreferences?>).data
-
+                val data = (uiState as UiStateSimple.Success<UserPreferences?>).data
                 ContentAjustesAvanzados(modifier = Modifier.padding(paddingValues), viewModel, data)
             }
 

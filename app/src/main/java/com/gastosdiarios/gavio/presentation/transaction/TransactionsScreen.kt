@@ -42,14 +42,18 @@ import androidx.compose.ui.platform.LocalContext
 import androidx.compose.ui.res.stringResource
 import androidx.compose.ui.unit.dp
 import androidx.hilt.navigation.compose.hiltViewModel
+import androidx.lifecycle.compose.collectAsStateWithLifecycle
 import com.gastosdiarios.gavio.R
 import com.gastosdiarios.gavio.data.commons.CommonsIsEmpty
 import com.gastosdiarios.gavio.data.commons.CommonsLoadingData
 import com.gastosdiarios.gavio.data.commons.CommonsLoadingScreen
 import com.gastosdiarios.gavio.data.commons.TextFieldDescription
 import com.gastosdiarios.gavio.data.commons.TopAppBarOnBack
-import com.gastosdiarios.gavio.domain.enums.Modo
+import com.gastosdiarios.gavio.data.ui_state.UiState
+import com.gastosdiarios.gavio.data.ui_state.UiStateSimple
+import com.gastosdiarios.gavio.domain.model.Action
 import com.gastosdiarios.gavio.domain.model.modelFirebase.TransactionModel
+import com.gastosdiarios.gavio.domain.model.modelFirebase.UserPreferences
 import com.gastosdiarios.gavio.presentation.configuration.create_gastos_programados.components.DialogDelete
 import com.gastosdiarios.gavio.presentation.home.components.TextFieldDinero
 import com.gastosdiarios.gavio.presentation.transaction.components.ItemFecha
@@ -79,10 +83,22 @@ fun TransactionsScreen(
         }
     }
 
+    val actions = listOf(
+        Action(
+            icon = Icons.Default.Create,
+            contentDescription = "editar",
+            onClick = { viewModel.isCreateTrue() }
+        ),
+        Action(
+            icon = Icons.Default.Delete,
+            contentDescription = "delete",
+            onClick = { viewModel.isDeleteTrue() }
+        )
+    )
     BottomSheetScaffold(
         topBar = {
             TopAppBarOnBack(
-                title = if (data.selectionMode && data.selectedItems.size > 1) "${data.selectedItems.size}"
+                title = if (data.selectedItems.isNotEmpty()) "${data.selectedItems.size}"
                 else {
                     stringResource(id = R.string.toolbar_registro_gastos)
                 },
@@ -97,14 +113,13 @@ fun TransactionsScreen(
                             )
                         }
                     } else if (data.selectionMode && data.selectedItems.size == 1) {
-                        IconButton(onClick = { viewModel.isCreateTrue() }) {
-                            Icon(imageVector = Icons.Default.Create, contentDescription = "editar")
-                        }
-
-                        IconButton(onClick = {
-                            viewModel.isDeleteTrue()
-                        }) {
-                            Icon(imageVector = Icons.Default.Delete, contentDescription = "delete")
+                        actions.forEach {
+                            IconButton(onClick = it.onClick) {
+                                Icon(
+                                    imageVector = it.icon,
+                                    contentDescription = it.contentDescription
+                                )
+                            }
                         }
                     }
                 }
@@ -136,7 +151,30 @@ fun TransactionsScreen(
                 onRefresh = { viewModel.refreshData() },
                 modifier = Modifier.padding(paddingValues)
             ) {
-                Content(viewModel, Modifier.padding(paddingValues))
+                val uiState by viewModel.uiState.collectAsStateWithLifecycle()
+
+
+                when (uiState) {
+                    is UiStateSimple.Loading -> {
+                        CommonsLoadingScreen(modifier = Modifier.fillMaxSize())
+                    }
+
+                    is UiState.IsEmpty -> {
+                        CommonsIsEmpty()
+                    }
+
+                    is UiState.Success<*> -> {
+                        val dataList: List<TransactionModel> =
+                            (uiState as UiState.Success<TransactionModel>).data
+                        ContentList(
+                            viewModel,
+                            dataList = dataList,
+                            showCommonsLoadingData = data.updateItem
+                        )
+                    }
+
+                    is UiState.Error -> {}
+                }
             }
         },
         snackbarHost = { SnackbarHost(hostState = isShowSnackbar) }
@@ -147,43 +185,21 @@ fun TransactionsScreen(
     )
 }
 
-@Composable
-fun Content(
-    viewModel: TransactionsViewModel,
-    modifier: Modifier
-) {
-    val loading by viewModel.loading.collectAsState()
-    val uiState by viewModel.uiState.collectAsState()
-    when {
-        loading -> {
-            CommonsLoadingScreen(modifier = modifier.fillMaxSize())
-        }
-
-        uiState.items.isEmpty() -> {
-            CommonsIsEmpty()
-        }
-
-        uiState.update -> {
-            ContentList(viewModel)
-            CommonsLoadingData()
-        }
-
-        else -> {
-            ContentList(viewModel)
-        }
-    }
-}
 
 @OptIn(ExperimentalFoundationApi::class)
 @Composable
-fun ContentList(viewModel: TransactionsViewModel) {
+fun ContentList(
+    viewModel: TransactionsViewModel,
+    dataList: List<TransactionModel>,
+    showCommonsLoadingData: Boolean
+) {
     val data by viewModel.dataList.collectAsState()
-    val list by viewModel.uiState.collectAsState()
+
     val listState = rememberLazyListState()
 
     LazyColumn(modifier = Modifier.fillMaxSize()) {
         //Agrupa los elementos de uiState.items por fecha.
-        val groupItems = list.items.groupBy { it.date }.entries.sortedByDescending { it.key }
+        val groupItems = dataList.groupBy { it.date }.entries.sortedByDescending { it.key }
         groupItems.forEach { (date, itemsForDate) ->
             // Encabezado para cada grupo de fecha
             stickyHeader {
@@ -198,7 +214,7 @@ fun ContentList(viewModel: TransactionsViewModel) {
                 key = { it.uid ?: it.hashCode() }
             ) { item ->
                 val isSelect = data.selectedItems.any { it.uid == item.uid }
-                Log.d("tagss", "ContentList: $item")
+
                 ItemTransactions(
                     item,
                     viewModel,
@@ -210,11 +226,14 @@ fun ContentList(viewModel: TransactionsViewModel) {
         }
     }
 
-    LaunchedEffect(list.items.lastOrNull()) {
+    LaunchedEffect(dataList.lastOrNull()) {
         // muestra el ultimo elemento agregado en la parte superior
         listState.scrollToItem(index = 0)
     }
 
+    if (showCommonsLoadingData) {
+        CommonsLoadingData()
+    }
 }
 
 @Composable

@@ -38,6 +38,7 @@ import com.gastosdiarios.gavio.data.commons.TopAppBarOnBack
 import com.gastosdiarios.gavio.data.ui_state.ListUiState
 import com.gastosdiarios.gavio.domain.enums.TipoTransaccion
 import com.gastosdiarios.gavio.domain.enums.Modo
+import com.gastosdiarios.gavio.domain.model.Action
 import com.gastosdiarios.gavio.domain.model.modelFirebase.GastosProgramadosModel
 import com.gastosdiarios.gavio.presentation.configuration.create_gastos_programados.components.ContentBottomSheetGastosProgramados
 import com.gastosdiarios.gavio.presentation.configuration.create_gastos_programados.components.DialogDelete
@@ -52,7 +53,18 @@ fun CreateGastosProgramadosScreen(
     val uiState by viewModel.gastosProgramadosUiState.collectAsState()
     val data by viewModel.dataList.collectAsState()
     val loading by viewModel.loading.collectAsState()
-
+    val actions = listOf(
+        Action(
+            icon = Icons.Default.Create,
+            contentDescription = "editar",
+            onClick = { viewModel.isCreateTrue() }
+        ),
+        Action(
+            icon = Icons.Default.Delete,
+            contentDescription = "delete",
+            onClick = { viewModel.isDeleteTrue() }
+        )
+    )
     BottomSheetScaffold(
         topBar = {
             TopAppBarOnBack(
@@ -69,14 +81,13 @@ fun CreateGastosProgramadosScreen(
                             Icon(imageVector = Icons.Default.Delete, contentDescription = "delete")
                         }
                     } else if (data.selectionMode && data.selectedItems.size == 1) {
-                        IconButton(onClick = { viewModel.isCreateTrue() }) {
-                            Icon(imageVector = Icons.Default.Create, contentDescription = "delete")
-                        }
-
-                        IconButton(onClick = {
-                            viewModel.isDeleteTrue()
-                        }) {
-                            Icon(imageVector = Icons.Default.Delete, contentDescription = "delete")
+                        actions.forEach {
+                            IconButton(onClick = it.onClick) {
+                                Icon(
+                                    imageVector = it.icon,
+                                    contentDescription = it.contentDescription
+                                )
+                            }
                         }
                     }
                 }
@@ -120,23 +131,11 @@ fun CreateGastosProgramadosScreen(
                 }
 
                 uiState.update -> {
-                    GastosProgramadosListContent(
-                        uiState,
-                        viewModel,
-                        paddingValues,
-                        data.selectionMode,
-                        showCommonsLoadingData = true
-                    )
+                    GastosProgramadosListContent(viewModel, showCommonsLoadingData = true)
                 }
 
                 else -> {
-                    GastosProgramadosListContent(
-                        uiState,
-                        viewModel,
-                        paddingValues,
-                        data.selectionMode,
-                        showCommonsLoadingData = false
-                    )
+                    GastosProgramadosListContent(viewModel, showCommonsLoadingData = false)
                 }
             }
         }
@@ -155,39 +154,37 @@ fun CreateGastosProgramadosScreen(
 
 @Composable
 fun GastosProgramadosListContent(
-    uiState: ListUiState<GastosProgramadosModel>,
     viewModel: CreateGastosProgramadosViewModel,
-    paddingValues: PaddingValues,
-    selectionMode: Boolean,
     showCommonsLoadingData: Boolean
 ) {
+    val uiState: ListUiState<GastosProgramadosModel> by viewModel.gastosProgramadosUiState.collectAsState()
     val data by viewModel.dataList.collectAsState()
+
     Box(
         modifier = Modifier
             .fillMaxSize()
-            .padding(paddingValues)
     ) {
         Column {
-        HorizontalDivider()
-        LazyColumn {
-            items(uiState.items, key = { it.uid ?: it.hashCode() }) { item ->
-                val isSelected = data.selectedItems.any { it.uid == item.uid }
-                ReplyListItem(
-                    item = item,
-                    isSelected = isSelected,
-                    viewModel = viewModel,
-                    onClick = { viewModel.onClick(item) },
-                    onLongClick = { viewModel.onLongClick(item) }
-                )
-            }
-            item {
-                HorizontalDivider()
-                Spacer(modifier = Modifier.height(100.dp))
+            HorizontalDivider()
+            LazyColumn {
+                items(uiState.items, key = { it.uid ?: it.hashCode() }) { item ->
+                    val isSelected = data.selectedItems.any { it.uid == item.uid }
+                    ReplyListItem(
+                        item = item,
+                        isSelected = isSelected,
+                        viewModel = viewModel,
+                        onClick = { viewModel.onClick(item) },
+                        onLongClick = { viewModel.onLongClick(item) }
+                    )
+                }
+                item {
+                    HorizontalDivider()
+                    Spacer(modifier = Modifier.height(100.dp))
+                }
             }
         }
-    }
         //si hay un elemento seleccionado, desaparece el boton de agregar
-        if (!selectionMode) {
+        if (!data.selectionMode) {
             FloatingActionButton(
                 onClick = { viewModel.isCreateTrue() },
                 Modifier

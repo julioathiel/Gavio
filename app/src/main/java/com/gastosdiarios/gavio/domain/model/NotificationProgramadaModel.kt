@@ -1,6 +1,6 @@
 package com.gastosdiarios.gavio.domain.model
 
-data class NotificationProgramadaModel(
+data class NotificationProgrammedModel(
     val id: Int,
     val smallIcon: Int,
     val title: String,

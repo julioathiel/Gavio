@@ -1,7 +1,6 @@
 package com.gastosdiarios.gavio
 
 import android.app.Application
-import androidx.compose.runtime.mutableStateOf
 import androidx.credentials.CredentialManager
 import com.gastosdiarios.gavio.utils.NetworkReceiver
 import com.google.firebase.FirebaseApp
@@ -10,7 +9,7 @@ import dagger.hilt.android.HiltAndroidApp
 import javax.inject.Inject
 
 @HiltAndroidApp
-class App: Application() {
+class App : Application() {
     @Inject
     lateinit var firebaseAuth: FirebaseAuth
     lateinit var credentialManager: CredentialManager
@@ -21,6 +20,5 @@ class App: Application() {
         FirebaseApp.initializeApp(this) // Inicializa Firebase aquí
         credentialManager = CredentialManager.create(this)
         networkReceiver.register()
-
     }
 }

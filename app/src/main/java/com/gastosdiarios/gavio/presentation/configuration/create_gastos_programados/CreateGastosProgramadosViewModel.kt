@@ -6,9 +6,9 @@ import android.widget.Toast
 import androidx.lifecycle.ViewModel
 import androidx.lifecycle.viewModelScope
 import com.gastosdiarios.gavio.data.ui_state.ListUiState
+import com.gastosdiarios.gavio.domain.model.DataList
 import com.gastosdiarios.gavio.domain.model.modelFirebase.GastosProgramadosModel
 import com.gastosdiarios.gavio.domain.repository.repositoriesFirestrore.GastosProgramadosFirestore
-import com.gastosdiarios.gavio.presentation.transaction.TransactionsViewModel.DataList
 import dagger.hilt.android.lifecycle.HiltViewModel
 import dagger.hilt.android.qualifiers.ApplicationContext
 import kotlinx.coroutines.Dispatchers
@@ -88,12 +88,6 @@ class CreateGastosProgramadosViewModel @Inject constructor(
         cargandoListaActualizada()
     }
 
-    fun deleteAll() {
-        viewModelScope.launch(Dispatchers.IO) {
-            gastosProgramadosFirestore.deleteAll()
-        }
-    }
-
 
     fun onClick(item: GastosProgramadosModel) {
         _dataList.update { currentDataList ->
@@ -113,7 +107,6 @@ class CreateGastosProgramadosViewModel @Inject constructor(
             }
         }
     }
-
 
     fun onLongClick(item: GastosProgramadosModel) {
         _dataList.update { currentDataList ->
