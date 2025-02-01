@@ -9,7 +9,7 @@ import androidx.compose.foundation.isSystemInDarkTheme
 import androidx.compose.runtime.collectAsState
 import androidx.compose.runtime.getValue
 import androidx.core.splashscreen.SplashScreen.Companion.installSplashScreen
-import com.gastosdiarios.gavio.data.ui_state.UiStateSimple
+import com.gastosdiarios.gavio.data.ui_state.UiStateSingle
 import com.gastosdiarios.gavio.domain.enums.ThemeMode
 import com.gastosdiarios.gavio.domain.model.modelFirebase.UserPreferences
 import com.gastosdiarios.gavio.navigation.MyAppContent
@@ -18,7 +18,6 @@ import com.gastosdiarios.gavio.presentation.configuration.notifications.Notifica
 import com.gastosdiarios.gavio.ui.theme.GavioTheme
 import com.google.firebase.auth.FirebaseAuth
 import dagger.hilt.android.AndroidEntryPoint
-import dagger.hilt.android.qualifiers.ApplicationContext
 import javax.inject.Inject
 
 @AndroidEntryPoint
@@ -38,7 +37,7 @@ class MainActivity : AppCompatActivity() {
             notificationViewModel.notificationProgrammed()
 
             val option by ajustesViewModel.uiState.collectAsState()
-            val data = (option as? UiStateSimple.Success<UserPreferences?>)?.data
+            val data = (option as? UiStateSingle.Success<UserPreferences?>)?.data
             val isDarkMode = when (data?.themeMode) {
                 ThemeMode.MODE_AUTO -> isSystemInDarkTheme()
                 ThemeMode.MODE_DAY -> false

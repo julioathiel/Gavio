@@ -2,7 +2,6 @@ package com.gastosdiarios.gavio.presentation.configuration.create_gastos_program
 
 import androidx.compose.foundation.layout.Box
 import androidx.compose.foundation.layout.Column
-import androidx.compose.foundation.layout.PaddingValues
 import androidx.compose.foundation.layout.Spacer
 import androidx.compose.foundation.layout.fillMaxSize
 import androidx.compose.foundation.layout.height
@@ -21,6 +20,8 @@ import androidx.compose.material3.Icon
 import androidx.compose.material3.IconButton
 import androidx.compose.material3.MaterialTheme
 import androidx.compose.material3.ModalBottomSheet
+import androidx.compose.material3.pulltorefresh.PullToRefreshBox
+import androidx.compose.material3.pulltorefresh.rememberPullToRefreshState
 import androidx.compose.material3.rememberModalBottomSheetState
 import androidx.compose.runtime.Composable
 import androidx.compose.runtime.collectAsState
@@ -30,14 +31,16 @@ import androidx.compose.ui.Modifier
 import androidx.compose.ui.res.dimensionResource
 import androidx.compose.ui.unit.dp
 import androidx.hilt.navigation.compose.hiltViewModel
+import androidx.lifecycle.compose.collectAsStateWithLifecycle
 import com.gastosdiarios.gavio.R
 import com.gastosdiarios.gavio.data.commons.CommonsEmptyFloating
 import com.gastosdiarios.gavio.data.commons.CommonsLoadingData
 import com.gastosdiarios.gavio.data.commons.CommonsLoadingScreen
+import com.gastosdiarios.gavio.data.commons.ErrorScreen
 import com.gastosdiarios.gavio.data.commons.TopAppBarOnBack
-import com.gastosdiarios.gavio.data.ui_state.ListUiState
-import com.gastosdiarios.gavio.domain.enums.TipoTransaccion
+import com.gastosdiarios.gavio.data.ui_state.UiStateList
 import com.gastosdiarios.gavio.domain.enums.Modo
+import com.gastosdiarios.gavio.domain.enums.TipoTransaccion
 import com.gastosdiarios.gavio.domain.model.Action
 import com.gastosdiarios.gavio.domain.model.modelFirebase.GastosProgramadosModel
 import com.gastosdiarios.gavio.presentation.configuration.create_gastos_programados.components.ContentBottomSheetGastosProgramados
@@ -50,9 +53,11 @@ fun CreateGastosProgramadosScreen(
     viewModel: CreateGastosProgramadosViewModel = hiltViewModel(),
     onBack: () -> Unit
 ) {
-    val uiState by viewModel.gastosProgramadosUiState.collectAsState()
+
+    val uiState by viewModel.uiState.collectAsStateWithLifecycle()
     val data by viewModel.dataList.collectAsState()
-    val loading by viewModel.loading.collectAsState()
+    val isRefreshing by viewModel.isRefreshing.collectAsState()
+
     val actions = listOf(
         Action(
             icon = Icons.Default.Create,
@@ -65,6 +70,7 @@ fun CreateGastosProgramadosScreen(
             onClick = { viewModel.isDeleteTrue() }
         )
     )
+
     BottomSheetScaffold(
         topBar = {
             TopAppBarOnBack(
@@ -117,25 +123,42 @@ fun CreateGastosProgramadosScreen(
             }
         },
         content = { paddingValues ->
+            PullToRefreshBox(
+                state = rememberPullToRefreshState(),
+                isRefreshing = isRefreshing.isRefreshing,
+                onRefresh = { viewModel.refreshData() },
+                modifier = Modifier.padding(paddingValues)
+            ){
 
-            when {
-                loading -> {
+            }
+            when (uiState) {
+                UiStateList.Loading -> {
                     CommonsLoadingScreen(Modifier.fillMaxSize())
                 }
 
-                uiState.items.isEmpty() -> {
+                is UiStateList.Error -> {
+                    ErrorScreen(
+                        uiState = uiState as UiStateList.Error,
+                        retryOperation = { viewModel.retryLoadData() },
+                        modifier = Modifier.padding(paddingValues)
+                    )
+                }
+
+                UiStateList.Empty -> {
                     CommonsEmptyFloating(
                         onClick = { viewModel.isCreateTrue() },
                         modifier = Modifier.padding(paddingValues)
                     )
                 }
 
-                uiState.update -> {
-                    GastosProgramadosListContent(viewModel, showCommonsLoadingData = true)
-                }
-
-                else -> {
-                    GastosProgramadosListContent(viewModel, showCommonsLoadingData = false)
+                is UiStateList.Success -> {
+                    val list = (uiState as UiStateList.Success<GastosProgramadosModel>).data
+                    GastosProgramadosListContent(
+                        list,
+                        Modifier.padding(paddingValues),
+                        viewModel,
+                        showCommonsLoadingData = data.updateItem
+                    )
                 }
             }
         }
@@ -151,23 +174,20 @@ fun CreateGastosProgramadosScreen(
 
 }
 
-
 @Composable
 fun GastosProgramadosListContent(
+    list: List<GastosProgramadosModel>,
+    modifier: Modifier,
     viewModel: CreateGastosProgramadosViewModel,
     showCommonsLoadingData: Boolean
 ) {
-    val uiState: ListUiState<GastosProgramadosModel> by viewModel.gastosProgramadosUiState.collectAsState()
     val data by viewModel.dataList.collectAsState()
 
-    Box(
-        modifier = Modifier
-            .fillMaxSize()
-    ) {
+    Box(modifier = modifier.fillMaxSize()) {
         Column {
             HorizontalDivider()
             LazyColumn {
-                items(uiState.items, key = { it.uid ?: it.hashCode() }) { item ->
+                items(list, key = { it.uid ?: it.hashCode() }) { item ->
                     val isSelected = data.selectedItems.any { it.uid == item.uid }
                     ReplyListItem(
                         item = item,

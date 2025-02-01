@@ -30,7 +30,7 @@ fun ToolbarGastos(
 
     TopAppBarOnBack(
         title = stringResource(R.string.categorias_nuevas),
-        containerColor = MaterialTheme.colorScheme.secondaryContainer,
+        containerColor = MaterialTheme.colorScheme.surface,
         actions = {
             if (uiStateDefault.isActivated) {
                 IconButton(onClick = { showDropdown = true }) {

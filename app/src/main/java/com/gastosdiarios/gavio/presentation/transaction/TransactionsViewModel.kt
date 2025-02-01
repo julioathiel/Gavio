@@ -6,20 +6,16 @@ import android.widget.Toast
 import androidx.lifecycle.ViewModel
 import androidx.lifecycle.viewModelScope
 import com.gastosdiarios.gavio.R
-import com.gastosdiarios.gavio.data.ui_state.ListUiState
-import com.gastosdiarios.gavio.data.ui_state.UiState
-import com.gastosdiarios.gavio.data.ui_state.UiStateSimple
+import com.gastosdiarios.gavio.data.ui_state.UiStateList
 import com.gastosdiarios.gavio.domain.enums.TipoTransaccion
 import com.gastosdiarios.gavio.domain.model.DataList
 import com.gastosdiarios.gavio.domain.model.RefreshDataModel
 import com.gastosdiarios.gavio.domain.model.modelFirebase.TransactionModel
-import com.gastosdiarios.gavio.domain.model.modelFirebase.UserPreferences
 import com.gastosdiarios.gavio.domain.repository.DataBaseManager
 import com.gastosdiarios.gavio.domain.repository.repositoriesFirestrore.GastosPorCategoriaFirestore
 import com.gastosdiarios.gavio.domain.repository.repositoriesFirestrore.TransactionsFirestore
 import com.gastosdiarios.gavio.domain.repository.repositoriesFirestrore.UserDataFirestore
 import com.gastosdiarios.gavio.utils.MathUtils
-import com.gastosdiarios.gavio.utils.RefreshDataUtils
 import dagger.hilt.android.lifecycle.HiltViewModel
 import dagger.hilt.android.qualifiers.ApplicationContext
 import kotlinx.coroutines.Dispatchers
@@ -32,7 +28,6 @@ import kotlinx.coroutines.flow.onStart
 import kotlinx.coroutines.flow.stateIn
 import kotlinx.coroutines.flow.update
 import kotlinx.coroutines.launch
-import kotlinx.coroutines.withContext
 import okhttp3.internal.wait
 import javax.inject.Inject
 
@@ -46,6 +41,18 @@ class TransactionsViewModel @Inject constructor(
 ) : ViewModel() {
     private val tag = "transactionViewModel"
 
+    private val _uiState = MutableStateFlow<UiStateList<TransactionModel>>(UiStateList.Loading)
+    val uiState = _uiState.onStart { getAllTransactions() }
+        .catch { throwable ->
+            _uiState.update {
+                UiStateList.Error(
+                    throwable.message ?: "Error desconocido",
+                    throwable
+                )
+            }
+        }
+        .stateIn(viewModelScope, SharingStarted.WhileSubscribed(5000L), UiStateList.Loading)
+
     private val _snackbarMessage = MutableStateFlow<Int?>(null)
     val snackbarMessage: StateFlow<Int?> get() = _snackbarMessage
 
@@ -56,25 +63,17 @@ class TransactionsViewModel @Inject constructor(
     val dataList: StateFlow<DataList<TransactionModel>> = _dataList.asStateFlow()
 
 
-    private val _uiState = MutableStateFlow<UiState<TransactionModel>>(UiState.Loading)
-    val uiState = _uiState.onStart { getAllTransactions() }
-        .catch { throwable ->
-            _uiState.update { UiState.Error(throwable.message ?: "Error desconocido", throwable) }
-        }
-        .stateIn(viewModelScope, SharingStarted.WhileSubscribed(5000L), UiStateSimple.Loading)
-
-
     private fun getAllTransactions() {
         viewModelScope.launch(Dispatchers.IO) {
             try {
                 val data: List<TransactionModel> = dbm.getTransactions()
-                if(data.isEmpty()){
-                    _uiState.update { UiState.IsEmpty }
-                }else{
-                    _uiState.update { UiState.Success(data) }
+                if (data.isEmpty()) {
+                    _uiState.update { UiStateList.Empty }
+                } else {
+                    _uiState.update { UiStateList.Success(data) }
                 }
             } catch (e: Exception) {
-                _uiState.update { UiState.Error(e.message ?: "Error desconocido", e) }
+                _uiState.update { UiStateList.Error(e.message ?: "Error desconocido", e) }
             }
         }
     }
@@ -84,12 +83,12 @@ class TransactionsViewModel @Inject constructor(
             try {
                 val data: List<TransactionModel> = dbm.getTransactions()
                 if (data.isEmpty()) {
-                    _uiState.update { UiState.IsEmpty }
+                    _uiState.update { UiStateList.Empty }
                 } else {
-                    _uiState.update { UiState.Success(data) }
+                    _uiState.update { UiStateList.Success(data) }
                 }
             } catch (e: Exception) {
-                _uiState.update { UiState.Error(e.message ?: "Error desconocido", e) }
+                _uiState.update { UiStateList.Error(e.message ?: "Error desconocido", e) }
             }
         }
     }
@@ -116,8 +115,9 @@ class TransactionsViewModel @Inject constructor(
             _dataList.value.selectedItems.forEach { item ->
                 val esPrimerItem = item.index == 0
                 if (esPrimerItem) {
+                    _dataList.update { it.copy(selectionMode = false) }
                     dbm.deleteAllScreenTransactions()
-                    dbm.updateCurrentMoney(updatedMoney, true)
+                    dbm.updateCurrentMoney(0.0, true)
                     cargandoListaActualizada()
                     return@launch
                 }
@@ -139,17 +139,17 @@ class TransactionsViewModel @Inject constructor(
         title: String,
         nuevoValor: String,
         description: String,
-        valorViejo: TransactionModel
+        item: TransactionModel
     ) {
         viewModelScope.launch {
             try {
                 //obteniendo el total de ingresos y gastos
                 val data = userDataFirestore.get()
-                val cashViejo = valorViejo.cash?.toDouble() ?: 0.0
+                val cashViejo = item.cash?.toDouble() ?: 0.0
                 val dataTotalIngresos = data?.totalIngresos ?: 0.0
                 val dataTotalGastos = data?.totalGastos ?: 0.0
 
-                if (valorViejo.tipoTransaccion == TipoTransaccion.GASTOS && nuevoValor.toDouble() > dataTotalIngresos) {
+                if (item.tipoTransaccion == TipoTransaccion.GASTOS && nuevoValor.toDouble() > dataTotalIngresos) {
                     _snackbarMessage.value =
                         R.string.error_el_gasto_no_puede_ser_superior_a_los_ingresos
 
@@ -158,13 +158,13 @@ class TransactionsViewModel @Inject constructor(
                     cargandoListaActualizada()
                     return@launch
                 } else {
-                    when (valorViejo.tipoTransaccion) {
+                    when (item.tipoTransaccion) {
                         //si es true estamos actualizando dinero de tipo ingresos
                         TipoTransaccion.INGRESOS -> {
                             // Ajustar el total de ingresos según si el nuevo valor es mayor o menor al anterior.
-                            if (nuevoValor > valorViejo.cash.toString()) {
+                            if (nuevoValor > item.cash.toString()) {
                                 val diferencia =
-                                    nuevoValor.toDouble().minus(valorViejo.cash?.toDouble() ?: 0.0)
+                                    nuevoValor.toDouble().minus(item.cash?.toDouble() ?: 0.0)
                                 val nuevoTotalIngresos = dataTotalIngresos.plus(diferencia)
                                 val currentMoney = if (dataTotalGastos != 0.0) {
                                     MathUtils.restarBigDecimal(nuevoTotalIngresos, dataTotalGastos)
@@ -225,10 +225,10 @@ class TransactionsViewModel @Inject constructor(
                     // si es un ingreso o si el nuevo valor no es superior al total de ingresos
                     Log.d(tag, "updateItem: ${nuevoValor}")
                     updateItemList(
-                        valorViejo.copy(title = title, subTitle = description, cash = nuevoValor)
+                        item.copy(title = title, subTitle = description, cash = nuevoValor)
                     )
                     //actualizando el gastos por categorias
-                    updateGastosCategory(title, nuevoValor, valorViejo)
+                    updateGastosCategory(title, nuevoValor, item)
                     cargandoListaActualizada()
                 }
 
@@ -243,11 +243,10 @@ class TransactionsViewModel @Inject constructor(
         viewModelScope.launch {
             val data = dbm.getTransactions()
             if (data.isEmpty()) {
-                _uiState.update { UiState.IsEmpty }
+                _uiState.update { UiStateList.Empty }
             } else {
                 _dataList.update { it.copy(updateItem = false) }
-                Log.d(tag, "cargandoListaActualizada: ${data}")
-                _uiState.update { UiState.Success(data) }
+                _uiState.update { UiStateList.Success(data) }
             }
         }
     }
@@ -260,6 +259,7 @@ class TransactionsViewModel @Inject constructor(
             try {
                 userDataFirestore.updateCurrentMoney(nuevoDinero, false)
             } catch (e: Exception) {
+                Toast.makeText(context, "Error al actualizar el dinero", Toast.LENGTH_SHORT).show()
                 Log.e(tag, " Error en updateCurrentMoney: ${e.message}")
             }
         }
@@ -269,8 +269,9 @@ class TransactionsViewModel @Inject constructor(
         viewModelScope.launch {
             try {
                 userDataFirestore.updateTotalIngresos(totalIngresos)
-                cargandoListaActualizada()
             } catch (e: Exception) {
+                Toast.makeText(context, "Error al actualizar el total Ingresos", Toast.LENGTH_SHORT)
+                    .show()
                 Log.e(tag, " Error en updateTotalIngresos: ${e.message}")
             }
         }
@@ -283,6 +284,8 @@ class TransactionsViewModel @Inject constructor(
                 //si el usuario edita un gasto se actualiza el total de gastos
                 userDataFirestore.updateTotalGastos(totalGastos)
             } catch (e: Exception) {
+                Toast.makeText(context, "Error al actualizar el total Gastos", Toast.LENGTH_SHORT)
+                    .show()
                 Log.e(tag, "Error en updateTotalGastos: ${e.message}")
             }
         }
@@ -292,11 +295,11 @@ class TransactionsViewModel @Inject constructor(
     private fun updateItemList(item: TransactionModel) {
         viewModelScope.launch {
             try {
-                    transactionsFirestore.update(item).wait()
+                transactionsFirestore.update(item).wait()
 
                 // Obtener la lista actual del uiState
                 val currentUiState = _uiState.value
-                if (currentUiState is UiState.Success) {
+                if (currentUiState is UiStateList.Success) {
                     val currentData = currentUiState.data.toMutableList()
 
                     // Buscar el índice del elemento a actualizar
@@ -306,7 +309,7 @@ class TransactionsViewModel @Inject constructor(
                         // Actualizar el elemento en la lista
                         currentData[index] = item
                         // Actualizar el uiState con la lista modificada
-                        _uiState.update { UiState.Success(currentData) }
+                        _uiState.update { UiStateList.Success(currentData) }
                     }
                 }
 

@@ -31,11 +31,12 @@ fun createScreens(navController: NavHostController): List<Screen> {
             name = "Home",
             route = "HomeScreen",
             icon = R.drawable.ic_home_filled,
-            content = { innerPadding ->
+            content = { innerPadding, snackbarHostState ->
                 HomeScreen(
                     modifier = Modifier.fillMaxSize().padding(innerPadding).background(MaterialTheme.colorScheme.surface),
                     navController = navController,
-                    navigateToMovimientosScreen = { navController.navigate(TransactionsScreen) }
+                    navigateToMovimientosScreen = { navController.navigate(TransactionsScreen) },
+                    snackbarHostState = snackbarHostState
                 )
             }
         ),
@@ -45,7 +46,7 @@ fun createScreens(navController: NavHostController): List<Screen> {
             name = "Analisis",
             route = "AnalisisGastosScreen",
             icon = R.drawable.ic_barra_filled,
-            content = { innerPadding ->
+            content = { innerPadding, snackbarHostState ->
                 AnalisisGastosScreen(modifier = Modifier.fillMaxSize().padding(innerPadding).background(MaterialTheme.colorScheme.surface))
             }
         ),
@@ -54,7 +55,7 @@ fun createScreens(navController: NavHostController): List<Screen> {
             name = "Menu",
             route = "ConfigurationScreen",
             icon = R.drawable.ic_menu,
-            content = { innerPadding ->
+            content = { innerPadding, snackbarHostState ->
                 ConfigurationScreen(
                     modifier = Modifier.fillMaxSize().padding(innerPadding).background(MaterialTheme.colorScheme.surface),
                     onToHomeScreen = { navController.navigate(com.gastosdiarios.gavio.navigation.HomeScreen) },

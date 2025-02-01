@@ -10,7 +10,7 @@ import androidx.lifecycle.ViewModel
 import androidx.lifecycle.viewModelScope
 import com.gastosdiarios.gavio.bar_graph_custom.CircularBuffer
 import com.gastosdiarios.gavio.data.constants.Constants.LIMIT_MONTH
-import com.gastosdiarios.gavio.data.ui_state.ListUiState
+import com.gastosdiarios.gavio.data.ui_state.UiStateList
 import com.gastosdiarios.gavio.domain.enums.ThemeMode
 import com.gastosdiarios.gavio.domain.model.RefreshDataModel
 import com.gastosdiarios.gavio.domain.model.modelFirebase.BarDataModel
@@ -30,6 +30,7 @@ import kotlinx.coroutines.flow.MutableStateFlow
 import kotlinx.coroutines.flow.SharingStarted
 import kotlinx.coroutines.flow.StateFlow
 import kotlinx.coroutines.flow.asStateFlow
+import kotlinx.coroutines.flow.onStart
 import kotlinx.coroutines.flow.stateIn
 import kotlinx.coroutines.flow.update
 import kotlinx.coroutines.launch
@@ -47,14 +48,22 @@ class AnalisisGastosViewModel @Inject constructor(
     private val tag = "analisisGastosViewModel"
     private val circularBuffer = CircularBuffer(capacity = LIMIT_MONTH, db = barDataFirestore)
 
-    private val _listBarDataModel = MutableStateFlow(ListUiState<BarDataModel>())
-    val listBarDataModel = _listBarDataModel.asStateFlow()
+    private val _listBarDataModel = MutableStateFlow<UiStateList<BarDataModel>>(UiStateList.Loading)
+    val listBarDataModel  = _listBarDataModel.onStart { dbm.getBarDataGraph() }
+        .stateIn(viewModelScope, SharingStarted.WhileSubscribed(5000L), UiStateList.Loading)
 
     private val _isRefreshing = MutableStateFlow(RefreshDataModel(isRefreshing = false))
     val isRefreshing: StateFlow<RefreshDataModel> = _isRefreshing.asStateFlow()
 
-    private val _uiState = MutableStateFlow<ListUiState<GastosPorCategoriaModel>>(ListUiState())
-    var uiState = _uiState.stateIn(viewModelScope, SharingStarted.Lazily, ListUiState())
+    private val _uiState =
+        MutableStateFlow<UiStateList<GastosPorCategoriaModel>>(UiStateList.Loading)
+    var uiState = _uiState.onStart {
+        getAllListGastos()
+    }
+        .stateIn(
+            viewModelScope, SharingStarted.WhileSubscribed(5000L),
+            UiStateList.Loading
+        )
 
     private val _porcentajeGasto = MutableStateFlow<Int?>(0)
     val porcentajeGasto = _porcentajeGasto.asStateFlow()
@@ -66,47 +75,35 @@ class AnalisisGastosViewModel @Inject constructor(
     val myIcon: StateFlow<String?> = _icon.asStateFlow()
 
     private val _isDarkMode = MutableStateFlow(ThemeMode.MODE_AUTO)
-    val isDarkMode:StateFlow<ThemeMode> = _isDarkMode.asStateFlow()
+    val isDarkMode: StateFlow<ThemeMode> = _isDarkMode.asStateFlow()
 
-
-    init {
-        getAllListGastos()
-        getDatosGastos()
-        getDarkTheme()
-    }
 
     fun getAllListGastos() {
-        _uiState.update { _uiState.value.copy(isLoading = true) }
-        getAllGastos()
-        getDatosGastos()
-        _uiState.update { _uiState.value.copy(isLoading = false) }
-    }
-
-    private fun getAllGastos() {
-        viewModelScope.launch(Dispatchers.IO) {
-//            _uiState.update { _uiState.value.copy(isLoading = true) }
-            val data = dbm.getGastosPorCategoria()
-            _uiState.update { _uiState.value.copy(items = data) }
-        }
-    }
-
-    private fun getDatosGastos() {
         viewModelScope.launch(Dispatchers.IO) {
             try {
-                val data = userDataFirestore.get()?.totalIngresos ?: 0.0
-                //variable que muestra el progress de cada lista de itemCategory
-                _totalIngresosRegistros.value = data
-                calcularValorMaximo(data)
-            } catch (e: Exception) {
-                Log.e(tag, "Error al obtener el total de ingresos: ${e.message}")
-            }
-        }
-    }
+                val dataGastosPorCategoria = dbm.getGastosPorCategoria()
+                val dataTotalIngresos = userDataFirestore.get()?.totalIngresos
+                val data = userPreferencesFirestore.get()?.themeMode
 
-    private fun getDarkTheme() {
-        viewModelScope.launch {
-            val data = userPreferencesFirestore.get()?.themeMode
-            _isDarkMode.update { data ?: ThemeMode.MODE_AUTO }
+                if (dataGastosPorCategoria.isNotEmpty()) {
+                    _uiState.update { UiStateList.Success(dataGastosPorCategoria) }
+                } else {
+                    _uiState.update { UiStateList.Empty }
+                }
+
+                if (dataTotalIngresos != null) {
+                    _totalIngresosRegistros.value = dataTotalIngresos
+                    calcularValorMaximo(dataTotalIngresos)
+                }
+
+                if (data != null) {
+                    _isDarkMode.update { data }
+                } else {
+                    _isDarkMode.update { ThemeMode.MODE_AUTO }
+                }
+            }catch (e:Exception){
+                UiStateList.Error(e.message ?: "Error desconocido", e)
+            }
         }
     }
 
@@ -165,13 +162,11 @@ class AnalisisGastosViewModel @Inject constructor(
     private fun updateBarGraphList() {
         viewModelScope.launch(Dispatchers.IO) {
             try {
-                _listBarDataModel.update { _listBarDataModel.value.copy(isLoading = true) }
                 val data: List<BarDataModel> = circularBuffer.getBarGraphList()
-                _listBarDataModel.update {
-                    _listBarDataModel.value.copy(
-                        items = data.reversed(),
-                        isLoading = false
-                    )
+                if(data.isEmpty()){
+                    _listBarDataModel.update { UiStateList.Empty }
+                }else{
+                    _listBarDataModel.update { UiStateList.Success(data.reversed()) }
                 }
             } catch (e: Exception) {
                 Log.e(tag, "Error en updateBarGraphList: ${e.message}")
@@ -180,7 +175,7 @@ class AnalisisGastosViewModel @Inject constructor(
     }
 //------------------------------- FIN CIRCULAR BUFFER ---------------------------------//
 
-    fun getRandomColor(isSystemInDarkTheme: Boolean):Pair<Color, Color> {
+    fun getRandomColor(isSystemInDarkTheme: Boolean): Pair<Color, Color> {
         var color = Pair(Color.Unspecified, Color.Unspecified)
         viewModelScope.launch {
             _isDarkMode.collect { mode ->
@@ -207,17 +202,19 @@ class AnalisisGastosViewModel @Inject constructor(
         val tertiaryContainerHSL = Color(0xFFF0F4F9).toHsl()
         val tertiaryContainerSaturation = tertiaryContainerHSL[1]
         val tertiaryContainerLightness = tertiaryContainerHSL[2]
-        val tertiaryContainerColor = Color.hsl(hue, tertiaryContainerSaturation, tertiaryContainerLightness)
+        val tertiaryContainerColor =
+            Color.hsl(hue, tertiaryContainerSaturation, tertiaryContainerLightness)
 
         // onTertiaryContainer color with same intensity
         val onTertiaryContainerHSL = Color(0xFF0B57D0).toHsl()
         val onTertiaryContainerSaturation = onTertiaryContainerHSL[1]
         val onTertiaryContainerLightness = onTertiaryContainerHSL[2]
-        val onTertiaryContainerColor = Color.hsl(hue, onTertiaryContainerSaturation, onTertiaryContainerLightness)
-     return Pair(tertiaryContainerColor, onTertiaryContainerColor)
+        val onTertiaryContainerColor =
+            Color.hsl(hue, onTertiaryContainerSaturation, onTertiaryContainerLightness)
+        return Pair(tertiaryContainerColor, onTertiaryContainerColor)
     }
 
-    private fun getRandomDarkColor(): Pair<Color, Color>  {
+    private fun getRandomDarkColor(): Pair<Color, Color> {
         val container = md_theme_dark_surfaceContainer
         val onContainer = md_theme_dark_primary
         return Pair(container, onContainer)
@@ -235,11 +232,8 @@ class AnalisisGastosViewModel @Inject constructor(
             isRefreshing = _isRefreshing,
             dataLoading = {
                 getAllListGastos()
-                getDatosGastos()
-                getDarkTheme()
                 Toast.makeText(context, "actualizado", Toast.LENGTH_SHORT).show()
             }
         )
     }
 }
-

@@ -5,8 +5,9 @@ import android.util.Log
 import android.widget.Toast
 import androidx.lifecycle.ViewModel
 import androidx.lifecycle.viewModelScope
-import com.gastosdiarios.gavio.data.ui_state.ListUiState
+import com.gastosdiarios.gavio.data.ui_state.UiStateList
 import com.gastosdiarios.gavio.domain.model.DataList
+import com.gastosdiarios.gavio.domain.model.RefreshDataModel
 import com.gastosdiarios.gavio.domain.model.modelFirebase.GastosProgramadosModel
 import com.gastosdiarios.gavio.domain.repository.repositoriesFirestrore.GastosProgramadosFirestore
 import dagger.hilt.android.lifecycle.HiltViewModel
@@ -28,31 +29,33 @@ class CreateGastosProgramadosViewModel @Inject constructor(
     private val gastosProgramadosFirestore: GastosProgramadosFirestore
 ) : ViewModel() {
 
-    private val _gastosProgramadosUiState = MutableStateFlow(ListUiState<GastosProgramadosModel>())
-    val gastosProgramadosUiState: StateFlow<ListUiState<GastosProgramadosModel>> =
-        _gastosProgramadosUiState.asStateFlow()
-
+    private val _uiState =
+        MutableStateFlow<UiStateList<GastosProgramadosModel>>(UiStateList.Loading)
+    val uiState = _uiState.onStart {
+        getAllGastosProgramados()
+    }.stateIn(
+        viewModelScope,
+        SharingStarted.WhileSubscribed(5000L), UiStateList.Loading
+    )
 
     private val _dataList = MutableStateFlow(DataList<GastosProgramadosModel>())
     val dataList: StateFlow<DataList<GastosProgramadosModel>> = _dataList.asStateFlow()
 
-
-    private val _loading = MutableStateFlow(false)
-    val loading = _loading.onStart {
-        getAllGastosProgramados()
-    }.stateIn(
-        viewModelScope,
-        SharingStarted.WhileSubscribed(5000L), false
-    )
+    private val _isRefreshing = MutableStateFlow(RefreshDataModel(isRefreshing = false))
+    val isRefreshing: StateFlow<RefreshDataModel> = _isRefreshing.asStateFlow()
 
     private fun getAllGastosProgramados() {
         viewModelScope.launch(Dispatchers.IO) {
-            _loading.update { true }
-            val data: List<GastosProgramadosModel> = gastosProgramadosFirestore.get()
-            _gastosProgramadosUiState.update {
-                it.copy(items = data, isLoading = false)
+            try {
+                val data: List<GastosProgramadosModel> = gastosProgramadosFirestore.get()
+                if (data.isEmpty()) {
+                    _uiState.update { UiStateList.Empty }
+                } else {
+                    _uiState.update { UiStateList.Success(data) }
+                }
+            } catch (e: Exception) {
+                _uiState.update { UiStateList.Error(e.message ?: "Error desconocido", e) }
             }
-            _loading.update { false }
         }
     }
 
@@ -84,7 +87,7 @@ class CreateGastosProgramadosViewModel @Inject constructor(
 
     fun deleteItemSelected(item: GastosProgramadosModel) {
         delete(item)
-        _dataList.update{ it.copy(selectedItems = emptyList(), selectionMode = false)}
+        _dataList.update { it.copy(selectedItems = emptyList(), selectionMode = false) }
         cargandoListaActualizada()
     }
 
@@ -121,19 +124,39 @@ class CreateGastosProgramadosViewModel @Inject constructor(
     }
 
     private fun cargandoListaActualizada() {
+        _dataList.update { it.copy(updateItem = true) }
         viewModelScope.launch(Dispatchers.IO) {
-              _gastosProgramadosUiState.update { it.copy(update = true) }
-            val data = gastosProgramadosFirestore.get()
-            _gastosProgramadosUiState.update {
-                it.copy(items = data, update = false)
+            try {
+                val data = gastosProgramadosFirestore.get()
+
+                if (data.isEmpty()) {
+                    _uiState.update { UiStateList.Empty }
+                } else {
+                    _dataList.update { it.copy(updateItem = false) }
+                    _uiState.update { UiStateList.Success(data) }
+                }
+            }catch (e:Exception){
+                Toast.makeText(context, "Error al actualizar la lista", Toast.LENGTH_SHORT).show()
+                Log.e("Error", e.message.toString())
             }
         }
     }
 
-    fun isCreateTrue() { _dataList.update { it.copy(isCreate = true) } }
-    fun isCreateFalse() { _dataList.update { it.copy(isCreate = false) }  }
-    fun isDeleteTrue() { _dataList.update { it.copy(isDelete = true) } }
-    fun isDeleteFalse() {_dataList.update { it.copy(isDelete = false) } }
+    fun isCreateTrue() {
+        _dataList.update { it.copy(isCreate = true) }
+    }
+
+    fun isCreateFalse() {
+        _dataList.update { it.copy(isCreate = false) }
+    }
+
+    fun isDeleteTrue() {
+        _dataList.update { it.copy(isDelete = true) }
+    }
+
+    fun isDeleteFalse() {
+        _dataList.update { it.copy(isDelete = false) }
+    }
 
     // funcion que se usa cuando se edita y se guarda el item
     fun clearSelection(item: GastosProgramadosModel) {
@@ -141,5 +164,27 @@ class CreateGastosProgramadosViewModel @Inject constructor(
         //hacce que se deseleccione ya que se edito y se guardo
         _dataList.update { it.copy(selectionMode = false, selectedItems = emptyList()) }
         onClick(item)
+    }
+
+    fun retryLoadData() {
+        _uiState.update { UiStateList.Loading }
+        getAllGastosProgramados()
+    }
+
+    fun refreshData() {
+      viewModelScope.launch(Dispatchers.IO) {
+          try {
+              _isRefreshing.update { it.copy(isRefreshing = true) }
+              val data: List<GastosProgramadosModel> = gastosProgramadosFirestore.get()
+              if (data.isEmpty()) {
+                  _uiState.update { UiStateList.Empty }
+              } else {
+                  _isRefreshing.update { it.copy(isRefreshing = false) }
+                  _uiState.update { UiStateList.Success(data) }
+              }
+          }catch (e:Exception){
+              _uiState.update { UiStateList.Error(e.message ?: "Error desconocido", e) }
+          }
+      }
     }
 }

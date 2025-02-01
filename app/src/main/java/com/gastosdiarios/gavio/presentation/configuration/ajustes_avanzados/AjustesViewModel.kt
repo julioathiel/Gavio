@@ -2,7 +2,7 @@ package com.gastosdiarios.gavio.presentation.configuration.ajustes_avanzados
 
 import androidx.lifecycle.ViewModel
 import androidx.lifecycle.viewModelScope
-import com.gastosdiarios.gavio.data.ui_state.UiStateSimple
+import com.gastosdiarios.gavio.data.ui_state.UiStateSingle
 import com.gastosdiarios.gavio.domain.enums.ThemeMode
 import com.gastosdiarios.gavio.domain.model.modelFirebase.UserPreferences
 import com.gastosdiarios.gavio.domain.repository.DataBaseManager
@@ -21,21 +21,21 @@ class AjustesViewModel @Inject constructor(
     private val dbm: DataBaseManager,
 ) : ViewModel() {
 
-    private val _uiState = MutableStateFlow<UiStateSimple<UserPreferences?>>(UiStateSimple.Loading)
+    private val _uiState = MutableStateFlow<UiStateSingle<UserPreferences?>>(UiStateSingle.Loading)
     val uiState = _uiState.onStart { getUserPreferences() }
         .catch { throwable ->
-            _uiState.update { UiStateSimple.Error(throwable.message ?: "Error desconocido") }
+            _uiState.update { UiStateSingle.Error(throwable.message ?: "Error desconocido") }
         }
-        .stateIn(viewModelScope, SharingStarted.WhileSubscribed(5000L), UiStateSimple.Loading)
+        .stateIn(viewModelScope, SharingStarted.WhileSubscribed(5000L), UiStateSingle.Loading)
 
 
     private fun getUserPreferences() {
         viewModelScope.launch {
             try {
                 val data: UserPreferences? = dbm.getUserPreferences()
-                _uiState.update { UiStateSimple.Success(data) }
+                _uiState.update { UiStateSingle.Success(data) }
             } catch (e: Exception) {
-                _uiState.update { UiStateSimple.Error(e.message ?: "Error desconocido") }
+                _uiState.update {UiStateSingle.Error(e.message ?: "Error desconocido") }
             }
         }
     }
@@ -45,21 +45,21 @@ class AjustesViewModel @Inject constructor(
         viewModelScope.launch {
             try {
                 val currentData = when (val currentState = _uiState.value) {
-                    is UiStateSimple.Success -> currentState.data
+                    is UiStateSingle.Success -> currentState.data
                     else -> null
                 }
                 if(currentData != null){
                     val updatedData = currentData.copy(biometricSecurity = newState)
                     try {
                         dbm.updateBiometricSecurity(newState)
-                        _uiState.update { UiStateSimple.Success(updatedData) }
+                        _uiState.update { UiStateSingle.Success(updatedData) }
 
                     }catch (e:Exception){
-                        _uiState.update { UiStateSimple.Error("Error saving to Firebase: ${e.message ?: "Unknown error"}") }
+                        _uiState.update { UiStateSingle.Error("Error saving to Firebase: ${e.message ?: "Unknown error"}") }
                     }
                 }
             }catch (e:Exception){
-                _uiState.update { UiStateSimple.Error(e.message ?: "Error desconocido") }
+                _uiState.update { UiStateSingle.Error(e.message ?: "Error desconocido") }
             }
         }
     }
@@ -68,7 +68,7 @@ class AjustesViewModel @Inject constructor(
         viewModelScope.launch {
             try {
                 val currentData = when (val currentState = _uiState.value) {
-                    is UiStateSimple.Success -> currentState.data
+                    is UiStateSingle.Success -> currentState.data
                     else -> null
                 }
 
@@ -76,15 +76,15 @@ class AjustesViewModel @Inject constructor(
                     val updatedData = currentData.copy(themeMode = themeMode)
                     try {
                          dbm.updateThemeMode(themeMode) // Saving to Firebase
-                        _uiState.update { UiStateSimple.Success(updatedData) }
+                        _uiState.update { UiStateSingle.Success(updatedData) }
                     } catch (e: Exception) {
-                        _uiState.update { UiStateSimple.Error("Error saving to Firebase: ${e.message ?: "Unknown error"}") }
+                        _uiState.update { UiStateSingle.Error("Error saving to Firebase: ${e.message ?: "Unknown error"}") }
                     }
                 } else {
-                    _uiState.update { UiStateSimple.Error("Error al obtener los datos") }
+                    _uiState.update { UiStateSingle.Error("Error al obtener los datos") }
                 }
             } catch (e: Exception) {
-                _uiState.update { UiStateSimple.Error(e.message ?: "Unknown error") }
+                _uiState.update { UiStateSingle.Error(e.message ?: "Unknown error") }
             }
         }
     }

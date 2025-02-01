@@ -161,4 +161,6 @@
     <string name="recordatorio_titulo">recordatorio</string>
     <string name="recordatorio_body">Sabemos que adquirir el hábito de acompañar sus gastos a diario es complicado, y podemos ayudarlo con eso. ¿Cuándo le gustaria recibir nuestro recordatorio?</string>
     <string name="resetear">Resetear</string>
+    <string name="pagado_con_exito">Pagado con exito</string>
+    <string name="no_hay_dias_restantes">No hay dias restantes</string>
 </resources>

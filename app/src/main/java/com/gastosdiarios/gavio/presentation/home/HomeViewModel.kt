@@ -11,7 +11,6 @@ import com.gastosdiarios.gavio.R
 import com.gastosdiarios.gavio.bar_graph_custom.CircularBuffer
 import com.gastosdiarios.gavio.data.constants.Constants.LIMIT_MONTH
 import com.gastosdiarios.gavio.data.ui_state.HomeUiState
-import com.gastosdiarios.gavio.data.ui_state.ListUiState
 import com.gastosdiarios.gavio.domain.enums.TipoTransaccion
 import com.gastosdiarios.gavio.domain.model.CategoryGastos
 import com.gastosdiarios.gavio.domain.model.CategoryIngresos
@@ -70,7 +69,7 @@ class HomeViewModel @Inject constructor(
     private val tag = "homeViewModel"
 
     private val _snackbarMessage = MutableStateFlow<Int?>(null)
-    val snackbarMessage: StateFlow<Int?> get() = _snackbarMessage
+    val snackbarMessage: StateFlow<Int?> = _snackbarMessage.asStateFlow()
 
     private val _homeUiState = MutableStateFlow(HomeUiState())
     val homeUiState: StateFlow<HomeUiState> = _homeUiState.asStateFlow()
@@ -81,7 +80,7 @@ class HomeViewModel @Inject constructor(
     private val _listFilter = mutableStateListOf<GastosProgramadosModel>()
     val listFilter: List<GastosProgramadosModel> = _listFilter
 
-    private val _transactionUiState = MutableStateFlow(ListUiState<TransactionModel>())
+   // private val _transactionUiState = MutableStateFlow(ListUiState<TransactionModel>())
 
     private val circularBuffer = CircularBuffer(capacity = LIMIT_MONTH, db = barDataFirestore)
 
@@ -131,7 +130,7 @@ class HomeViewModel @Inject constructor(
                                 )
                                 dbm.updateTotalGastos(0.0)
                                 dbm.deleteAllTransactions()
-                                _transactionUiState.update { it.copy(items = emptyList()) }
+                              //  _transactionUiState.update { it.copy(items = emptyList()) }
                                 crearTransaction(
                                     cantidad = dataCurrentMoney.toString(),
                                     categoryName = getString(R.string.saldo_restante),
@@ -606,6 +605,7 @@ class HomeViewModel @Inject constructor(
                         tipoTransaccion = TipoTransaccion.GASTOS,// el menu de gastos esta activado = false,// el menu de gastos esta activado
                         enabledButtonGastos = true //el boton de gastos esta activado
                     )
+
                 }
             }
         }
@@ -645,7 +645,9 @@ class HomeViewModel @Inject constructor(
 
                 if (totalIngresos == 0.0) {
                     _snackbarMessage.value = R.string.no_hay_dinero_para_un_gasto
+                    Toast.makeText(context, "No hay dinero para un gasto", Toast.LENGTH_SHORT).show()
                 } else if (totalIngresos < cash) {
+                    Toast.makeText(context, "No hay dinero suficiente", Toast.LENGTH_SHORT).show()
                     _snackbarMessage.value = R.string.agrega_mas_dinero_antes_de_pagar
                 } else {
                     clearItem(item)
@@ -656,6 +658,7 @@ class HomeViewModel @Inject constructor(
                         categoryIcon = item.icon?.toInt() ?: 0,
                         tipoTransaccion = TipoTransaccion.GASTOS
                     )
+                    _snackbarMessage.value = R.string.pagado_con_exito
                 }
             } catch (e: Exception) {
                 Toast.makeText(context, "Error en pagarItem", Toast.LENGTH_SHORT).show()
@@ -699,6 +702,10 @@ class HomeViewModel @Inject constructor(
                 Log.e(tag, "getGastosprogramados: error", e)
             }
         }
+    }
+
+    fun clearSnackbarMessage() {
+        _snackbarMessage.value = null
     }
     //--------------FIN-------Gastos programados -------------------------//
 }

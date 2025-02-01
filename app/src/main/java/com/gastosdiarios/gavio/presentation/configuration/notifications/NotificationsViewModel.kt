@@ -11,7 +11,7 @@ import androidx.lifecycle.ViewModel
 import androidx.lifecycle.viewModelScope
 import com.gastosdiarios.gavio.data.NotificationProgrammed
 import com.gastosdiarios.gavio.data.constants.Constants.NOTIFICATION_ID
-import com.gastosdiarios.gavio.data.ui_state.UiStateSimple
+import com.gastosdiarios.gavio.data.ui_state.UiStateSingle
 import com.gastosdiarios.gavio.domain.model.modelFirebase.UserPreferences
 import com.gastosdiarios.gavio.domain.repository.DataBaseManager
 import dagger.hilt.android.lifecycle.HiltViewModel
@@ -33,17 +33,17 @@ class NotificationsViewModel @Inject constructor(
     val dbm: DataBaseManager
 ) : ViewModel() {
 
-    private val _uiState = MutableStateFlow<UiStateSimple<UserPreferences?>>(UiStateSimple.Loading)
+    private val _uiState = MutableStateFlow<UiStateSingle<UserPreferences?>>(UiStateSingle.Loading)
     val uiState = _uiState.onStart { getTime() }
         .catch { throwable ->
-            _uiState.update { UiStateSimple.Error(throwable.message ?: "Error desconocido") }
+            _uiState.update { UiStateSingle.Error(throwable.message ?: "Error desconocido") }
         }
-        .stateIn(viewModelScope, SharingStarted.WhileSubscribed(5000L), UiStateSimple.Loading)
+        .stateIn(viewModelScope, SharingStarted.WhileSubscribed(5000L), UiStateSingle.Loading)
 
     private fun getTime() {
         viewModelScope.launch {
             val data = dbm.getUserPreferences()
-            _uiState.update { UiStateSimple.Success(data) }
+            _uiState.update { UiStateSingle.Success(data) }
         }
     }
 
@@ -146,7 +146,7 @@ class NotificationsViewModel @Inject constructor(
         viewModelScope.launch {
             try {
                 val currentData = when (val currentState = _uiState.value) {
-                    is UiStateSimple.Success -> currentState.data
+                    is UiStateSingle.Success -> currentState.data
                     else -> null
                 }
                 if (currentData != null) {
@@ -154,11 +154,11 @@ class NotificationsViewModel @Inject constructor(
                         val data = currentData.copy(hour = hour, minute = minute)
                         dbm.updateHourMinute(data.hour?: 0, data.minute?: 0)
                     }catch (e:Exception){
-                        _uiState.update { UiStateSimple.Error("Error al guardar en Firebase: ${e.message ?: "Error desconocido"}") }
+                        _uiState.update { UiStateSingle.Error("Error al guardar en Firebase: ${e.message ?: "Error desconocido"}") }
                     }
                 }
             }catch (e:Exception){
-                _uiState.update { UiStateSimple.Error(e.message ?: "Error desconocido") }
+                _uiState.update { UiStateSingle.Error(e.message ?: "Error desconocido") }
             }
         }
     }

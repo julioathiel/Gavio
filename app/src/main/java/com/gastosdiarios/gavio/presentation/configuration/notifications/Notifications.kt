@@ -47,7 +47,7 @@ import com.gastosdiarios.gavio.data.commons.CommonsLoadingScreen
 import com.gastosdiarios.gavio.data.commons.TopAppBarOnBack
 import com.gastosdiarios.gavio.data.constants.Constants.HORAS_PREDEFINIDAS
 import com.gastosdiarios.gavio.data.constants.Constants.MINUTOS_PREDEFINIDOS
-import com.gastosdiarios.gavio.data.ui_state.UiStateSimple
+import com.gastosdiarios.gavio.data.ui_state.UiStateSingle
 import com.gastosdiarios.gavio.domain.model.modelFirebase.UserPreferences
 import java.text.SimpleDateFormat
 import java.time.LocalTime
@@ -70,10 +70,10 @@ fun NotificationsScreen(
     }) { paddingValues ->
 
         when (uiState) {
-            UiStateSimple.Loading -> CommonsLoadingScreen()
+            UiStateSingle.Loading -> CommonsLoadingScreen()
 
-            is UiStateSimple.Success -> {
-                val data = (uiState as UiStateSimple.Success).data
+            is UiStateSingle.Success<*> -> {
+                val data = (uiState as UiStateSingle.Success).data
                 ContentNotifications(
                     modifier = Modifier.padding(paddingValues),
                     viewModel = viewModel,
@@ -81,8 +81,8 @@ fun NotificationsScreen(
                 )
             }
 
-            is UiStateSimple.Error -> {
-                val errorMessage = (uiState as UiStateSimple.Error).message
+            is UiStateSingle.Error -> {
+                val errorMessage = (uiState as UiStateSingle.Error).message
                 Text(text = "Error: $errorMessage")
             }
         }

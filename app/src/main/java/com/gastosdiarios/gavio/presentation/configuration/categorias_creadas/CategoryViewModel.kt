@@ -3,7 +3,7 @@ package com.gastosdiarios.gavio.presentation.configuration.categorias_creadas
 import android.content.Context
 import androidx.lifecycle.ViewModel
 import androidx.lifecycle.viewModelScope
-import com.gastosdiarios.gavio.data.ui_state.ListUiState
+import com.gastosdiarios.gavio.data.ui_state.UiStateList
 import com.gastosdiarios.gavio.domain.enums.TipoTransaccion
 import com.gastosdiarios.gavio.domain.model.CategoryCreate
 import com.gastosdiarios.gavio.domain.model.CategoryDefaultModel
@@ -38,39 +38,37 @@ class CategoryViewModel @Inject constructor(
     @ApplicationContext private val appContext: Context
 ) : ViewModel() {
 
+    private val _uiStateIngresos = MutableStateFlow<UiStateList<UserCreateCategoryModel>>(UiStateList.Loading)
+    val uiStateIngresos = _uiStateIngresos.onStart {
+        getAllIngresos()
+    }.stateIn(viewModelScope,SharingStarted.WhileSubscribed(5000L),UiStateList.Loading)
+
+    private val _uiStateGastos = MutableStateFlow<UiStateList<UserCreateCategoryModel>>(UiStateList.Loading)
+    val uiStateGastos = _uiStateGastos.onStart {
+        getAllGastos()
+    }.stateIn(viewModelScope,SharingStarted.WhileSubscribed(5000L),UiStateList.Loading)
+
     private val _uiStateDefault = MutableStateFlow(CategoryDefaultModel())
     var uiStateDefault: StateFlow<CategoryDefaultModel> = _uiStateDefault.asStateFlow()
 
-    private val _uiStateGastos = MutableStateFlow(ListUiState<UserCreateCategoryModel>())
-    val uiStateGastos: StateFlow<ListUiState<UserCreateCategoryModel>> =
-        _uiStateGastos.asStateFlow()
+    private val _dataList = MutableStateFlow(false)
+    val dataList:StateFlow<Boolean> = _dataList.asStateFlow()
 
-    private val _uiStateIngresos = MutableStateFlow(ListUiState<UserCreateCategoryModel>())
-    val uiStateIngresos: StateFlow<ListUiState<UserCreateCategoryModel>> =
-        _uiStateIngresos.asStateFlow()
-
-    private val _uiState = MutableStateFlow(false)
-    val uiState = _uiState.onStart {
-        getAllCategories()
-    }.stateIn(viewModelScope,
-        SharingStarted.WhileSubscribed(5000L),
-        false
-    )
-
-
-    private fun getAllCategories() {
-        getAllGastos()
-        getAllIngresos()
-    }
 
     private fun getAllGastos() {
         viewModelScope.launch {
             if (IsInternetAvailableUtils.isInternetAvailable(appContext)) {
-                _uiState.update { true }
-                val data: List<UserCreateCategoryModel> =
-                    withContext(Dispatchers.IO) { dbm.getUserCategoryGastos() }
-                _uiStateGastos.update { it.copy(items = data) }
-                _uiState.update{false}
+                try {
+                    val data: List<UserCreateCategoryModel> =
+                        withContext(Dispatchers.IO) { dbm.getUserCategoryGastos() }
+                    if (data.isEmpty()) {
+                        _uiStateGastos.update { UiStateList.Empty }
+                    }else{
+                        _uiStateGastos.update { UiStateList.Success(data)  }
+                    }
+                }catch (e:Exception){
+                    _uiStateGastos.update { UiStateList.Error(e.message ?: "Error desconocido", e) }
+                }
             } else {
                 _uiStateDefault.update { it.copy(errorConectionInternet = true) }
             }
@@ -80,12 +78,18 @@ class CategoryViewModel @Inject constructor(
     private fun getAllIngresos() {
         viewModelScope.launch {
             if (IsInternetAvailableUtils.isInternetAvailable(appContext)) {
-                _uiState.update { true }
-                val data: List<UserCreateCategoryModel> =
-                    withContext(Dispatchers.IO) { dbm.getUserCategoryIngresos() }
-                _uiStateIngresos.update { it.copy(items = data) }
-                _uiState.update { false }
-            }else{
+                try {
+                    val data: List<UserCreateCategoryModel> =
+                        withContext(Dispatchers.IO) { dbm.getUserCategoryIngresos() }
+                    if (data.isEmpty()) {
+                        _uiStateIngresos.update { UiStateList.Empty }
+                    }else{
+                        _uiStateIngresos.update { UiStateList.Success(data)  }
+                    }
+                }catch (e:Exception){
+                    _uiStateIngresos.update { UiStateList.Error(e.message ?: "Error desconocido", e) }
+                }
+            } else {
                 _uiStateDefault.update { it.copy(errorConectionInternet = true) }
             }
         }
@@ -203,14 +207,33 @@ class CategoryViewModel @Inject constructor(
 
     private fun cargandoListaActualizada(typeCategory: TipoTransaccion) {
         viewModelScope.launch {
-            if (typeCategory == TipoTransaccion.INGRESOS) {
-                _uiStateIngresos.update { it.copy(update = true) }
-                val data = withContext(Dispatchers.IO) { dbm.getUserCategoryIngresos() }
-                _uiStateIngresos.update { it.copy(items = data, update = false) }
-            } else {
-                _uiStateGastos.update { it.copy(update = true) }
-                val data = withContext(Dispatchers.IO) { dbm.getUserCategoryGastos() }
-                _uiStateGastos.update { it.copy(items = data, update = false) }
+            _dataList.update { true }
+            try {
+                val data = when (typeCategory) {
+                    TipoTransaccion.INGRESOS -> withContext(Dispatchers.IO) { dbm.getUserCategoryIngresos() }
+                    TipoTransaccion.GASTOS -> withContext(Dispatchers.IO) { dbm.getUserCategoryGastos() }
+                }
+
+
+                if (data.isEmpty()) {
+                    if (typeCategory == TipoTransaccion.INGRESOS) {
+                        _uiStateIngresos.update { UiStateList.Empty }
+                    } else {
+                        _uiStateGastos.update { UiStateList.Empty }
+                    }
+                } else {
+                    if (typeCategory == TipoTransaccion.INGRESOS) {
+                        _uiStateIngresos.update { UiStateList.Success(data) }
+                    } else {
+                        _uiStateGastos.update { UiStateList.Success(data) }
+                    }
+                }
+            } catch (e: Exception) {
+                if (typeCategory == TipoTransaccion.INGRESOS) {
+                    _uiStateIngresos.update { UiStateList.Error(e.message ?: "Error desconocido", e) }
+                } else {
+                    _uiStateGastos.update { UiStateList.Error(e.message ?: "Error desconocido", e) }
+                }
             }
         }
     }

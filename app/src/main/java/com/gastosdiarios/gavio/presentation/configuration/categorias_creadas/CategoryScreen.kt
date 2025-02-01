@@ -30,9 +30,12 @@ import androidx.compose.ui.Modifier
 import androidx.compose.ui.unit.dp
 import androidx.compose.ui.zIndex
 import androidx.hilt.navigation.compose.hiltViewModel
+import androidx.lifecycle.compose.collectAsStateWithLifecycle
 import com.gastosdiarios.gavio.data.commons.CommonsEmptyFloating
 import com.gastosdiarios.gavio.data.commons.CommonsLoadingData
 import com.gastosdiarios.gavio.data.commons.CommonsLoadingScreen
+import com.gastosdiarios.gavio.data.commons.ErrorScreen
+import com.gastosdiarios.gavio.data.ui_state.UiStateList
 import com.gastosdiarios.gavio.domain.enums.TipoTransaccion
 import com.gastosdiarios.gavio.domain.model.CategoryDefaultModel
 import com.gastosdiarios.gavio.domain.model.UserCreateCategoryModel
@@ -145,30 +148,28 @@ fun StateContentCategoryIngresos(
     ingresosActions: CategoryActions,
     modifier: Modifier
 ) {
-    val uiStateIngresos by viewModel.uiStateIngresos.collectAsState()
-    val loading by viewModel.uiState.collectAsState()
-    when {
-        loading -> CommonsLoadingScreen(Modifier.fillMaxSize())
+    val uiStateIngresos by viewModel.uiStateIngresos.collectAsStateWithLifecycle()
 
-        uiStateIngresos.items.isEmpty() -> {
-            // Si la lista está vacía, mostrar
+    when (uiStateIngresos) {
+        UiStateList.Loading -> {CommonsLoadingScreen(Modifier.fillMaxSize()) }
+        is UiStateList.Error -> {
+            ErrorScreen(uiStateIngresos as UiStateList.Error,
+                retryOperation = {
+
+                },
+                modifier = modifier
+            )
+        }
+
+        UiStateList.Empty -> {
             viewModel.isActivatedFalse()
             ContentCategoryEmpty(viewModel, modifier)
         }
 
-        uiStateIngresos.update -> {
+        is UiStateList.Success -> {
+            val list = (uiStateIngresos as UiStateList.Success<UserCreateCategoryModel>).data
             ListContentTypeCategory(
-                uiStateIngresos.items,
-                viewModel,
-                ingresosActions,
-                modifier
-            )
-            CommonsLoadingData()
-        }
-
-        else -> {
-            ListContentTypeCategory(
-                uiState = uiStateIngresos.items,
+                list = list,
                 viewModel = viewModel,
                 ingresosActions,
                 modifier = modifier
@@ -185,32 +186,36 @@ fun StateContentCategoryGastos(
     modifier: Modifier
 ) {
     //Contenido para la pantalla de gastos
-    val uiStateGastos by viewModel.uiStateGastos.collectAsState()
-    val loading by viewModel.uiState.collectAsState()
-    when {
-        loading -> CommonsLoadingScreen(Modifier.fillMaxSize())
-        uiStateGastos.items.isEmpty() -> {
-            // Si la lista está vacía, mostrar
+    val uiStateGastos by viewModel.uiStateGastos.collectAsStateWithLifecycle()
+
+
+    when (uiStateGastos) {
+        UiStateList.Loading -> {
+            CommonsLoadingScreen(Modifier.fillMaxSize())
+        }
+
+        is UiStateList.Error -> {
+            ErrorScreen(uiStateGastos as UiStateList.Error,
+                retryOperation = {
+
+                },
+                modifier = modifier
+            )
+        }
+
+        UiStateList.Empty -> {
             viewModel.isActivatedFalse()
             ContentCategoryEmpty(viewModel, modifier)
         }
 
-        uiStateGastos.update -> {
+        is UiStateList.Success -> {
+            val list = (uiStateGastos as UiStateList.Success<UserCreateCategoryModel>).data
             ListContentTypeCategory(
-                uiStateGastos.items,
-                viewModel,
-                gastosActions,
-                modifier
-            )
-            CommonsLoadingData()
-        }
+                list = list,
+                viewModel = viewModel,
+                categoryActions = gastosActions,
+                modifier = modifier
 
-        else -> {
-            ListContentTypeCategory(
-                uiStateGastos.items,
-                viewModel,
-                gastosActions,
-                modifier
             )
         }
     }
@@ -262,7 +267,7 @@ fun PantallaDeCategoriasCreadas(
 
 @Composable
 fun ListContentTypeCategory(
-    uiState: List<UserCreateCategoryModel>,
+    list: List<UserCreateCategoryModel>,
     viewModel: CategoryViewModel,
     categoryActions: CategoryActions,
     modifier: Modifier,
@@ -270,8 +275,8 @@ fun ListContentTypeCategory(
     viewModel.isActivatedTrue()
     Box(modifier) {
         LazyColumn(horizontalAlignment = Alignment.CenterHorizontally) {
-            items(uiState.size) { nuevoItem ->
-                val item = uiState[nuevoItem]
+            items(list.size) { nuevoItem ->
+                val item = list[nuevoItem]
                 ItemCategory(item = item, categoryActions = categoryActions)
             }
         }

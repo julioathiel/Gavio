@@ -26,21 +26,23 @@ import androidx.compose.ui.Modifier
 import androidx.compose.ui.res.stringResource
 import androidx.compose.ui.unit.dp
 import androidx.compose.ui.unit.sp
+import androidx.lifecycle.compose.collectAsStateWithLifecycle
 import com.gastosdiarios.gavio.R
 import com.gastosdiarios.gavio.bar_graph_custom.BarGraphConfigCustom
-import com.gastosdiarios.gavio.data.ui_state.ListUiState
+import com.gastosdiarios.gavio.data.ui_state.UiStateList
+import com.gastosdiarios.gavio.domain.model.modelFirebase.BarDataModel
 import com.gastosdiarios.gavio.domain.model.modelFirebase.GastosPorCategoriaModel
 import com.gastosdiarios.gavio.presentation.analisis_gastos.AnalisisGastosViewModel
 
 @Composable
 fun GastosPorCategoriaList(
-    uiStateList: ListUiState<GastosPorCategoriaModel>,
+    list: List<GastosPorCategoriaModel>,
     viewModel: AnalisisGastosViewModel,
     modifier: Modifier,
 ) {
     // Invertir el orden de la lista asi lo  que se grega va quedando arriba
-    val transaccionesRevertidas = uiStateList.items.reversed()
-    val uiStateListBarGraph by viewModel.listBarDataModel.collectAsState()
+    val transaccionesRevertidas = list.reversed()
+    val uiStateListBarGraph by viewModel.listBarDataModel.collectAsStateWithLifecycle()
 
     LazyVerticalGrid(
         columns = GridCells.Fixed(2),
@@ -59,25 +61,31 @@ fun GastosPorCategoriaList(
         }
         item(span = { GridItemSpan(maxLineSpan) }) {
             // Mostrar el gráfico aquí siempre, incluso si no hay datos
-            if (uiStateListBarGraph.items.isNotEmpty()) {
-                Card(colors = CardDefaults.cardColors(containerColor = MaterialTheme.colorScheme.surfaceContainer)) {
-                    BarGraphConfigCustom(
-                        viewModel
-                    )
+            when (uiStateListBarGraph) {
+                UiStateList.Loading -> {
+                    Card(
+                        modifier = Modifier
+                            .fillMaxWidth()
+                            .height(358.dp),
+                        colors = CardDefaults.cardColors(containerColor = MaterialTheme.colorScheme.surfaceContainer)
+                    ) {
+                        Box(modifier = Modifier.fillMaxSize()) {
+                            CircularProgressIndicator(
+                                modifier = Modifier
+                                    .size(30.dp)
+                                    .align(Alignment.Center)
+                            )
+                        }
+                    }
                 }
-            } else {
-                Card(
-                    modifier = Modifier
-                        .fillMaxWidth()
-                        .height(358.dp),
-                    colors = CardDefaults.cardColors(containerColor = MaterialTheme.colorScheme.surfaceContainer)
-                ) {
-                    Box(modifier = Modifier.fillMaxSize()) {
-                        CircularProgressIndicator(
-                            modifier = Modifier
-                                .size(30.dp)
-                                .align(Alignment.Center)
-                        )
+
+                is UiStateList.Error -> {}
+                UiStateList.Empty -> {}
+                is UiStateList.Success -> {
+                    val listBarGraph: List<BarDataModel> =
+                        (uiStateListBarGraph as UiStateList.Success<BarDataModel>).data
+                    Card(colors = CardDefaults.cardColors(containerColor = MaterialTheme.colorScheme.surfaceContainer)) {
+                        BarGraphConfigCustom(listBarGraph)
                     }
                 }
             }
@@ -94,8 +102,8 @@ fun GastosPorCategoriaList(
 
         item(span = { GridItemSpan(maxLineSpan) }) {
             // Mostrar la categoría con más gastos si hay datos disponibles
-            if (uiStateList.items.isNotEmpty()) {
-                ItemCategoriaConMasGastos(uiStateList = uiStateList.items, viewModel)
+            if (list.isNotEmpty()) {
+                ItemCategoriaConMasGastos(uiStateList = list, viewModel)
             } else {
                 // Mostrar "Sin categoría" y total gastado "0.0" cuando no hay datos
                 val sinCategoria = GastosPorCategoriaModel(
@@ -115,12 +123,12 @@ fun GastosPorCategoriaList(
             )
         }
         items(transaccionesRevertidas.size) { index ->
-            val (tertiaryContainer, onTertiary)  = viewModel.getRandomColor(isSystemInDarkTheme())
+            val (tertiaryContainer, onTertiary) = viewModel.getRandomColor(isSystemInDarkTheme())
             val itemCategory = transaccionesRevertidas[index]
 
             ItemCategory(
                 uiState = itemCategory,
-                uiStateList = uiStateList.items,
+                uiStateList = list,
                 viewModel = viewModel,
                 tertiaryContainer = tertiaryContainer,
                 onTertiary = onTertiary

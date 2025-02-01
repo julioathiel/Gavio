@@ -1,10 +1,8 @@
 package com.gastosdiarios.gavio.main_scaffold.scaffold
 
 import androidx.compose.foundation.layout.fillMaxSize
-import androidx.compose.foundation.layout.padding
 import androidx.compose.foundation.pager.HorizontalPager
 import androidx.compose.foundation.pager.rememberPagerState
-import androidx.compose.material3.BottomAppBarDefaults
 import androidx.compose.material3.FabPosition
 import androidx.compose.material3.Icon
 import androidx.compose.material3.MaterialTheme
@@ -40,7 +38,7 @@ fun MainScaffold(navController: NavHostController) {
 
     val viewModel = hiltViewModel<HomeViewModel>()
     val uiState by viewModel.homeUiState.collectAsState()
-    val isShowSnackbar = remember { SnackbarHostState() }
+
     Scaffold(
         topBar = {
             when (pagerState.currentPage) {
@@ -92,19 +90,24 @@ fun MainScaffold(navController: NavHostController) {
             if (pagerState.currentPage == 0) { // Mostrar FAB solo en HomeScreen (página 0)
                 MyFAB(
                     diasRestantes = uiState.diasRestantes,
-                    isShowSnackbar,
+                    SnackbarHostState(),
                     onDismiss = { viewModel.onShowDialogClickTransaction() }
                 )
             }
         },
         floatingActionButtonPosition = FabPosition.End,
-        snackbarHost = { SnackbarHost(hostState = isShowSnackbar) }
+        snackbarHost = { SnackbarHost(hostState = SnackbarHostState()) }
     ) { innerPadding ->
         HorizontalPager(
             state = pagerState,
             modifier = Modifier.fillMaxSize()
         ) { page ->
-            screens[page].content(innerPadding) // Mostrar contenido dinámico
+            if (page == 0) {
+                // Pasar isShowSnackbar a ContentHomeScreen
+                screens[page].content(innerPadding, SnackbarHostState())
+            } else {
+                screens[page].content(innerPadding, SnackbarHostState())
+            }
         }
     }
 }

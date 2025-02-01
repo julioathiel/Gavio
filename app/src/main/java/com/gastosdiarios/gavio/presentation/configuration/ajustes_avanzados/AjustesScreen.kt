@@ -34,7 +34,7 @@ import androidx.hilt.navigation.compose.hiltViewModel
 import com.gastosdiarios.gavio.R
 import com.gastosdiarios.gavio.data.commons.CommonsLoadingScreen
 import com.gastosdiarios.gavio.data.commons.TopAppBarOnBack
-import com.gastosdiarios.gavio.data.ui_state.UiStateSimple
+import com.gastosdiarios.gavio.data.ui_state.UiStateSingle
 import com.gastosdiarios.gavio.domain.enums.ItemConfAvanzada
 import com.gastosdiarios.gavio.domain.enums.ThemeMode
 import com.gastosdiarios.gavio.domain.model.modelFirebase.UserPreferences
@@ -47,9 +47,9 @@ fun AjustesScreen(
     val uiState by viewModel.uiState.collectAsState()
 
     when (uiState) {
-        UiStateSimple.Loading -> {}
-        is UiStateSimple.Success -> {
-            val data = (uiState as UiStateSimple.Success<UserPreferences?>).data
+        UiStateSingle.Loading -> {}
+        is UiStateSingle.Success<*> -> {
+            val data = (uiState as UiStateSingle.Success<UserPreferences?>).data
             var isSecurity: Boolean by remember {
                 mutableStateOf(data?.biometricSecurity ?: false)
             }
@@ -65,7 +65,7 @@ fun AjustesScreen(
             }
         }
 
-        is UiStateSimple.Error -> {}
+        is UiStateSingle.Error -> {}
     }
 
     Scaffold(
@@ -76,9 +76,9 @@ fun AjustesScreen(
                 onBack = { onBack() },
                 actions = {
                     when (uiState) {
-                        UiStateSimple.Loading -> {}
-                        is UiStateSimple.Success -> {
-                            val data = (uiState as UiStateSimple.Success<UserPreferences?>).data
+                        UiStateSingle.Loading -> {}
+                        is UiStateSingle.Success<*> -> {
+                            val data = (uiState as UiStateSingle.Success<UserPreferences?>).data
                             Icon(
                                 painter = painterResource(
                                     id = when (data?.themeMode) {
@@ -97,7 +97,7 @@ fun AjustesScreen(
                             )
                         }
 
-                        is UiStateSimple.Error -> {}
+                        is UiStateSingle.Error -> {}
                     }
                 }
             )
@@ -105,14 +105,14 @@ fun AjustesScreen(
     ) { paddingValues ->
 
         when (uiState) {
-            UiStateSimple.Loading -> CommonsLoadingScreen(Modifier.fillMaxSize())
-            is UiStateSimple.Success -> {
-                val data = (uiState as UiStateSimple.Success<UserPreferences?>).data
+            UiStateSingle.Loading -> CommonsLoadingScreen(Modifier.fillMaxSize())
+            is UiStateSingle.Success<*> -> {
+                val data = (uiState as UiStateSingle.Success<UserPreferences?>).data
                 ContentAjustesAvanzados(modifier = Modifier.padding(paddingValues), viewModel, data)
             }
 
-            is UiStateSimple.Error -> {
-                val errorMessage = (uiState as UiStateSimple.Error).message
+            is UiStateSingle.Error -> {
+                val errorMessage = (uiState as UiStateSingle.Error).message
                 Text(text = "Error: $errorMessage")
             }
         }

@@ -1,6 +1,7 @@
 package com.gastosdiarios.gavio.presentation.home
 
 
+import android.content.Context
 import androidx.activity.compose.BackHandler
 import androidx.compose.foundation.background
 import androidx.compose.foundation.clickable
@@ -29,6 +30,7 @@ import androidx.compose.runtime.collectAsState
 import androidx.compose.runtime.getValue
 import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
+import androidx.compose.ui.platform.LocalContext
 import androidx.compose.ui.text.style.TextAlign
 import androidx.compose.ui.unit.dp
 import androidx.hilt.navigation.compose.hiltViewModel
@@ -49,7 +51,8 @@ fun HomeScreen(
     modifier: Modifier = Modifier,
     viewModel: HomeViewModel = hiltViewModel(),
     navController: NavController,
-    navigateToMovimientosScreen: () -> Unit
+    navigateToMovimientosScreen: () -> Unit,
+    snackbarHostState: SnackbarHostState
 ) {
     BackHandler { exitProcess(0) }
 
@@ -69,6 +72,7 @@ fun HomeScreen(
                 viewModel,
                 navController,
                 navigateToMovimientosScreen,
+                snackbarHostState
             )
         }
     )
@@ -79,9 +83,11 @@ fun ContentHomeScreen(
     uiState: HomeUiState,
     viewModel: HomeViewModel,
     navController: NavController,
-    navigateToMovimientos: () -> Unit
+    navigateToMovimientos: () -> Unit,
+    snackbarHostState: SnackbarHostState
 ) {
     val isLoading by viewModel.isLoading.collectAsState()
+    val snackbarMessage by viewModel.snackbarMessage.collectAsState()
     when {
        isLoading -> {
             Column(
@@ -155,14 +161,22 @@ fun ContentHomeScreen(
             }
         }
     }
+    val context = LocalContext.current
+    LaunchedEffect(snackbarMessage) {
+        snackbarMessage?.let {
+            showSnackbar(snackbarHostState, message = it, context)
+            viewModel.clearSnackbarMessage()
+        }
+    }
 }
 
 suspend fun showSnackbar(
     snackbarHostState: SnackbarHostState,
-    message: String
+    message: Int,
+    context: Context
 ) {
     snackbarHostState.showSnackbar(
-        message = message,
+        message = context.getString(message),
         actionLabel = null,
         duration = SnackbarDuration.Short
     )

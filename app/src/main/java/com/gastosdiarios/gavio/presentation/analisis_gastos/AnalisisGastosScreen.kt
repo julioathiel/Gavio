@@ -2,6 +2,7 @@ package com.gastosdiarios.gavio.presentation.analisis_gastos
 
 import androidx.compose.foundation.layout.fillMaxSize
 import androidx.compose.material3.ExperimentalMaterial3Api
+import androidx.compose.material3.Text
 import androidx.compose.material3.pulltorefresh.PullToRefreshBox
 import androidx.compose.material3.pulltorefresh.rememberPullToRefreshState
 import androidx.compose.runtime.Composable
@@ -11,7 +12,10 @@ import androidx.compose.runtime.getValue
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.platform.LocalContext
 import androidx.hilt.navigation.compose.hiltViewModel
+import com.gastosdiarios.gavio.data.commons.CommonsIsEmpty
 import com.gastosdiarios.gavio.data.commons.CommonsLoadingScreen
+import com.gastosdiarios.gavio.data.ui_state.UiStateList
+import com.gastosdiarios.gavio.domain.model.modelFirebase.GastosPorCategoriaModel
 import com.gastosdiarios.gavio.presentation.analisis_gastos.components.GastosPorCategoriaList
 
 @OptIn(ExperimentalMaterial3Api::class)
@@ -38,9 +42,13 @@ fun ContentAnalisisGastos(viewModel: AnalisisGastosViewModel, modifier: Modifier
     val uiState by viewModel.uiState.collectAsState()
 
     LaunchedEffect(Unit) { viewModel.getAllListGastos() }
-    if (uiState.isLoading) {
-        CommonsLoadingScreen(modifier = Modifier.fillMaxSize())
-    } else {
-        GastosPorCategoriaList(uiState, viewModel, Modifier.fillMaxSize())
+    when(uiState){
+        is UiStateList.Loading -> { CommonsLoadingScreen(modifier = Modifier.fillMaxSize())}
+        is UiStateList.Error -> {}
+        is UiStateList.Empty -> { CommonsIsEmpty() }
+        is UiStateList.Success -> {
+            val list: List<GastosPorCategoriaModel> = (uiState as UiStateList.Success<GastosPorCategoriaModel>).data
+            GastosPorCategoriaList(list, viewModel, Modifier.fillMaxSize())
+        }
     }
 }

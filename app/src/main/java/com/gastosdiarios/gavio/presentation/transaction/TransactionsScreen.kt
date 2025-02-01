@@ -1,6 +1,5 @@
 package com.gastosdiarios.gavio.presentation.transaction
 
-import android.util.Log
 import androidx.activity.compose.BackHandler
 import androidx.compose.foundation.ExperimentalFoundationApi
 import androidx.compose.foundation.layout.Column
@@ -49,11 +48,9 @@ import com.gastosdiarios.gavio.data.commons.CommonsLoadingData
 import com.gastosdiarios.gavio.data.commons.CommonsLoadingScreen
 import com.gastosdiarios.gavio.data.commons.TextFieldDescription
 import com.gastosdiarios.gavio.data.commons.TopAppBarOnBack
-import com.gastosdiarios.gavio.data.ui_state.UiState
-import com.gastosdiarios.gavio.data.ui_state.UiStateSimple
+import com.gastosdiarios.gavio.data.ui_state.UiStateList
 import com.gastosdiarios.gavio.domain.model.Action
 import com.gastosdiarios.gavio.domain.model.modelFirebase.TransactionModel
-import com.gastosdiarios.gavio.domain.model.modelFirebase.UserPreferences
 import com.gastosdiarios.gavio.presentation.configuration.create_gastos_programados.components.DialogDelete
 import com.gastosdiarios.gavio.presentation.home.components.TextFieldDinero
 import com.gastosdiarios.gavio.presentation.transaction.components.ItemFecha
@@ -72,8 +69,8 @@ fun TransactionsScreen(
     val snackbarMessage by viewModel.snackbarMessage.collectAsState()
     val isShowSnackbar = remember { SnackbarHostState() }
     val isRefreshing by viewModel.isRefreshing.collectAsState()
-    val statePullToRefresh = rememberPullToRefreshState()
     val data by viewModel.dataList.collectAsState()
+    val uiState by viewModel.uiState.collectAsStateWithLifecycle()
 
     snackbarMessage?.let { messageResId ->
         val context = LocalContext.current
@@ -146,34 +143,32 @@ fun TransactionsScreen(
         },
         content = { paddingValues ->
             PullToRefreshBox(
-                state = statePullToRefresh,
+                state = rememberPullToRefreshState(),
                 isRefreshing = isRefreshing.isRefreshing,
                 onRefresh = { viewModel.refreshData() },
                 modifier = Modifier.padding(paddingValues)
             ) {
-                val uiState by viewModel.uiState.collectAsStateWithLifecycle()
-
 
                 when (uiState) {
-                    is UiStateSimple.Loading -> {
+                    UiStateList.Loading -> {
                         CommonsLoadingScreen(modifier = Modifier.fillMaxSize())
                     }
 
-                    is UiState.IsEmpty -> {
-                        CommonsIsEmpty()
-                    }
+                    UiStateList.Empty -> { CommonsIsEmpty() }
 
-                    is UiState.Success<*> -> {
-                        val dataList: List<TransactionModel> =
-                            (uiState as UiState.Success<TransactionModel>).data
+                    is UiStateList.Success -> {
+                        val list: List<TransactionModel> =
+                            (uiState as UiStateList.Success<TransactionModel>).data
                         ContentList(
                             viewModel,
-                            dataList = dataList,
+                            list = list,
                             showCommonsLoadingData = data.updateItem
                         )
                     }
 
-                    is UiState.Error -> {}
+                    is UiStateList.Error -> {
+
+                    }
                 }
             }
         },
@@ -190,7 +185,7 @@ fun TransactionsScreen(
 @Composable
 fun ContentList(
     viewModel: TransactionsViewModel,
-    dataList: List<TransactionModel>,
+    list: List<TransactionModel>,
     showCommonsLoadingData: Boolean
 ) {
     val data by viewModel.dataList.collectAsState()
@@ -199,7 +194,7 @@ fun ContentList(
 
     LazyColumn(modifier = Modifier.fillMaxSize()) {
         //Agrupa los elementos de uiState.items por fecha.
-        val groupItems = dataList.groupBy { it.date }.entries.sortedByDescending { it.key }
+        val groupItems = list.groupBy { it.date }.entries.sortedByDescending { it.key }
         groupItems.forEach { (date, itemsForDate) ->
             // Encabezado para cada grupo de fecha
             stickyHeader {
@@ -226,7 +221,7 @@ fun ContentList(
         }
     }
 
-    LaunchedEffect(dataList.lastOrNull()) {
+    LaunchedEffect(list.lastOrNull()) {
         // muestra el ultimo elemento agregado en la parte superior
         listState.scrollToItem(index = 0)
     }
@@ -279,7 +274,7 @@ fun ContentBottomSheetTransaction(
                     title = item.title.orEmpty(),
                     nuevoValor = cantidadIngresada,
                     description = description,
-                    valorViejo = item
+                    item = item
                 )
                 onDismiss()
                 cantidadIngresada = ""

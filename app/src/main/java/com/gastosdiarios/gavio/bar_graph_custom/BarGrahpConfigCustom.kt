@@ -1,27 +1,32 @@
 package com.gastosdiarios.gavio.bar_graph_custom
 
+import androidx.compose.foundation.layout.fillMaxSize
 import androidx.compose.material3.MaterialTheme
 import androidx.compose.runtime.Composable
 import androidx.compose.runtime.collectAsState
 import androidx.compose.runtime.getValue
+import androidx.compose.ui.Modifier
 import androidx.compose.ui.unit.dp
 import androidx.compose.ui.unit.sp
+import com.gastosdiarios.gavio.data.commons.CommonsLoadingScreen
+import com.gastosdiarios.gavio.data.ui_state.UiStateList
 import com.gastosdiarios.gavio.domain.model.modelFirebase.BarDataModel
 import com.gastosdiarios.gavio.presentation.analisis_gastos.AnalisisGastosViewModel
 import java.util.Calendar
 import java.util.Locale
 
 @Composable
-fun BarGraphConfigCustom(viewModel: AnalisisGastosViewModel,calendar: Calendar = Calendar.getInstance()) {
-
-    val listBarGraph by viewModel.listBarDataModel.collectAsState()
-     listBarGraph.items.map { BarDataModel(it.uid,it.value, it.month,it.money) }
+fun BarGraphConfigCustom(
+    listBarGraph: List<BarDataModel>,
+    calendar: Calendar = Calendar.getInstance()
+) {
+    listBarGraph.map { BarDataModel(it.uid, it.value, it.month, it.money) }
     val mesActual = calendar.getDisplayName(Calendar.MONTH, Calendar.SHORT, Locale.getDefault())
 
 
     //Configuración del gráfico de barras
     val config = BarGraphConfig<BarDataModel>()
-        .data(listBarGraph.items.reversed())
+        .data(listBarGraph.reversed())
         .dataBar(
             selectedBarColor = MaterialTheme.colorScheme.primary,
             unSelectedBarColor = MaterialTheme.colorScheme.secondaryContainer,
