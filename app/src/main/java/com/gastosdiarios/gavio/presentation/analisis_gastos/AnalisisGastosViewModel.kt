@@ -49,7 +49,7 @@ class AnalisisGastosViewModel @Inject constructor(
     private val circularBuffer = CircularBuffer(capacity = LIMIT_MONTH, db = barDataFirestore)
 
     private val _listBarDataModel = MutableStateFlow<UiStateList<BarDataModel>>(UiStateList.Loading)
-    val listBarDataModel  = _listBarDataModel.onStart { dbm.getBarDataGraph() }
+    val listBarDataModel  = _listBarDataModel.onStart { updateBarGraphList()  }
         .stateIn(viewModelScope, SharingStarted.WhileSubscribed(5000L), UiStateList.Loading)
 
     private val _isRefreshing = MutableStateFlow(RefreshDataModel(isRefreshing = false))
@@ -78,7 +78,7 @@ class AnalisisGastosViewModel @Inject constructor(
     val isDarkMode: StateFlow<ThemeMode> = _isDarkMode.asStateFlow()
 
 
-    fun getAllListGastos() {
+    private fun getAllListGastos() {
         viewModelScope.launch(Dispatchers.IO) {
             try {
                 val dataGastosPorCategoria = dbm.getGastosPorCategoria()

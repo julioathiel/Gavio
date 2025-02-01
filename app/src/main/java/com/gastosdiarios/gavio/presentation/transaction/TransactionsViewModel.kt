@@ -115,9 +115,9 @@ class TransactionsViewModel @Inject constructor(
             _dataList.value.selectedItems.forEach { item ->
                 val esPrimerItem = item.index == 0
                 if (esPrimerItem) {
-                    _dataList.update { it.copy(selectionMode = false) }
                     dbm.deleteAllScreenTransactions()
                     dbm.updateCurrentMoney(0.0, true)
+                    _dataList.update { it.copy(selectionMode = false, selectedItems = emptyList()) }
                     cargandoListaActualizada()
                     return@launch
                 }
@@ -223,7 +223,6 @@ class TransactionsViewModel @Inject constructor(
                     }
                     // Actualiza el valor en la lista
                     // si es un ingreso o si el nuevo valor no es superior al total de ingresos
-                    Log.d(tag, "updateItem: ${nuevoValor}")
                     updateItemList(
                         item.copy(title = title, subTitle = description, cash = nuevoValor)
                     )
@@ -302,7 +301,7 @@ class TransactionsViewModel @Inject constructor(
                 if (currentUiState is UiStateList.Success) {
                     val currentData = currentUiState.data.toMutableList()
 
-                    // Buscar el índice del elemento a actualizar
+                    // Bus car el índice del elemento a actualizar
                     val index = currentData.indexOfFirst { it.uid == item.uid }
 
                     if (index != -1) {

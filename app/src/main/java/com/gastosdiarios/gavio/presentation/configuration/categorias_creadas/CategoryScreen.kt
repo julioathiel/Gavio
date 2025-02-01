@@ -32,7 +32,6 @@ import androidx.compose.ui.zIndex
 import androidx.hilt.navigation.compose.hiltViewModel
 import androidx.lifecycle.compose.collectAsStateWithLifecycle
 import com.gastosdiarios.gavio.data.commons.CommonsEmptyFloating
-import com.gastosdiarios.gavio.data.commons.CommonsLoadingData
 import com.gastosdiarios.gavio.data.commons.CommonsLoadingScreen
 import com.gastosdiarios.gavio.data.commons.ErrorScreen
 import com.gastosdiarios.gavio.data.ui_state.UiStateList
@@ -41,7 +40,7 @@ import com.gastosdiarios.gavio.domain.model.CategoryDefaultModel
 import com.gastosdiarios.gavio.domain.model.UserCreateCategoryModel
 import com.gastosdiarios.gavio.presentation.configuration.categorias_creadas.components.ContentBottomSheet
 import com.gastosdiarios.gavio.presentation.configuration.categorias_creadas.components.ItemCategory
-import com.gastosdiarios.gavio.presentation.configuration.categorias_creadas.components.ToolbarGastos
+import com.gastosdiarios.gavio.presentation.configuration.categorias_creadas.components.ToolbarCategoriasNuevas
 import kotlinx.coroutines.launch
 
 @OptIn(ExperimentalMaterial3Api::class)
@@ -233,7 +232,7 @@ fun PantallaDeCategoriasCreadas(
 ) {
     BottomSheetScaffold(
         topBar = {
-            ToolbarGastos(
+            ToolbarCategoriasNuevas(
                 uiStateDefault,
                 viewModel,
                 onBack = { onBack() },

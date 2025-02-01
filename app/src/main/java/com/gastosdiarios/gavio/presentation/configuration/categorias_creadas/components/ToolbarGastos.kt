@@ -19,7 +19,7 @@ import com.gastosdiarios.gavio.domain.model.CategoryDefaultModel
 import com.gastosdiarios.gavio.presentation.configuration.categorias_creadas.CategoryViewModel
 
 @Composable
-fun ToolbarGastos(
+fun ToolbarCategoriasNuevas(
     uiStateDefault: CategoryDefaultModel,
     viewModel: CategoryViewModel,
     onClickAction: () -> Unit,
@@ -35,7 +35,7 @@ fun ToolbarGastos(
             if (uiStateDefault.isActivated) {
                 IconButton(onClick = { showDropdown = true }) {
                     Icon(
-                        painter = painterResource(id = R.drawable.ic_option),
+                        painter = painterResource(id = R.drawable.ic_menu),
                         contentDescription = null
                     )
                 }

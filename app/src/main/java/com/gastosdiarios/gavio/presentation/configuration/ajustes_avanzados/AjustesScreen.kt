@@ -48,7 +48,7 @@ fun AjustesScreen(
 
     when (uiState) {
         UiStateSingle.Loading -> {}
-        is UiStateSingle.Success<*> -> {
+        is UiStateSingle.Success -> {
             val data = (uiState as UiStateSingle.Success<UserPreferences?>).data
             var isSecurity: Boolean by remember {
                 mutableStateOf(data?.biometricSecurity ?: false)
@@ -72,12 +72,12 @@ fun AjustesScreen(
         topBar = {
             TopAppBarOnBack(
                 title = stringResource(id = R.string.toolbar_ajustes),
-                containerColor = MaterialTheme.colorScheme.secondaryContainer,
+                containerColor = MaterialTheme.colorScheme.surface,
                 onBack = { onBack() },
                 actions = {
                     when (uiState) {
                         UiStateSingle.Loading -> {}
-                        is UiStateSingle.Success<*> -> {
+                        is UiStateSingle.Success -> {
                             val data = (uiState as UiStateSingle.Success<UserPreferences?>).data
                             Icon(
                                 painter = painterResource(
@@ -106,9 +106,9 @@ fun AjustesScreen(
 
         when (uiState) {
             UiStateSingle.Loading -> CommonsLoadingScreen(Modifier.fillMaxSize())
-            is UiStateSingle.Success<*> -> {
+            is UiStateSingle.Success -> {
                 val data = (uiState as UiStateSingle.Success<UserPreferences?>).data
-                ContentAjustesAvanzados(modifier = Modifier.padding(paddingValues), viewModel, data)
+                ContentAjustesAvanzados(modifier = Modifier.padding(paddingValues).fillMaxSize(), viewModel, data)
             }
 
             is UiStateSingle.Error -> {
@@ -161,54 +161,52 @@ fun ContentAjustesAvanzados(
         isSecurity = data?.biometricSecurity ?: false
         checkButton = data?.themeMode ?: ThemeMode.MODE_AUTO
     }
-    Box(
-        modifier = modifier.background(MaterialTheme.colorScheme.surface)
-    ) {
-        Column(
-            Modifier
-                .fillMaxSize()
-                .padding(horizontal = dimensionResource(id = R.dimen.padding_medium))
-        ) {
 
-            ThemeMode.entries.forEach { option ->
-                Row(verticalAlignment = Alignment.CenterVertically) {
-                    val title = when (option) {
-                        ThemeMode.MODE_AUTO -> stringResource(id = R.string.mode_auto)
-                        ThemeMode.MODE_DAY -> stringResource(id = R.string.mode_day)
-                        ThemeMode.MODE_NIGHT -> stringResource(id = R.string.mode_night)
+    Column(
+        modifier
+            .background(MaterialTheme.colorScheme.surface)
+            .padding(horizontal = dimensionResource(id = R.dimen.padding_medium)),
+    ) {
+        HorizontalDivider()
+        ThemeMode.entries.forEach { option ->
+            Row(verticalAlignment = Alignment.CenterVertically) {
+                val title = when (option) {
+                    ThemeMode.MODE_AUTO -> stringResource(id = R.string.mode_auto)
+                    ThemeMode.MODE_DAY -> stringResource(id = R.string.mode_day)
+                    ThemeMode.MODE_NIGHT -> stringResource(id = R.string.mode_night)
+                }
+                Text(text = title, modifier = Modifier.weight(1f))
+                RadioButton(
+                    selected = option == checkButton,
+                    onClick = {
+                        checkButton = option
+                        viewModel.updateThemeMode(checkButton)
                     }
-                    Text(text = title, modifier = Modifier.weight(1f))
-                    RadioButton(
-                        selected = option == checkButton,
-                        onClick = {
-                            checkButton = option
-                            viewModel.updateThemeMode(checkButton)
+                )
+            }
+        }
+
+        Spacer(modifier = Modifier.size(20.dp))
+
+        HorizontalDivider()
+
+        Spacer(modifier = Modifier.size(20.dp))
+        ItemConfAvanzada.entries.forEach { item ->
+            when (item) {
+                ItemConfAvanzada.SEGURIDAD -> {
+                    SwitchWith(
+                        switchText = "Seguridad",
+                        isChecked = isSecurity,
+                        onCheckedChange = { newState ->
+                            isSecurity = newState
+                            viewModel.updateBiometricSecurity(isSecurity)
                         }
                     )
                 }
             }
-
-            Spacer(modifier = Modifier.size(20.dp))
-
-            HorizontalDivider()
-
-            Spacer(modifier = Modifier.size(20.dp))
-            ItemConfAvanzada.entries.forEach { item ->
-                when (item) {
-                    ItemConfAvanzada.SEGURIDAD -> {
-                        SwitchWith(
-                            switchText = "Seguridad",
-                            isChecked = isSecurity,
-                            onCheckedChange = { newState ->
-                                isSecurity = newState
-                                viewModel.updateBiometricSecurity(isSecurity)
-                            }
-                        )
-                    }
-                }
-            }
-
         }
+
     }
+
 }
 

@@ -1,6 +1,7 @@
 package com.gastosdiarios.gavio.presentation.configuration.create_gastos_programados.components
 
 import android.util.Log
+import androidx.compose.foundation.background
 import androidx.compose.foundation.layout.Arrangement
 import androidx.compose.foundation.layout.Box
 import androidx.compose.foundation.layout.Column
@@ -25,6 +26,7 @@ import androidx.compose.runtime.setValue
 import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.focus.FocusRequester
+import androidx.compose.ui.graphics.Color
 import androidx.compose.ui.res.dimensionResource
 import com.gastosdiarios.gavio.R
 import com.gastosdiarios.gavio.domain.enums.TipoTransaccion
@@ -67,78 +69,77 @@ fun ContentBottomSheetGastosProgramados(
 
     HorizontalPager(
         state = state,
-        modifier = Modifier
-    ) { page ->
-        Box(
-            Modifier
-                .fillMaxWidth()
-                .padding(dimensionResource(id = R.dimen.padding_medium))
-        ) {
-            Column(
-                Modifier.wrapContentSize(),
-                horizontalAlignment = Alignment.CenterHorizontally,
-                verticalArrangement = Arrangement.Center
+        modifier = Modifier,
+        pageContent = { page ->
+            Box(
+                Modifier
+                    .fillMaxWidth()
+                    .padding(dimensionResource(id = R.dimen.padding_medium))
             ) {
-                list[state.currentPage].content(PaddingValues())
-            }
-
-            when (page) {
-                0 -> {
-                    Button(
-                        onClick = {
-                            scope.launch {
-                                val nextPage = (state.currentPage + 1) % state.pageCount
-                                state.scrollToPage(nextPage)
-                            }
-                        },
-                        modifier = Modifier
-                            .align(Alignment.BottomEnd)
-                            .height(dimensionResource(id = R.dimen.padding_altura_boton))
-                            .fillMaxWidth(),
-                        enabled = enabledButton
-                    ) {
-                        Text("Siguiente")
-                    }
-                    LaunchedEffect(focusRequester) {
-                        focusRequester.requestFocus()
-                    }
+                Column(
+                    Modifier.wrapContentSize(),
+                    horizontalAlignment = Alignment.CenterHorizontally,
+                    verticalArrangement = Arrangement.Center
+                ) {
+                    list[state.currentPage].content(PaddingValues())
                 }
 
-                1 -> {
-                    Row(
-                        modifier = Modifier
-                            .align(Alignment.BottomCenter)
-                            .fillMaxWidth()
-                            .padding(dimensionResource(id = R.dimen.padding_medium)),
-                        horizontalArrangement = Arrangement.SpaceBetween
-                    ) {
-                        OutlinedButton(
+                when (page) {
+
+                    0 -> {
+                        Button(
                             onClick = {
                                 scope.launch {
-                                    val nextPage = (state.currentPage - 1) % state.pageCount
+                                    val nextPage = (state.currentPage + 1) % state.pageCount
                                     state.scrollToPage(nextPage)
                                 }
                             },
-                            modifier = Modifier.height(dimensionResource(id = R.dimen.padding_altura_boton)),
+                            modifier = Modifier
+                                .align(Alignment.BottomEnd)
+                                .height(dimensionResource(id = R.dimen.padding_altura_boton))
+                                .fillMaxWidth(),
+                            enabled = enabledButton
                         ) {
-                            Text("Atras")
+                            Text("Siguiente")
                         }
+                    }
 
-                        val newValor = item.copy(
-                            title = selectedCategory?.name,
-                            subTitle = subTitleProgramado,
-                            cash = dineroProgramado,
-                            date = selectedDate,
-                            icon = selectedCategory?.icon.toString(),
-                            categoryType = categoryTypes
-                        )
-                        Log.d("TAGG", "ContentBottomSheetGastosProgramados: $newValor")
-                        RealizarAccion(modo, viewModel, newValor, selectedDate, onDismiss)
+                    1 -> {
+                        Row(
+                            modifier = Modifier
+                                .align(Alignment.BottomCenter)
+                                .fillMaxWidth()
+                                .padding(dimensionResource(id = R.dimen.padding_medium)),
+                            horizontalArrangement = Arrangement.SpaceBetween
+                        ) {
+                            OutlinedButton(
+                                onClick = {
+                                    scope.launch {
+                                        val nextPage = (state.currentPage - 1) % state.pageCount
+                                        state.scrollToPage(nextPage)
+                                    }
+                                },
+                                modifier = Modifier.height(dimensionResource(id = R.dimen.padding_altura_boton)),
+                            ) {
+                                Text("Atras")
+                            }
+
+                            val newValor = item.copy(
+                                title = selectedCategory?.name,
+                                subTitle = subTitleProgramado,
+                                cash = dineroProgramado,
+                                date = selectedDate,
+                                icon = selectedCategory?.icon.toString(),
+                                categoryType = categoryTypes
+                            )
+                            Log.d("TAGG", "ContentBottomSheetGastosProgramados: $newValor")
+                            RealizarAccion(modo, viewModel, newValor, selectedDate, onDismiss)
+                        }
                     }
                 }
             }
         }
-    }
+    )
 }
 
 @Composable
