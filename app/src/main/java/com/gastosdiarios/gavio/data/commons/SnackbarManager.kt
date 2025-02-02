@@ -1,24 +1,22 @@
 package com.gastosdiarios.gavio.data.commons
 
-import androidx.annotation.StringRes
 import kotlinx.coroutines.flow.MutableStateFlow
 import kotlinx.coroutines.flow.StateFlow
 import kotlinx.coroutines.flow.asStateFlow
 
-object SnackbarManager {
-    private val messages: MutableStateFlow<SnackbarMessage?> = MutableStateFlow(null)
-    val snackbarMessages: StateFlow<SnackbarMessage?>
-        get() = messages.asStateFlow()
+class SnackbarManager {
+    private val _messages = MutableStateFlow<SnackbarMessage?>(null)
+    val messages: StateFlow<SnackbarMessage?> = _messages.asStateFlow()
 
-    fun showMessage(@StringRes message: Int) {
-        messages.value = SnackbarMessage.ResourceSnackbar(message)
-    }
-
-    fun showMessage(message: SnackbarMessage) {
-        messages.value = message
+    fun showMessage(message: String) {
+        _messages.value = SnackbarMessage.StringSnackbar(message)
     }
 
     fun clearSnackbarState() {
-        messages.value = null
+        _messages.value = null
     }
+}
+
+sealed class SnackbarMessage {
+    class StringSnackbar(val message: String) : SnackbarMessage()
 }

@@ -1,5 +1,6 @@
 package com.gastosdiarios.gavio.presentation.welcome.login
 
+import android.content.Context
 import android.util.Patterns
 import androidx.compose.runtime.mutableStateOf
 import androidx.lifecycle.ViewModel
@@ -13,6 +14,7 @@ import com.gastosdiarios.gavio.domain.repository.AuthFirebaseImp
 import com.google.firebase.auth.FirebaseAuthInvalidCredentialsException
 import com.google.firebase.auth.FirebaseAuthInvalidUserException
 import dagger.hilt.android.lifecycle.HiltViewModel
+import dagger.hilt.android.qualifiers.ApplicationContext
 import kotlinx.coroutines.flow.MutableStateFlow
 import kotlinx.coroutines.flow.StateFlow
 import kotlinx.coroutines.launch
@@ -21,7 +23,8 @@ import javax.inject.Inject
 
 @HiltViewModel
 class LoginViewModel @Inject constructor(
-    private val authFirebaseImp: AuthFirebaseImp
+    @ApplicationContext private val context: Context,
+    private val authFirebaseImp: AuthFirebaseImp,
 ) : ViewModel() {
     val tag = "loginViewModel"
     var uiState = mutableStateOf(LoginUiState())
@@ -82,12 +85,13 @@ class LoginViewModel @Inject constructor(
         }
 
         if (!password.isValidPassword()) {
-            SnackbarManager.showMessage(R.string.password_error)
+            SnackbarManager().showMessage(context.getString(R.string.password_error))
+
             return
         }
 
         if (!password.passwordMatches(uiState.value.repeatPassword)) {
-            SnackbarManager.showMessage(R.string.password_match_error)
+            SnackbarManager().showMessage(context.getString(R.string.password_match_error))
             return
         }
     }

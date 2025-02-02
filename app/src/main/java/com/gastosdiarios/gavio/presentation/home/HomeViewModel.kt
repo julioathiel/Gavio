@@ -4,11 +4,14 @@ import android.content.Context
 import android.content.res.Resources
 import android.util.Log
 import android.widget.Toast
+import androidx.compose.material3.SnackbarHostState
 import androidx.compose.runtime.mutableStateListOf
 import androidx.lifecycle.ViewModel
 import androidx.lifecycle.viewModelScope
 import com.gastosdiarios.gavio.R
 import com.gastosdiarios.gavio.bar_graph_custom.CircularBuffer
+import com.gastosdiarios.gavio.data.commons.SnackbarManager
+import com.gastosdiarios.gavio.data.commons.SnackbarMessage
 import com.gastosdiarios.gavio.data.constants.Constants.LIMIT_MONTH
 import com.gastosdiarios.gavio.data.ui_state.HomeUiState
 import com.gastosdiarios.gavio.domain.enums.TipoTransaccion
@@ -64,12 +67,11 @@ class HomeViewModel @Inject constructor(
     private val gastosPorCategoriaFirestore: GastosPorCategoriaFirestore,
     private val gastosProgramadosFirestore: GastosProgramadosFirestore,
     barDataFirestore: BarDataFirestore,
+    val snackbarManager: SnackbarManager
 ) : ViewModel() {
 
     private val tag = "homeViewModel"
 
-    private val _snackbarMessage = MutableStateFlow<Int?>(null)
-    val snackbarMessage: StateFlow<Int?> = _snackbarMessage.asStateFlow()
 
     private val _homeUiState = MutableStateFlow(HomeUiState())
     val homeUiState: StateFlow<HomeUiState> = _homeUiState.asStateFlow()
@@ -80,14 +82,14 @@ class HomeViewModel @Inject constructor(
     private val _listFilter = mutableStateListOf<GastosProgramadosModel>()
     val listFilter: List<GastosProgramadosModel> = _listFilter
 
-   // private val _transactionUiState = MutableStateFlow(ListUiState<TransactionModel>())
 
     private val circularBuffer = CircularBuffer(capacity = LIMIT_MONTH, db = barDataFirestore)
 
     private val _isLoading = MutableStateFlow(false)
     val isLoading = _isLoading.onStart {
         calculandoInit()
-    }.stateIn(viewModelScope,
+    }.stateIn(
+        viewModelScope,
         SharingStarted.WhileSubscribed(5000L),
         false
     )
@@ -130,7 +132,7 @@ class HomeViewModel @Inject constructor(
                                 )
                                 dbm.updateTotalGastos(0.0)
                                 dbm.deleteAllTransactions()
-                              //  _transactionUiState.update { it.copy(items = emptyList()) }
+
                                 crearTransaction(
                                     cantidad = dataCurrentMoney.toString(),
                                     categoryName = getString(R.string.saldo_restante),
@@ -337,7 +339,7 @@ class HomeViewModel @Inject constructor(
             val totalIngresos = data?.totalIngresos ?: 0.0
             val totalGastos = data?.totalGastos ?: 0.0
             val currentMoney = data?.currentMoney ?: 0.0
-            val currentMoneyIsZero = data?.currentMoneyIsZero?: false
+            val currentMoneyIsZero = data?.currentMoneyIsZero ?: false
             val date = data?.selectedDate ?: ""
 
             val nuevoTotal = when (tipoTransaccion) {
@@ -357,15 +359,14 @@ class HomeViewModel @Inject constructor(
             when (tipoTransaccion) {
                 TipoTransaccion.INGRESOS ->
                     if (currentMoneyIsZero) {
-                    //data.checked es true entonces significa que no hay nada aun guardado
-                    insertPrimerTotalIngresos(nuevoTotal)
-                }
-                else {
-                    //Si el usuario eligio Ingresos pero en data.isChecked es false
-                    // significa que ya hay datos guardados, por ende se actualizaran los ingresos
-                    // Si ya hay datos en db se actualiza el totalIngresos
-                    updateIngresos(nuevoTotal)
-                }
+                        //data.checked es true entonces significa que no hay nada aun guardado
+                        insertPrimerTotalIngresos(nuevoTotal)
+                    } else {
+                        //Si el usuario eligio Ingresos pero en data.isChecked es false
+                        // significa que ya hay datos guardados, por ende se actualizaran los ingresos
+                        // Si ya hay datos en db se actualiza el totalIngresos
+                        updateIngresos(nuevoTotal)
+                    }
                 //Si el usuario eligio Gastos
                 TipoTransaccion.GASTOS -> {
                     //si el usuario eligio gastos
@@ -644,11 +645,9 @@ class HomeViewModel @Inject constructor(
                 val cash: Double = item.cash?.toDouble() ?: 0.0
 
                 if (totalIngresos == 0.0) {
-                    _snackbarMessage.value = R.string.no_hay_dinero_para_un_gasto
-                    Toast.makeText(context, "No hay dinero para un gasto", Toast.LENGTH_SHORT).show()
+                    snackbarManager.showMessage(context.getString(R.string.no_hay_dinero_para_un_gasto))
                 } else if (totalIngresos < cash) {
-                    Toast.makeText(context, "No hay dinero suficiente", Toast.LENGTH_SHORT).show()
-                    _snackbarMessage.value = R.string.agrega_mas_dinero_antes_de_pagar
+                    snackbarManager.showMessage(context.getString(R.string.agrega_mas_dinero_antes_de_pagar))
                 } else {
                     clearItem(item)
                     crearTransaction(
@@ -658,7 +657,7 @@ class HomeViewModel @Inject constructor(
                         categoryIcon = item.icon?.toInt() ?: 0,
                         tipoTransaccion = TipoTransaccion.GASTOS
                     )
-                    _snackbarMessage.value = R.string.pagado_con_exito
+                        snackbarManager.showMessage(context.getString(R.string.pagado_con_exito))
                 }
             } catch (e: Exception) {
                 Toast.makeText(context, "Error en pagarItem", Toast.LENGTH_SHORT).show()
@@ -704,8 +703,6 @@ class HomeViewModel @Inject constructor(
         }
     }
 
-    fun clearSnackbarMessage() {
-        _snackbarMessage.value = null
-    }
     //--------------FIN-------Gastos programados -------------------------//
+
 }

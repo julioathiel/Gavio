@@ -23,6 +23,7 @@
     <string name="sin_resultados">Sin resultados</string>
 
     <!--globales-->
+    <string name="seleccionar_fecha">Seleccionar fecha</string>
     <string name="editar">Editar</string>
     <string name="eliminar">Eliminar</string>
     <string name="guardar">Guardar</string>
@@ -163,4 +164,5 @@
     <string name="resetear">Resetear</string>
     <string name="pagado_con_exito">Pagado con exito</string>
     <string name="no_hay_dias_restantes">No hay dias restantes</string>
+    <string name="elije_una_feccha_primero">Elije una fecha primero.</string>
 </resources>

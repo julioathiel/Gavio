@@ -13,6 +13,7 @@ import androidx.compose.material3.SnackbarHost
 import androidx.compose.material3.SnackbarHostState
 import androidx.compose.material3.Text
 import androidx.compose.runtime.Composable
+import androidx.compose.runtime.LaunchedEffect
 import androidx.compose.runtime.collectAsState
 import androidx.compose.runtime.getValue
 import androidx.compose.runtime.mutableStateOf
@@ -22,8 +23,10 @@ import androidx.compose.runtime.setValue
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.res.painterResource
 import androidx.hilt.navigation.compose.hiltViewModel
+import androidx.lifecycle.compose.collectAsStateWithLifecycle
 import androidx.navigation.NavHostController
 import com.gastosdiarios.gavio.data.commons.CommonsToolbar
+import com.gastosdiarios.gavio.data.commons.SnackbarMessage
 import com.gastosdiarios.gavio.main_scaffold.list_screen.createScreens
 import com.gastosdiarios.gavio.presentation.home.HomeViewModel
 import com.gastosdiarios.gavio.presentation.home.components.MyFAB
@@ -38,6 +41,20 @@ fun MainScaffold(navController: NavHostController) {
 
     val viewModel = hiltViewModel<HomeViewModel>()
     val uiState by viewModel.homeUiState.collectAsState()
+    val snackbarMessage by viewModel.snackbarManager.messages.collectAsStateWithLifecycle()
+    val snackbarHostState = remember { SnackbarHostState() }
+
+    LaunchedEffect(key1 = snackbarMessage) {
+        if (snackbarMessage != null){
+            when(snackbarMessage){
+                is SnackbarMessage.StringSnackbar -> {
+                    snackbarHostState.currentSnackbarData?.dismiss()
+                    snackbarHostState.showSnackbar((snackbarMessage as SnackbarMessage.StringSnackbar).message)
+                }
+                null -> {}
+            }
+        }
+    }
 
     Scaffold(
         topBar = {
@@ -89,14 +106,14 @@ fun MainScaffold(navController: NavHostController) {
         floatingActionButton = {
             if (pagerState.currentPage == 0) { // Mostrar FAB solo en HomeScreen (página 0)
                 MyFAB(
+                    snackbarHostState,
                     diasRestantes = uiState.diasRestantes,
-                    SnackbarHostState(),
                     onDismiss = { viewModel.onShowDialogClickTransaction() }
                 )
             }
         },
         floatingActionButtonPosition = FabPosition.End,
-        snackbarHost = { SnackbarHost(hostState = SnackbarHostState()) }
+        snackbarHost = { SnackbarHost(hostState = snackbarHostState) }
     ) { innerPadding ->
         HorizontalPager(
             state = pagerState,
@@ -104,9 +121,9 @@ fun MainScaffold(navController: NavHostController) {
         ) { page ->
             if (page == 0) {
                 // Pasar isShowSnackbar a ContentHomeScreen
-                screens[page].content(innerPadding, SnackbarHostState())
+                screens[page].content(innerPadding)
             } else {
-                screens[page].content(innerPadding, SnackbarHostState())
+                screens[page].content(innerPadding)
             }
         }
     }

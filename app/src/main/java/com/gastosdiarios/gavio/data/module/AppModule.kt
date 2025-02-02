@@ -7,6 +7,7 @@ import android.content.pm.PackageManager
 import android.content.res.Resources
 import androidx.appcompat.app.AppCompatActivity
 import androidx.credentials.CredentialManager
+import com.gastosdiarios.gavio.data.commons.SnackbarManager
 import com.google.firebase.auth.FirebaseAuth
 import com.google.firebase.firestore.FirebaseFirestore
 import com.google.firebase.firestore.ktx.firestore
@@ -59,6 +60,12 @@ object AppModule {
     @Singleton
     fun provideCredentialManager(application: Application): CredentialManager {
         return CredentialManager.create(application)
+    }
+
+    @Provides
+    @Singleton
+    fun provideSnackbarManager(): SnackbarManager {
+        return SnackbarManager()
     }
 
 }

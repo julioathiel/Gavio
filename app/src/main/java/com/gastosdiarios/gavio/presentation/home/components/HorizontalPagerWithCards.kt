@@ -1,11 +1,15 @@
 package com.gastosdiarios.gavio.presentation.home.components
 
 import androidx.compose.foundation.layout.PaddingValues
+import androidx.compose.foundation.layout.fillMaxWidth
 import androidx.compose.foundation.pager.HorizontalPager
 import androidx.compose.foundation.pager.rememberPagerState
+import androidx.compose.material3.Snackbar
+import androidx.compose.material3.Text
 import androidx.compose.runtime.Composable
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.unit.dp
+import com.gastosdiarios.gavio.R
 import com.gastosdiarios.gavio.presentation.home.HomeViewModel
 
 @Composable

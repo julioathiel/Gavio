@@ -10,23 +10,23 @@ import androidx.compose.runtime.Composable
 import androidx.compose.runtime.rememberCoroutineScope
 import androidx.compose.ui.platform.LocalContext
 import com.gastosdiarios.gavio.R
-import com.gastosdiarios.gavio.presentation.home.showSnackbar
 import kotlinx.coroutines.launch
 
 @Composable
 fun MyFAB(
+    snackbarHostState: SnackbarHostState,
     diasRestantes: Int,
-    isShowSnackbar: SnackbarHostState,
     onDismiss: () -> Unit = {}
 ) {
     val scope = rememberCoroutineScope()
     val context = LocalContext.current
-    val message:Int = R.string.no_hay_dias_restantes
+    val message = context.getString(R.string.elije_una_feccha_primero)
     FloatingActionButton(
         onClick = {
             if (diasRestantes == 0) {
                 scope.launch {
-                    showSnackbar(isShowSnackbar, message,context)
+                    snackbarHostState.currentSnackbarData?.dismiss()
+                    snackbarHostState.showSnackbar(message)
                 }
             } else { onDismiss() }
         },

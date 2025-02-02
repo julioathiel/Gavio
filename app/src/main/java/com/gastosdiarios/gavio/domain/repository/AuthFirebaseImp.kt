@@ -11,8 +11,12 @@ import com.google.firebase.auth.GoogleAuthProvider
 import com.google.firebase.auth.TwitterAuthProvider
 import javax.inject.Inject
 
-class AuthFirebaseImp @Inject constructor(private val firebaseAuth: FirebaseAuth) : AuthRepository {
+class AuthFirebaseImp @Inject constructor(
+    private val firebaseAuth: FirebaseAuth,
+    private val snackbarMessage: SnackbarManager
+) : AuthRepository {
     private val tag = "AuthFirebaseImp"
+
     /*
     Permite autenticar al usuario utilizando un token de Google.
      Este método se utiliza cuando un usuario elige iniciar sesión con su cuenta de Google en tu aplicación.
@@ -94,9 +98,9 @@ class AuthFirebaseImp @Inject constructor(private val firebaseAuth: FirebaseAuth
      */
     override suspend fun deleteUser(): Task<Void>? {
         val user = firebaseAuth.currentUser
-        return  user?.delete()?.addOnCompleteListener { task ->
+        return user?.delete()?.addOnCompleteListener { task ->
             if (task.isSuccessful) {
-                SnackbarManager.showMessage(R.string.user_deleted)
+                snackbarMessage.showMessage("Cuenta eliminada exitosamente")
             }
         }
     }

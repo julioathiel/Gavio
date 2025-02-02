@@ -1,7 +1,6 @@
 package com.gastosdiarios.gavio.presentation.home
 
 
-import android.content.Context
 import androidx.activity.compose.BackHandler
 import androidx.compose.foundation.background
 import androidx.compose.foundation.clickable
@@ -19,18 +18,15 @@ import androidx.compose.material3.CircularProgressIndicator
 import androidx.compose.material3.ExperimentalMaterial3Api
 import androidx.compose.material3.HorizontalDivider
 import androidx.compose.material3.MaterialTheme
-import androidx.compose.material3.SnackbarDuration
 import androidx.compose.material3.SnackbarHostState
 import androidx.compose.material3.Text
 import androidx.compose.material3.pulltorefresh.PullToRefreshBox
 import androidx.compose.material3.pulltorefresh.rememberPullToRefreshState
 import androidx.compose.runtime.Composable
-import androidx.compose.runtime.LaunchedEffect
 import androidx.compose.runtime.collectAsState
 import androidx.compose.runtime.getValue
 import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
-import androidx.compose.ui.platform.LocalContext
 import androidx.compose.ui.text.style.TextAlign
 import androidx.compose.ui.unit.dp
 import androidx.hilt.navigation.compose.hiltViewModel
@@ -51,8 +47,7 @@ fun HomeScreen(
     modifier: Modifier = Modifier,
     viewModel: HomeViewModel = hiltViewModel(),
     navController: NavController,
-    navigateToMovimientosScreen: () -> Unit,
-    snackbarHostState: SnackbarHostState
+    navigateToMovimientosScreen: () -> Unit
 ) {
     BackHandler { exitProcess(0) }
 
@@ -71,8 +66,7 @@ fun HomeScreen(
                 uiState,
                 viewModel,
                 navController,
-                navigateToMovimientosScreen,
-                snackbarHostState
+                navigateToMovimientosScreen
             )
         }
     )
@@ -83,11 +77,10 @@ fun ContentHomeScreen(
     uiState: HomeUiState,
     viewModel: HomeViewModel,
     navController: NavController,
-    navigateToMovimientos: () -> Unit,
-    snackbarHostState: SnackbarHostState
+    navigateToMovimientos: () -> Unit
 ) {
     val isLoading by viewModel.isLoading.collectAsState()
-    val snackbarMessage by viewModel.snackbarMessage.collectAsState()
+
     when {
        isLoading -> {
             Column(
@@ -161,23 +154,4 @@ fun ContentHomeScreen(
             }
         }
     }
-    val context = LocalContext.current
-    LaunchedEffect(snackbarMessage) {
-        snackbarMessage?.let {
-            showSnackbar(snackbarHostState, message = it, context)
-            viewModel.clearSnackbarMessage()
-        }
-    }
-}
-
-suspend fun showSnackbar(
-    snackbarHostState: SnackbarHostState,
-    message: Int,
-    context: Context
-) {
-    snackbarHostState.showSnackbar(
-        message = context.getString(message),
-        actionLabel = null,
-        duration = SnackbarDuration.Short
-    )
 }

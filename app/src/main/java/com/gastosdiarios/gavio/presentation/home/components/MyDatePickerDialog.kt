@@ -27,7 +27,9 @@ fun MyDatePickerDialog(homeViewModel: HomeViewModel) {
 
     TextButton(onClick = { showDatePicker = true }) {
         Text(
-            text = stringResource(id = R.string.editar),
+            text = if (selectedDate == null) stringResource(id = R.string.seleccionar_fecha) else stringResource(
+                id = R.string.editar
+            ),
             color = MaterialTheme.colorScheme.onSurface
         )
     }
@@ -51,14 +53,18 @@ fun DatePickerView(
 ) {
     val homeUiState by viewModel.homeUiState.collectAsState()
 
-    val state: DatePickerState = rememberDatePickerState(selectableDates = object : SelectableDates {
-        override fun isSelectableDate(utcTimeMillis: Long): Boolean {
-            return DateUtils.isDateSelectableRestrictMinMax(utcTimeMillis, homeUiState.limitMonth)
+    val state: DatePickerState =
+        rememberDatePickerState(selectableDates = object : SelectableDates {
+            override fun isSelectableDate(utcTimeMillis: Long): Boolean {
+                return DateUtils.isDateSelectableRestrictMinMax(
+                    utcTimeMillis,
+                    homeUiState.limitMonth
+                )
+            }
         }
-    }
-    )
+        )
 
-   val selectedDate:String = DateUtils.formatSelectedDate(state.selectedDateMillis)
+    val selectedDate: String = DateUtils.formatSelectedDate(state.selectedDateMillis)
 
     DatePickerDialog(onDismissRequest = { onDismiss() },
         confirmButton = {
