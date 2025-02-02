@@ -1,10 +1,15 @@
 package com.gastosdiarios.gavio.data.ui_state
 
+
+interface UiError {
+    val throwable: Throwable
+}
+
 sealed interface UiStateList<out T> {
     data object Loading : UiStateList<Nothing>
     data object Empty : UiStateList<Nothing>
     data class Success<T>(val data: List<T>) : UiStateList<T>
-    data class Error(val message: String, val throwable: Throwable) : UiStateList<Nothing>
+    data class Error(override val throwable: Throwable) : UiStateList<Nothing>, UiError
 }
 
 sealed class Result<out T> {
@@ -16,5 +21,5 @@ sealed class Result<out T> {
 sealed interface UiStateSingle<out T> {
     data object Loading : UiStateSingle<Nothing>
     data class Success<T>(val data: T) : UiStateSingle<T>
-    data class Error(val message: String) : UiStateSingle<Nothing>
+    data class Error(override val throwable: Throwable) : UiStateSingle<Nothing>, UiError
 }

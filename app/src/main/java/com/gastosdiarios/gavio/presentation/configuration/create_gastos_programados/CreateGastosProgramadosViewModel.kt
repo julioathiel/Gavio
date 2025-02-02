@@ -54,7 +54,7 @@ class CreateGastosProgramadosViewModel @Inject constructor(
                     _uiState.update { UiStateList.Success(data) }
                 }
             } catch (e: Exception) {
-                _uiState.update { UiStateList.Error(e.message ?: "Error desconocido", e) }
+                _uiState.update { UiStateList.Error(throwable =  e) }
             }
         }
     }
@@ -183,7 +183,7 @@ class CreateGastosProgramadosViewModel @Inject constructor(
                   _uiState.update { UiStateList.Success(data) }
               }
           }catch (e:Exception){
-              _uiState.update { UiStateList.Error(e.message ?: "Error desconocido", e) }
+              _uiState.update { UiStateList.Error(throwable =  e) }
           }
       }
     }

@@ -24,10 +24,10 @@ import com.gastosdiarios.gavio.utils.DateUtils
 fun MyDatePickerDialog(homeViewModel: HomeViewModel) {
     var selectedDate: String? by remember { mutableStateOf(null) }
     var showDatePicker by remember { mutableStateOf(false) }
-
+    val uiState by homeViewModel.homeUiState.collectAsState()
     TextButton(onClick = { showDatePicker = true }) {
         Text(
-            text = if (selectedDate == null) stringResource(id = R.string.seleccionar_fecha) else stringResource(
+            text = if (uiState.fechaElegida == "") stringResource(id = R.string.seleccionar_fecha) else stringResource(
                 id = R.string.editar
             ),
             color = MaterialTheme.colorScheme.onSurface

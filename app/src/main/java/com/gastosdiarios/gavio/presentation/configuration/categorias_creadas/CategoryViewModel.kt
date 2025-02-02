@@ -23,6 +23,7 @@ import kotlinx.coroutines.flow.MutableStateFlow
 import kotlinx.coroutines.flow.SharingStarted
 import kotlinx.coroutines.flow.StateFlow
 import kotlinx.coroutines.flow.asStateFlow
+import kotlinx.coroutines.flow.catch
 import kotlinx.coroutines.flow.onStart
 import kotlinx.coroutines.flow.stateIn
 import kotlinx.coroutines.flow.update
@@ -38,21 +39,30 @@ class CategoryViewModel @Inject constructor(
     @ApplicationContext private val appContext: Context
 ) : ViewModel() {
 
-    private val _uiStateIngresos = MutableStateFlow<UiStateList<UserCreateCategoryModel>>(UiStateList.Loading)
+    private val _uiStateIngresos =
+        MutableStateFlow<UiStateList<UserCreateCategoryModel>>(UiStateList.Loading)
     val uiStateIngresos = _uiStateIngresos.onStart {
         getAllIngresos()
-    }.stateIn(viewModelScope,SharingStarted.WhileSubscribed(5000L),UiStateList.Loading)
+    }.catch { throwable ->
+        _uiStateIngresos.update { UiStateList.Error(throwable = throwable) }
+    }
+        .stateIn(viewModelScope, SharingStarted.WhileSubscribed(5000L), UiStateList.Loading)
 
-    private val _uiStateGastos = MutableStateFlow<UiStateList<UserCreateCategoryModel>>(UiStateList.Loading)
+    private val _uiStateGastos =
+        MutableStateFlow<UiStateList<UserCreateCategoryModel>>(UiStateList.Loading)
     val uiStateGastos = _uiStateGastos.onStart {
         getAllGastos()
-    }.stateIn(viewModelScope,SharingStarted.WhileSubscribed(5000L),UiStateList.Loading)
+    }
+        .catch { throwable ->
+            _uiStateGastos.update { UiStateList.Error(throwable = throwable) }
+        }
+        .stateIn(viewModelScope, SharingStarted.WhileSubscribed(5000L), UiStateList.Loading)
 
     private val _uiStateDefault = MutableStateFlow(CategoryDefaultModel())
     var uiStateDefault: StateFlow<CategoryDefaultModel> = _uiStateDefault.asStateFlow()
 
     private val _dataList = MutableStateFlow(false)
-    val dataList:StateFlow<Boolean> = _dataList.asStateFlow()
+    val dataList: StateFlow<Boolean> = _dataList.asStateFlow()
 
 
     private fun getAllGastos() {
@@ -63,11 +73,11 @@ class CategoryViewModel @Inject constructor(
                         withContext(Dispatchers.IO) { dbm.getUserCategoryGastos() }
                     if (data.isEmpty()) {
                         _uiStateGastos.update { UiStateList.Empty }
-                    }else{
-                        _uiStateGastos.update { UiStateList.Success(data)  }
+                    } else {
+                        _uiStateGastos.update { UiStateList.Success(data) }
                     }
-                }catch (e:Exception){
-                    _uiStateGastos.update { UiStateList.Error(e.message ?: "Error desconocido", e) }
+                } catch (e: Exception) {
+                    _uiStateGastos.update { UiStateList.Error(throwable = e) }
                 }
             } else {
                 _uiStateDefault.update { it.copy(errorConectionInternet = true) }
@@ -83,11 +93,11 @@ class CategoryViewModel @Inject constructor(
                         withContext(Dispatchers.IO) { dbm.getUserCategoryIngresos() }
                     if (data.isEmpty()) {
                         _uiStateIngresos.update { UiStateList.Empty }
-                    }else{
-                        _uiStateIngresos.update { UiStateList.Success(data)  }
+                    } else {
+                        _uiStateIngresos.update { UiStateList.Success(data) }
                     }
-                }catch (e:Exception){
-                    _uiStateIngresos.update { UiStateList.Error(e.message ?: "Error desconocido", e) }
+                } catch (e: Exception) {
+                    _uiStateIngresos.update { UiStateList.Error(throwable = e) }
                 }
             } else {
                 _uiStateDefault.update { it.copy(errorConectionInternet = true) }
@@ -228,11 +238,10 @@ class CategoryViewModel @Inject constructor(
                         _uiStateGastos.update { UiStateList.Success(data) }
                     }
                 }
+                _dataList.update { false }
             } catch (e: Exception) {
                 if (typeCategory == TipoTransaccion.INGRESOS) {
-                    _uiStateIngresos.update { UiStateList.Error(e.message ?: "Error desconocido", e) }
-                } else {
-                    _uiStateGastos.update { UiStateList.Error(e.message ?: "Error desconocido", e) }
+                    _uiStateIngresos.update { UiStateList.Error(throwable = e) }
                 }
             }
         }

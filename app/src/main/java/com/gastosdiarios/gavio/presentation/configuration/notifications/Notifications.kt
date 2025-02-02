@@ -44,6 +44,7 @@ import androidx.hilt.navigation.compose.hiltViewModel
 import com.gastosdiarios.gavio.R
 import com.gastosdiarios.gavio.data.commons.CommonsLoaderData
 import com.gastosdiarios.gavio.data.commons.CommonsLoadingScreen
+import com.gastosdiarios.gavio.data.commons.ErrorScreen
 import com.gastosdiarios.gavio.data.commons.TopAppBarOnBack
 import com.gastosdiarios.gavio.data.constants.Constants.HORAS_PREDEFINIDAS
 import com.gastosdiarios.gavio.data.constants.Constants.MINUTOS_PREDEFINIDOS
@@ -69,7 +70,7 @@ fun NotificationsScreen(
         )
     }) { paddingValues ->
 
-        when (uiState) {
+        when (val state = uiState) {
             UiStateSingle.Loading -> CommonsLoadingScreen()
 
             is UiStateSingle.Success<*> -> {
@@ -82,8 +83,7 @@ fun NotificationsScreen(
             }
 
             is UiStateSingle.Error -> {
-                val errorMessage = (uiState as UiStateSingle.Error).message
-                Text(text = "Error: $errorMessage")
+               ErrorScreen(uiState = state, retryOperation = {  }, Modifier)
             }
         }
     }

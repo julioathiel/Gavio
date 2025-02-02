@@ -2,7 +2,6 @@ package com.gastosdiarios.gavio.presentation.configuration.ajustes_avanzados
 
 
 import androidx.compose.foundation.background
-import androidx.compose.foundation.layout.Box
 import androidx.compose.foundation.layout.Column
 import androidx.compose.foundation.layout.Row
 import androidx.compose.foundation.layout.Spacer
@@ -33,6 +32,7 @@ import androidx.compose.ui.unit.dp
 import androidx.hilt.navigation.compose.hiltViewModel
 import com.gastosdiarios.gavio.R
 import com.gastosdiarios.gavio.data.commons.CommonsLoadingScreen
+import com.gastosdiarios.gavio.data.commons.ErrorScreen
 import com.gastosdiarios.gavio.data.commons.TopAppBarOnBack
 import com.gastosdiarios.gavio.data.ui_state.UiStateSingle
 import com.gastosdiarios.gavio.domain.enums.ItemConfAvanzada
@@ -104,16 +104,25 @@ fun AjustesScreen(
         }
     ) { paddingValues ->
 
-        when (uiState) {
+        when (val state = uiState) {
             UiStateSingle.Loading -> CommonsLoadingScreen(Modifier.fillMaxSize())
             is UiStateSingle.Success -> {
                 val data = (uiState as UiStateSingle.Success<UserPreferences?>).data
-                ContentAjustesAvanzados(modifier = Modifier.padding(paddingValues).fillMaxSize(), viewModel, data)
+                ContentAjustesAvanzados(
+                    modifier = Modifier
+                        .padding(paddingValues)
+                        .fillMaxSize(),
+                    viewModel,
+                    data
+                )
             }
 
             is UiStateSingle.Error -> {
-                val errorMessage = (uiState as UiStateSingle.Error).message
-                Text(text = "Error: $errorMessage")
+                ErrorScreen(
+                    uiState = state,
+                    retryOperation = {  },
+                    modifier = Modifier.fillMaxSize()
+                )
             }
         }
 

@@ -46,6 +46,7 @@ import com.gastosdiarios.gavio.R
 import com.gastosdiarios.gavio.data.commons.CommonsIsEmpty
 import com.gastosdiarios.gavio.data.commons.CommonsLoadingData
 import com.gastosdiarios.gavio.data.commons.CommonsLoadingScreen
+import com.gastosdiarios.gavio.data.commons.ErrorScreen
 import com.gastosdiarios.gavio.data.commons.TextFieldDescription
 import com.gastosdiarios.gavio.data.commons.TopAppBarOnBack
 import com.gastosdiarios.gavio.data.ui_state.UiStateList
@@ -149,12 +150,14 @@ fun TransactionsScreen(
                 modifier = Modifier.padding(paddingValues)
             ) {
 
-                when (uiState) {
+                when (val state = uiState) {
                     UiStateList.Loading -> {
                         CommonsLoadingScreen(modifier = Modifier.fillMaxSize())
                     }
 
-                    UiStateList.Empty -> { CommonsIsEmpty() }
+                    UiStateList.Empty -> {
+                        CommonsIsEmpty()
+                    }
 
                     is UiStateList.Success -> {
                         val list: List<TransactionModel> =
@@ -167,7 +170,11 @@ fun TransactionsScreen(
                     }
 
                     is UiStateList.Error -> {
-
+                        ErrorScreen(
+                            uiState = state,
+                            retryOperation = { viewModel.refreshData() },
+                            Modifier
+                        )
                     }
                 }
             }

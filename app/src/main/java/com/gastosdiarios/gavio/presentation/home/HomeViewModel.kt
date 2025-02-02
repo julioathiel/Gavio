@@ -4,16 +4,15 @@ import android.content.Context
 import android.content.res.Resources
 import android.util.Log
 import android.widget.Toast
-import androidx.compose.material3.SnackbarHostState
 import androidx.compose.runtime.mutableStateListOf
 import androidx.lifecycle.ViewModel
 import androidx.lifecycle.viewModelScope
 import com.gastosdiarios.gavio.R
 import com.gastosdiarios.gavio.bar_graph_custom.CircularBuffer
 import com.gastosdiarios.gavio.data.commons.SnackbarManager
-import com.gastosdiarios.gavio.data.commons.SnackbarMessage
 import com.gastosdiarios.gavio.data.constants.Constants.LIMIT_MONTH
 import com.gastosdiarios.gavio.data.ui_state.HomeUiState
+import com.gastosdiarios.gavio.data.ui_state.UiStateSingle
 import com.gastosdiarios.gavio.domain.enums.TipoTransaccion
 import com.gastosdiarios.gavio.domain.model.CategoryGastos
 import com.gastosdiarios.gavio.domain.model.CategoryIngresos
@@ -45,6 +44,7 @@ import kotlinx.coroutines.flow.MutableStateFlow
 import kotlinx.coroutines.flow.SharingStarted
 import kotlinx.coroutines.flow.StateFlow
 import kotlinx.coroutines.flow.asStateFlow
+import kotlinx.coroutines.flow.catch
 import kotlinx.coroutines.flow.onStart
 import kotlinx.coroutines.flow.stateIn
 import kotlinx.coroutines.flow.update
@@ -72,6 +72,16 @@ class HomeViewModel @Inject constructor(
 
     private val tag = "homeViewModel"
 
+    private val _uiState = MutableStateFlow<UiStateSingle<HomeUiState>>(UiStateSingle.Loading)
+    val uiState = _uiState.onStart { calculandoInit() }
+        .catch { throwable ->
+            _uiState.value = UiStateSingle.Error(throwable = throwable)
+        }
+        .stateIn(
+            viewModelScope,
+            SharingStarted.WhileSubscribed(5000L),
+            UiStateSingle.Loading
+        )
 
     private val _homeUiState = MutableStateFlow(HomeUiState())
     val homeUiState: StateFlow<HomeUiState> = _homeUiState.asStateFlow()
@@ -82,22 +92,11 @@ class HomeViewModel @Inject constructor(
     private val _listFilter = mutableStateListOf<GastosProgramadosModel>()
     val listFilter: List<GastosProgramadosModel> = _listFilter
 
-
     private val circularBuffer = CircularBuffer(capacity = LIMIT_MONTH, db = barDataFirestore)
-
-    private val _isLoading = MutableStateFlow(false)
-    val isLoading = _isLoading.onStart {
-        calculandoInit()
-    }.stateIn(
-        viewModelScope,
-        SharingStarted.WhileSubscribed(5000L),
-        false
-    )
 
 
     private fun calculandoInit() {
         viewModelScope.launch {
-            _isLoading.update { true }
             try {
                 val fechaActual = obtenerFechaActual()// muestra 2025-01-01
                 val data = dbm.getUserData()
@@ -107,7 +106,6 @@ class HomeViewModel @Inject constructor(
                 // Verificar si fechaGuardada es nula o esta vacia antes de intentar analizarla
                 when (dataDate?.isNotEmpty()) {
                     true -> {
-
                         val fechaLocalDate = DateUtils.toLocalDate(dataDate)
 
                         // ej: 2023-12-12
@@ -169,7 +167,6 @@ class HomeViewModel @Inject constructor(
                         //  manejarFechayDiasRestantesNulos()
                     }
                 }
-                _isLoading.update { false }
             } catch (e: Exception) {
                 Log.e(tag, "calculandoInit: error: ${e.message}")
                 manejarFechayDiasRestantesNulos()
@@ -199,7 +196,6 @@ class HomeViewModel @Inject constructor(
         viewModelScope.launch {
             try {
                 getMaxDate()
-                dbm.getUserData()
                 getGastosProgramados()
                 mostrarCurrentMoney()
                 mostrarTotalIngresos()
@@ -207,9 +203,9 @@ class HomeViewModel @Inject constructor(
                 mostrarEstadoUsuario()
                 listCatGastosNueva()
                 listCatIngresosNueva()
-                _homeUiState.update { it.copy(isLoading = false) }
+                _uiState.update { UiStateSingle.Success(HomeUiState()) }
             } catch (e: Exception) {
-                _homeUiState.update { it.copy(isError = true) }
+                _uiState.value = UiStateSingle.Error(throwable = e)
                 Log.e(tag, "initMostrandoAlUsuario no hay internet: ${e.message}")
             }
         }
@@ -645,11 +641,14 @@ class HomeViewModel @Inject constructor(
                 val cash: Double = item.cash?.toDouble() ?: 0.0
 
                 if (totalIngresos == 0.0) {
-                    snackbarManager.showMessage(context.getString(R.string.no_hay_dinero_para_un_gasto))
+                    snackbarManager.showMessage(context.getString(R.string.no_hay_dinero_para_pagar))
                 } else if (totalIngresos < cash) {
-                    snackbarManager.showMessage(context.getString(R.string.agrega_mas_dinero_antes_de_pagar))
+                    snackbarManager.showMessage(context.getString(R.string.dinero_insuficiente))
                 } else {
                     clearItem(item)
+                    //
+                    cantidadIngresada(item.cash ?: "", TipoTransaccion.GASTOS)
+                    //se crea para la lista de transacciones
                     crearTransaction(
                         cantidad = item.cash ?: "",
                         categoryName = item.title ?: "",
@@ -657,7 +656,13 @@ class HomeViewModel @Inject constructor(
                         categoryIcon = item.icon?.toInt() ?: 0,
                         tipoTransaccion = TipoTransaccion.GASTOS
                     )
-                        snackbarManager.showMessage(context.getString(R.string.pagado_con_exito))
+                    //dentro de esta funcion se verifica si no esta creado el item en la base de datos
+                    crearNuevaCategoriaDeGastos(
+                        nameCategory = item.title ?: "",
+                        icon = item.icon?.toInt() ?: 0,
+                        cantidadIngresada = item.cash ?: ""
+                    )
+                    snackbarManager.showMessage(context.getString(R.string.pagado_con_exito))
                 }
             } catch (e: Exception) {
                 Toast.makeText(context, "Error en pagarItem", Toast.LENGTH_SHORT).show()

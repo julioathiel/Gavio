@@ -72,8 +72,8 @@
     <string name="cargando_espere_por_favor">Cargando…espere por favor</string>
     <string name="error_al_cargar_los_datos" tools:keep="@string/error_al_cargar_los_datos">Error al cargar los datos</string>
     <string name="error_el_gasto_no_puede_ser_superior_a_los_ingresos">El gasto no puede ser superior a los ingresos.</string>
-    <string name="no_hay_dinero_para_un_gasto">No hay dinero para un gasto</string>
-    <string name="agrega_mas_dinero_antes_de_pagar">Agrega mas dinero antes de pagar</string>
+    <string name="no_hay_dinero_para_pagar">No hay dinero para pagar</string>
+    <string name="dinero_insuficiente">Dinero insuficiente!</string>
     <string name="error_al_cargar_los_datos_del_usuario" tools:keep="@string/error_al_cargar_los_datos_del_usuario">Error al cargar los datos del usuario</string>
     <string name="error_al_cargar_los_datos_de_los_gastos" tools:keep="@string/error_al_cargar_los_datos_de_los_gastos">Error al cargar los datos de los gastos</string>
     <string name="error_al_cargar_los_datos_de_los_ingresos" tools:keep="@string/error_al_cargar_los_datos_de_los_ingresos">Error al cargar los datos de los ingresos</string>

@@ -32,6 +32,7 @@ import androidx.compose.ui.zIndex
 import androidx.hilt.navigation.compose.hiltViewModel
 import androidx.lifecycle.compose.collectAsStateWithLifecycle
 import com.gastosdiarios.gavio.data.commons.CommonsEmptyFloating
+import com.gastosdiarios.gavio.data.commons.CommonsLoadingData
 import com.gastosdiarios.gavio.data.commons.CommonsLoadingScreen
 import com.gastosdiarios.gavio.data.commons.ErrorScreen
 import com.gastosdiarios.gavio.data.ui_state.UiStateList
@@ -54,6 +55,7 @@ fun CategoryScreen(
     BackHandler { onBack() }
 
     val uiStateDefault by viewModel.uiStateDefault.collectAsState()
+    val showUpdate by viewModel.dataList.collectAsState()
     val sheetState = rememberModalBottomSheetState(skipPartiallyExpanded = true)
     val pagerState = rememberPagerState(initialPage = 0, pageCount = { 2 })
     val coroutineScope = rememberCoroutineScope()
@@ -108,7 +110,8 @@ fun CategoryScreen(
                             StateContentCategoryIngresos(
                                 viewModel,
                                 ingresosActions,
-                                Modifier.fillMaxSize()
+                                Modifier.fillMaxSize(),
+                                showUpdate
                             )
                         }
 
@@ -131,7 +134,8 @@ fun CategoryScreen(
                             StateContentCategoryGastos(
                                 viewModel,
                                 gastosActions,
-                                Modifier.fillMaxSize()
+                                Modifier.fillMaxSize(),
+                                showUpdate
                             )
                         }
                     }
@@ -145,14 +149,20 @@ fun CategoryScreen(
 fun StateContentCategoryIngresos(
     viewModel: CategoryViewModel,
     ingresosActions: CategoryActions,
-    modifier: Modifier
+    modifier: Modifier,
+    showUpdate: Boolean
 ) {
     val uiStateIngresos by viewModel.uiStateIngresos.collectAsStateWithLifecycle()
 
+
     when (uiStateIngresos) {
-        UiStateList.Loading -> {CommonsLoadingScreen(Modifier.fillMaxSize()) }
+        UiStateList.Loading -> {
+            CommonsLoadingScreen(Modifier.fillMaxSize())
+        }
+
         is UiStateList.Error -> {
-            ErrorScreen(uiStateIngresos as UiStateList.Error,
+            ErrorScreen(
+                uiStateIngresos as UiStateList.Error,
                 retryOperation = {
 
                 },
@@ -171,7 +181,8 @@ fun StateContentCategoryIngresos(
                 list = list,
                 viewModel = viewModel,
                 ingresosActions,
-                modifier = modifier
+                modifier = modifier,
+                showUpdate = showUpdate
             )
         }
     }
@@ -182,11 +193,11 @@ fun StateContentCategoryIngresos(
 fun StateContentCategoryGastos(
     viewModel: CategoryViewModel,
     gastosActions: CategoryActions,
-    modifier: Modifier
+    modifier: Modifier,
+    showUpdate: Boolean,
 ) {
     //Contenido para la pantalla de gastos
     val uiStateGastos by viewModel.uiStateGastos.collectAsStateWithLifecycle()
-
 
     when (uiStateGastos) {
         UiStateList.Loading -> {
@@ -194,7 +205,8 @@ fun StateContentCategoryGastos(
         }
 
         is UiStateList.Error -> {
-            ErrorScreen(uiStateGastos as UiStateList.Error,
+            ErrorScreen(
+                uiStateGastos as UiStateList.Error,
                 retryOperation = {
 
                 },
@@ -213,8 +225,8 @@ fun StateContentCategoryGastos(
                 list = list,
                 viewModel = viewModel,
                 categoryActions = gastosActions,
-                modifier = modifier
-
+                modifier = modifier,
+                showUpdate = showUpdate
             )
         }
     }
@@ -270,8 +282,10 @@ fun ListContentTypeCategory(
     viewModel: CategoryViewModel,
     categoryActions: CategoryActions,
     modifier: Modifier,
+    showUpdate: Boolean
 ) {
     viewModel.isActivatedTrue()
+
     Box(modifier) {
         LazyColumn(horizontalAlignment = Alignment.CenterHorizontally) {
             items(list.size) { nuevoItem ->
@@ -288,6 +302,10 @@ fun ListContentTypeCategory(
                 .zIndex(1f)
         )
         { Icon(Icons.Default.Add, contentDescription = null) }
+
+        if (showUpdate) {
+            CommonsLoadingData()
+        }
     }
 }
 

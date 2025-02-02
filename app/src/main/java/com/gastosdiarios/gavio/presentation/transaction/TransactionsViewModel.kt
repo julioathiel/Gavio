@@ -45,13 +45,13 @@ class TransactionsViewModel @Inject constructor(
     val uiState = _uiState.onStart { getAllTransactions() }
         .catch { throwable ->
             _uiState.update {
-                UiStateList.Error(
-                    throwable.message ?: "Error desconocido",
-                    throwable
-                )
+                UiStateList.Error(throwable = throwable)
             }
         }
-        .stateIn(viewModelScope, SharingStarted.WhileSubscribed(5000L), UiStateList.Loading)
+        .stateIn(
+            viewModelScope, SharingStarted.WhileSubscribed(5000L),
+            UiStateList.Loading
+        )
 
     private val _snackbarMessage = MutableStateFlow<Int?>(null)
     val snackbarMessage: StateFlow<Int?> get() = _snackbarMessage
@@ -73,7 +73,7 @@ class TransactionsViewModel @Inject constructor(
                     _uiState.update { UiStateList.Success(data) }
                 }
             } catch (e: Exception) {
-                _uiState.update { UiStateList.Error(e.message ?: "Error desconocido", e) }
+                _uiState.update { UiStateList.Error(throwable = e) }
             }
         }
     }
@@ -88,7 +88,7 @@ class TransactionsViewModel @Inject constructor(
                     _uiState.update { UiStateList.Success(data) }
                 }
             } catch (e: Exception) {
-                _uiState.update { UiStateList.Error(e.message ?: "Error desconocido", e) }
+                _uiState.update { UiStateList.Error(throwable = e) }
             }
         }
     }

@@ -36,7 +36,7 @@ class NotificationsViewModel @Inject constructor(
     private val _uiState = MutableStateFlow<UiStateSingle<UserPreferences?>>(UiStateSingle.Loading)
     val uiState = _uiState.onStart { getTime() }
         .catch { throwable ->
-            _uiState.update { UiStateSingle.Error(throwable.message ?: "Error desconocido") }
+            _uiState.update { UiStateSingle.Error(throwable = throwable) }
         }
         .stateIn(viewModelScope, SharingStarted.WhileSubscribed(5000L), UiStateSingle.Loading)
 
@@ -154,11 +154,11 @@ class NotificationsViewModel @Inject constructor(
                         val data = currentData.copy(hour = hour, minute = minute)
                         dbm.updateHourMinute(data.hour?: 0, data.minute?: 0)
                     }catch (e:Exception){
-                        _uiState.update { UiStateSingle.Error("Error al guardar en Firebase: ${e.message ?: "Error desconocido"}") }
+                        _uiState.update { UiStateSingle.Error(throwable = e) }
                     }
                 }
             }catch (e:Exception){
-                _uiState.update { UiStateSingle.Error(e.message ?: "Error desconocido") }
+                _uiState.update { UiStateSingle.Error(throwable = e) }
             }
         }
     }

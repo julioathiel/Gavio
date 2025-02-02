@@ -15,11 +15,11 @@ import androidx.compose.ui.Modifier
 import androidx.compose.ui.graphics.Color
 import androidx.compose.ui.text.style.TextAlign
 import androidx.compose.ui.unit.dp
-import com.gastosdiarios.gavio.data.ui_state.UiStateList
+import com.gastosdiarios.gavio.data.ui_state.UiError
 import java.util.concurrent.TimeoutException
 
 @Composable
-fun ErrorScreen(uiState: UiStateList.Error, retryOperation:() -> Unit, modifier: Modifier) {
+fun ErrorScreen(uiState: UiError, retryOperation:() -> Unit, modifier: Modifier) {
     val errorMessage = when ((uiState).throwable) {
         is NetworkErrorException -> "Error de conexión a internet."
         is TimeoutException -> "La operación ha tardado demasiado."

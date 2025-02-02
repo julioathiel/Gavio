@@ -9,6 +9,7 @@ import androidx.compose.material3.MaterialTheme
 import androidx.compose.material3.NavigationBar
 import androidx.compose.material3.NavigationBarItem
 import androidx.compose.material3.Scaffold
+import androidx.compose.material3.Snackbar
 import androidx.compose.material3.SnackbarHost
 import androidx.compose.material3.SnackbarHostState
 import androidx.compose.material3.Text
@@ -46,12 +47,9 @@ fun MainScaffold(navController: NavHostController) {
 
     LaunchedEffect(key1 = snackbarMessage) {
         if (snackbarMessage != null){
-            when(snackbarMessage){
-                is SnackbarMessage.StringSnackbar -> {
-                    snackbarHostState.currentSnackbarData?.dismiss()
-                    snackbarHostState.showSnackbar((snackbarMessage as SnackbarMessage.StringSnackbar).message)
-                }
-                null -> {}
+            snackbarMessage?.let{
+                snackbarHostState.currentSnackbarData?.dismiss()
+                snackbarHostState.showSnackbar((it as SnackbarMessage.StringSnackbar).message)
             }
         }
     }
@@ -113,7 +111,13 @@ fun MainScaffold(navController: NavHostController) {
             }
         },
         floatingActionButtonPosition = FabPosition.End,
-        snackbarHost = { SnackbarHost(hostState = snackbarHostState) }
+        snackbarHost = {
+            SnackbarHost(
+                hostState = snackbarHostState,
+            snackbar = { data ->
+                Snackbar(data, containerColor = MaterialTheme.colorScheme.primary)
+
+        }) }
     ) { innerPadding ->
         HorizontalPager(
             state = pagerState,

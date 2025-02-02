@@ -26,8 +26,10 @@ import androidx.compose.runtime.setValue
 import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.graphics.Color
+import androidx.compose.ui.res.dimensionResource
 import androidx.compose.ui.text.style.TextOverflow
 import androidx.compose.ui.unit.dp
+import com.gastosdiarios.gavio.R
 import com.gastosdiarios.gavio.data.commons.ProfileIcon
 import com.gastosdiarios.gavio.domain.model.modelFirebase.GastosPorCategoriaModel
 import com.gastosdiarios.gavio.presentation.analisis_gastos.AnalisisGastosViewModel
@@ -111,18 +113,28 @@ fun ItemCategory(
                         style = MaterialTheme.typography.bodyMedium,
                         maxLines = if (expanded) Int.MAX_VALUE else 1,
                         overflow = if (expanded) TextOverflow.Clip else TextOverflow.Ellipsis,
-                        modifier = Modifier.padding(16.dp)
+                        modifier = Modifier.padding(start = dimensionResource(R.dimen.padding_medium)).weight(1f)
+                    )
+                    ProfileIcon(
+                        drawableResource = uiState.icon!!.toInt(),
+                        description = "",
+                        sizeBox = 40,
+                        colorBackground = Color.Transparent,
+                        colorIcon = onTertiary,
+                        modifier = Modifier.padding( end = 8.dp, top = 8.dp, bottom = 8.dp)
+                    )
+                }else{
+                    Spacer(modifier = Modifier.weight(1f))
+                    ProfileIcon(
+                        drawableResource = uiState.icon!!.toInt(),
+                        description = "",
+                        sizeBox = 40,
+                        colorBackground = Color.Transparent,
+                        colorIcon = onTertiary,
+                        modifier = Modifier.padding( end = 8.dp, top = 8.dp)
                     )
                 }
-                Spacer(modifier = Modifier.weight(1f))
-                ProfileIcon(
-                    drawableResource = uiState.icon!!.toInt(),
-                    description = "",
-                    sizeBox = 40,
-                    colorBackground = tertiaryContainer,
-                    colorIcon = onTertiary,
-                    modifier = Modifier.padding(8.dp)
-                )
+
             }
 
         }

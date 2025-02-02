@@ -25,11 +25,13 @@ import com.gastosdiarios.gavio.utils.DateUtils
 import com.gastosdiarios.gavio.utils.MathUtils
 import com.gastosdiarios.gavio.utils.RefreshDataUtils
 import dagger.hilt.android.lifecycle.HiltViewModel
+import dagger.hilt.android.qualifiers.ApplicationContext
 import kotlinx.coroutines.Dispatchers
 import kotlinx.coroutines.flow.MutableStateFlow
 import kotlinx.coroutines.flow.SharingStarted
 import kotlinx.coroutines.flow.StateFlow
 import kotlinx.coroutines.flow.asStateFlow
+import kotlinx.coroutines.flow.catch
 import kotlinx.coroutines.flow.onStart
 import kotlinx.coroutines.flow.stateIn
 import kotlinx.coroutines.flow.update
@@ -39,31 +41,40 @@ import kotlin.random.Random
 
 @HiltViewModel
 class AnalisisGastosViewModel @Inject constructor(
+    @ApplicationContext private val context: Context,
     private val dbm: DataBaseManager,
     private val barDataFirestore: BarDataFirestore,
     private val userPreferencesFirestore: UserPreferencesFirestore,
     private val userDataFirestore: UserDataFirestore
 ) : ViewModel() {
 
+
     private val tag = "analisisGastosViewModel"
-    private val circularBuffer = CircularBuffer(capacity = LIMIT_MONTH, db = barDataFirestore)
-
-    private val _listBarDataModel = MutableStateFlow<UiStateList<BarDataModel>>(UiStateList.Loading)
-    val listBarDataModel  = _listBarDataModel.onStart { updateBarGraphList()  }
-        .stateIn(viewModelScope, SharingStarted.WhileSubscribed(5000L), UiStateList.Loading)
-
-    private val _isRefreshing = MutableStateFlow(RefreshDataModel(isRefreshing = false))
-    val isRefreshing: StateFlow<RefreshDataModel> = _isRefreshing.asStateFlow()
 
     private val _uiState =
         MutableStateFlow<UiStateList<GastosPorCategoriaModel>>(UiStateList.Loading)
     var uiState = _uiState.onStart {
         getAllListGastos()
     }
+        .catch { throwable ->
+            _uiState.value = UiStateList.Error(throwable = throwable)
+        }
         .stateIn(
             viewModelScope, SharingStarted.WhileSubscribed(5000L),
             UiStateList.Loading
         )
+
+    private val circularBuffer = CircularBuffer(capacity = LIMIT_MONTH, db = barDataFirestore)
+
+    private val _listBarDataModel = MutableStateFlow<UiStateList<BarDataModel>>(UiStateList.Loading)
+    val listBarDataModel = _listBarDataModel.onStart { updateBarGraphList() }
+        .stateIn(viewModelScope, SharingStarted.WhileSubscribed(5000L), UiStateList.Loading)
+
+    private val _isRefreshing = MutableStateFlow(RefreshDataModel(isRefreshing = false))
+    val isRefreshing: StateFlow<RefreshDataModel> = _isRefreshing.asStateFlow()
+
+    private val _showTwoColumns = MutableStateFlow(false)
+    val showTwoColumns: StateFlow<Boolean> = _showTwoColumns.asStateFlow()
 
     private val _porcentajeGasto = MutableStateFlow<Int?>(0)
     val porcentajeGasto = _porcentajeGasto.asStateFlow()
@@ -101,8 +112,8 @@ class AnalisisGastosViewModel @Inject constructor(
                 } else {
                     _isDarkMode.update { ThemeMode.MODE_AUTO }
                 }
-            }catch (e:Exception){
-                UiStateList.Error(e.message ?: "Error desconocido", e)
+            } catch (e: Exception) {
+                UiStateList.Error(throwable = e)
             }
         }
     }
@@ -163,9 +174,9 @@ class AnalisisGastosViewModel @Inject constructor(
         viewModelScope.launch(Dispatchers.IO) {
             try {
                 val data: List<BarDataModel> = circularBuffer.getBarGraphList()
-                if(data.isEmpty()){
+                if (data.isEmpty()) {
                     _listBarDataModel.update { UiStateList.Empty }
-                }else{
+                } else {
                     _listBarDataModel.update { UiStateList.Success(data.reversed()) }
                 }
             } catch (e: Exception) {
@@ -226,7 +237,7 @@ class AnalisisGastosViewModel @Inject constructor(
         return hsl
     }
 
-    fun refreshData(context: Context) {
+    fun refreshData() {
         RefreshDataUtils.refreshData(
             viewModelScope,
             isRefreshing = _isRefreshing,
@@ -235,5 +246,9 @@ class AnalisisGastosViewModel @Inject constructor(
                 Toast.makeText(context, "actualizado", Toast.LENGTH_SHORT).show()
             }
         )
+    }
+
+    fun setToggleTwoColumns(boolean: Boolean) {
+        _showTwoColumns.value = boolean
     }
 }

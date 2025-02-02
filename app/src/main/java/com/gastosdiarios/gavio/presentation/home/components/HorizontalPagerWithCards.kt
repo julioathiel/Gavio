@@ -7,6 +7,7 @@ import androidx.compose.foundation.pager.rememberPagerState
 import androidx.compose.material3.Snackbar
 import androidx.compose.material3.Text
 import androidx.compose.runtime.Composable
+import androidx.compose.runtime.key
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.unit.dp
 import com.gastosdiarios.gavio.R
@@ -24,9 +25,8 @@ fun HorizontalPagerWithCards(viewModel: HomeViewModel, modifier: Modifier) {
             contentPadding = PaddingValues(horizontal = 30.dp),
             pageSpacing = 10.dp,
             pageContent = { pageIndex ->
-
                 val item = listFilter[pageIndex]
-
+                key(item.uid) {
                     CardListItem(
                         modifier = modifier,
                         viewModel = viewModel,
@@ -34,6 +34,7 @@ fun HorizontalPagerWithCards(viewModel: HomeViewModel, modifier: Modifier) {
                         onPagarItem = { viewModel.pagarItem(item) },
                         onRemoveItem = { viewModel.clearItem(item) }
                     )
+                }
             }
         )
     }

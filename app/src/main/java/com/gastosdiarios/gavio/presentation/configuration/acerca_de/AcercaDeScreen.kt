@@ -18,6 +18,7 @@ import androidx.compose.runtime.Composable
 import androidx.compose.runtime.getValue
 import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
+import androidx.compose.ui.graphics.ColorFilter
 import androidx.compose.ui.unit.dp
 import androidx.hilt.navigation.compose.hiltViewModel
 import coil.compose.rememberAsyncImagePainter
@@ -52,7 +53,8 @@ fun Content(viewModel: AcercaDeViewModel, paddingValues: PaddingValues) {
         Image(
             painter = rememberAsyncImagePainter(model = appIcon),
             contentDescription = "App Icon",
-            modifier = Modifier.size(60.dp)
+            modifier = Modifier.size(60.dp),
+            colorFilter = ColorFilter.tint(MaterialTheme.colorScheme.primary)
         )
         Spacer(modifier = Modifier.height(16.dp))
 
