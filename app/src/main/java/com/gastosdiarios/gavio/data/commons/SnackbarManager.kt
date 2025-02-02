@@ -1,5 +1,6 @@
 package com.gastosdiarios.gavio.data.commons
 
+import kotlinx.coroutines.delay
 import kotlinx.coroutines.flow.MutableStateFlow
 import kotlinx.coroutines.flow.StateFlow
 import kotlinx.coroutines.flow.asStateFlow
@@ -12,8 +13,13 @@ class SnackbarManager {
         _messages.value = SnackbarMessage.StringSnackbar(message)
     }
 
-    fun clearSnackbarState() {
+    private fun clearSnackbarState() {
         _messages.value = null
+    }
+
+   suspend fun durationSnackbar(duration: Long) {
+        delay(duration)
+        clearSnackbarState()
     }
 }
 

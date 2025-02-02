@@ -194,13 +194,12 @@ fun GastosPorCategoriaList(
                     viewModel.setToggleTwoColumns(!showTwoColumns)
                 }) {
                     if(showTwoColumns){
-                        Icon(painterResource(R.drawable.ic_view_cozy), contentDescription = "gridView")
+                        Icon(painterResource(R.drawable.ic_list), contentDescription = "list")
                     }else{
-                        Icon(painterResource(R.drawable.ic_lists), contentDescription = "list")
+                        Icon(painterResource(R.drawable.ic_view_cozy), contentDescription = "gridView")
                     }
                 }
             }
-
         }
 
         // Mostrar la lista de categorías con gastos si hay datos disponibles

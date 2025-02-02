@@ -184,7 +184,6 @@ fun CardListItem(
                         onClick = {
                             viewModel.pagarItem(item.copy(cash = cantidadIngresada))
                             showBottomSheet = false
-
                         },
                         modifier = Modifier
                             .fillMaxWidth()
@@ -197,6 +196,5 @@ fun CardListItem(
                 }
             }
         )
-
     }
 }

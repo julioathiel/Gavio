@@ -40,6 +40,7 @@ import com.google.firebase.auth.FirebaseUser
 import dagger.hilt.android.lifecycle.HiltViewModel
 import dagger.hilt.android.qualifiers.ApplicationContext
 import kotlinx.coroutines.Dispatchers
+import kotlinx.coroutines.delay
 import kotlinx.coroutines.flow.MutableStateFlow
 import kotlinx.coroutines.flow.SharingStarted
 import kotlinx.coroutines.flow.StateFlow
@@ -56,6 +57,7 @@ import java.time.LocalDate
 import java.time.format.DateTimeParseException
 import java.time.temporal.ChronoUnit
 import javax.inject.Inject
+import kotlin.time.Duration.Companion.seconds
 
 @HiltViewModel
 class HomeViewModel @Inject constructor(
@@ -667,6 +669,10 @@ class HomeViewModel @Inject constructor(
             } catch (e: Exception) {
                 Toast.makeText(context, "Error en pagarItem", Toast.LENGTH_SHORT).show()
                 Log.e(tag, "Error en pagarItem", e)
+            }
+            finally {
+                val duration = 2000L
+                snackbarManager.durationSnackbar(duration = duration)
             }
         }
     }

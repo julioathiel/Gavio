@@ -7,6 +7,7 @@ import androidx.compose.foundation.pager.rememberPagerState
 import androidx.compose.material3.Snackbar
 import androidx.compose.material3.Text
 import androidx.compose.runtime.Composable
+import androidx.compose.runtime.collectAsState
 import androidx.compose.runtime.key
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.unit.dp
@@ -31,7 +32,9 @@ fun HorizontalPagerWithCards(viewModel: HomeViewModel, modifier: Modifier) {
                         modifier = modifier,
                         viewModel = viewModel,
                         item = item,
-                        onPagarItem = { viewModel.pagarItem(item) },
+                        onPagarItem = {
+                            viewModel.pagarItem(item)
+                        },
                         onRemoveItem = { viewModel.clearItem(item) }
                     )
                 }
