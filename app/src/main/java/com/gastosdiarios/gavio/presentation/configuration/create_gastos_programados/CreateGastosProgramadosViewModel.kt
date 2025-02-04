@@ -6,10 +6,10 @@ import android.widget.Toast
 import androidx.lifecycle.ViewModel
 import androidx.lifecycle.viewModelScope
 import com.gastosdiarios.gavio.data.ui_state.UiStateList
-import com.gastosdiarios.gavio.domain.model.DataList
-import com.gastosdiarios.gavio.domain.model.RefreshDataModel
-import com.gastosdiarios.gavio.domain.model.modelFirebase.GastosProgramadosModel
-import com.gastosdiarios.gavio.domain.repository.repositoriesFirestrore.GastosProgramadosFirestore
+import com.gastosdiarios.gavio.data.domain.model.DataList
+import com.gastosdiarios.gavio.data.domain.model.RefreshDataModel
+import com.gastosdiarios.gavio.data.domain.model.modelFirebase.GastosProgramadosModel
+import com.gastosdiarios.gavio.data.repository.repositoriesFirestrore.GastosProgramadosFirestore
 import dagger.hilt.android.lifecycle.HiltViewModel
 import dagger.hilt.android.qualifiers.ApplicationContext
 import kotlinx.coroutines.Dispatchers
@@ -41,7 +41,11 @@ class CreateGastosProgramadosViewModel @Inject constructor(
     private val _dataList = MutableStateFlow(DataList<GastosProgramadosModel>())
     val dataList: StateFlow<DataList<GastosProgramadosModel>> = _dataList.asStateFlow()
 
-    private val _isRefreshing = MutableStateFlow(RefreshDataModel(isRefreshing = false))
+    private val _isRefreshing = MutableStateFlow(
+        RefreshDataModel(
+            isRefreshing = false
+        )
+    )
     val isRefreshing: StateFlow<RefreshDataModel> = _isRefreshing.asStateFlow()
 
     private fun getAllGastosProgramados() {
@@ -54,7 +58,7 @@ class CreateGastosProgramadosViewModel @Inject constructor(
                     _uiState.update { UiStateList.Success(data) }
                 }
             } catch (e: Exception) {
-                _uiState.update { UiStateList.Error(throwable =  e) }
+                _uiState.update { UiStateList.Error(throwable = e) }
             }
         }
     }
@@ -135,7 +139,7 @@ class CreateGastosProgramadosViewModel @Inject constructor(
                     _dataList.update { it.copy(updateItem = false) }
                     _uiState.update { UiStateList.Success(data) }
                 }
-            }catch (e:Exception){
+            } catch (e: Exception) {
                 Toast.makeText(context, "Error al actualizar la lista", Toast.LENGTH_SHORT).show()
                 Log.e("Error", e.message.toString())
             }
@@ -161,7 +165,7 @@ class CreateGastosProgramadosViewModel @Inject constructor(
     // funcion que se usa cuando se edita y se guarda el item
     fun clearSelection(item: GastosProgramadosModel) {
         isCreateFalse()
-        //hacce que se deseleccione ya que se edito y se guardo
+        //hace que se deseleccione ya que se edito y se guardo
         _dataList.update { it.copy(selectionMode = false, selectedItems = emptyList()) }
         onClick(item)
     }
@@ -172,19 +176,19 @@ class CreateGastosProgramadosViewModel @Inject constructor(
     }
 
     fun refreshData() {
-      viewModelScope.launch(Dispatchers.IO) {
-          try {
-              _isRefreshing.update { it.copy(isRefreshing = true) }
-              val data: List<GastosProgramadosModel> = gastosProgramadosFirestore.get()
-              if (data.isEmpty()) {
-                  _uiState.update { UiStateList.Empty }
-              } else {
-                  _isRefreshing.update { it.copy(isRefreshing = false) }
-                  _uiState.update { UiStateList.Success(data) }
-              }
-          }catch (e:Exception){
-              _uiState.update { UiStateList.Error(throwable =  e) }
-          }
-      }
+        viewModelScope.launch(Dispatchers.IO) {
+            try {
+                _isRefreshing.update { it.copy(isRefreshing = true) }
+                val data: List<GastosProgramadosModel> = gastosProgramadosFirestore.get()
+                if (data.isEmpty()) {
+                    _uiState.update { UiStateList.Empty }
+                } else {
+                    _isRefreshing.update { it.copy(isRefreshing = false) }
+                    _uiState.update { UiStateList.Success(data) }
+                }
+            } catch (e: Exception) {
+                _uiState.update { UiStateList.Error(throwable = e) }
+            }
+        }
     }
 }

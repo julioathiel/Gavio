@@ -4,11 +4,11 @@ import android.util.Log
 import androidx.lifecycle.ViewModel
 import androidx.lifecycle.viewModelScope
 import com.gastosdiarios.gavio.data.ui_state.ConfigurationUiState
-import com.gastosdiarios.gavio.domain.model.OpcionEliminarModel
-import com.gastosdiarios.gavio.domain.model.ShareDataModel
-import com.gastosdiarios.gavio.domain.model.modelFirebase.BarDataModel
-import com.gastosdiarios.gavio.domain.repository.DataBaseManager
-import com.gastosdiarios.gavio.domain.repository.repositoriesFirestrore.BarDataFirestore
+import com.gastosdiarios.gavio.data.domain.model.OpcionEliminarModel
+import com.gastosdiarios.gavio.data.domain.model.ShareDataModel
+import com.gastosdiarios.gavio.data.domain.model.modelFirebase.BarDataModel
+import com.gastosdiarios.gavio.data.repository.DataBaseManager
+import com.gastosdiarios.gavio.data.repository.repositoriesFirestrore.BarDataFirestore
 import com.gastosdiarios.gavio.utils.DateUtils
 import dagger.hilt.android.lifecycle.HiltViewModel
 import kotlinx.coroutines.Dispatchers
@@ -35,7 +35,7 @@ class ConfigurationViewModel @Inject constructor(
 
     private fun getShareLink() {
         viewModelScope.launch(Dispatchers.IO) {
-            val data: ShareDataModel = dbm.getSharedLink()
+            val data: com.gastosdiarios.gavio.data.domain.model.ShareDataModel = dbm.getSharedLink()
             if (data.shareUrl != null) {
                 _configurationUiState.update { it.copy(sharedLink = data.shareUrl) }
             }
@@ -60,7 +60,11 @@ class ConfigurationViewModel @Inject constructor(
         viewModelScope.launch(Dispatchers.IO) {
             dbm.deleteAllGraphBar()
             val month = DateUtils.currentMonth()
-            val entity = BarDataModel(value = 0f, month = month, money = "0")
+            val entity = com.gastosdiarios.gavio.data.domain.model.modelFirebase.BarDataModel(
+                value = 0f,
+                month = month,
+                money = "0"
+            )
             dataBarDataFirestore.create(entity)
         }
     }
@@ -104,19 +108,20 @@ class ConfigurationViewModel @Inject constructor(
 
     // Opciones de eliminación adicionales que son opcionales para el usuario
     val opcionesEliminar = listOf(
-        OpcionEliminarModel(
+        com.gastosdiarios.gavio.data.domain.model.OpcionEliminarModel(
             "Datos estadísticos del gráfico",
             ::deleteGraphBar
         ),
-        OpcionEliminarModel(
+        com.gastosdiarios.gavio.data.domain.model.OpcionEliminarModel(
             "Categorías de ingresos creadas",
             ::deleteUserCreaCatIngresos
         ),
-        OpcionEliminarModel(
+        com.gastosdiarios.gavio.data.domain.model.OpcionEliminarModel(
             "Categorías de gastos creadas",
             ::deleteUserCreaCatGastos
         ),
-        OpcionEliminarModel("Gastos programados",
+        com.gastosdiarios.gavio.data.domain.model.OpcionEliminarModel(
+            "Gastos programados",
             ::deleteGastosProgramados
         )
     )

@@ -7,10 +7,10 @@ import androidx.lifecycle.ViewModel
 import androidx.lifecycle.viewModelScope
 import com.gastosdiarios.gavio.R
 import com.gastosdiarios.gavio.data.commons.SnackbarManager
-import com.gastosdiarios.gavio.data.constants.Constants.MIN_PASS_LENGTH
-import com.gastosdiarios.gavio.data.constants.Constants.PASS_PATTERN
+import com.gastosdiarios.gavio.utils.Constants.MIN_PASS_LENGTH
+import com.gastosdiarios.gavio.utils.Constants.PASS_PATTERN
 import com.gastosdiarios.gavio.data.ui_state.LoginUiState
-import com.gastosdiarios.gavio.domain.repository.AuthFirebaseImp
+import com.gastosdiarios.gavio.data.repository.AuthFirebaseImp
 import com.google.firebase.auth.FirebaseAuthInvalidCredentialsException
 import com.google.firebase.auth.FirebaseAuthInvalidUserException
 import dagger.hilt.android.lifecycle.HiltViewModel

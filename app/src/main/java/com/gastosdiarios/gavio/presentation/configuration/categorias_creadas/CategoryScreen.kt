@@ -36,9 +36,9 @@ import com.gastosdiarios.gavio.data.commons.CommonsLoadingData
 import com.gastosdiarios.gavio.data.commons.CommonsLoadingScreen
 import com.gastosdiarios.gavio.data.commons.ErrorScreen
 import com.gastosdiarios.gavio.data.ui_state.UiStateList
-import com.gastosdiarios.gavio.domain.enums.TipoTransaccion
-import com.gastosdiarios.gavio.domain.model.CategoryDefaultModel
-import com.gastosdiarios.gavio.domain.model.UserCreateCategoryModel
+import com.gastosdiarios.gavio.data.domain.enums.TipoTransaccion
+import com.gastosdiarios.gavio.data.domain.model.CategoryDefaultModel
+import com.gastosdiarios.gavio.data.domain.model.UserCreateCategoryModel
 import com.gastosdiarios.gavio.presentation.configuration.categorias_creadas.components.ContentBottomSheet
 import com.gastosdiarios.gavio.presentation.configuration.categorias_creadas.components.ItemCategory
 import com.gastosdiarios.gavio.presentation.configuration.categorias_creadas.components.ToolbarCategoriasNuevas
@@ -64,7 +64,7 @@ fun CategoryScreen(
         uiStateDefault = uiStateDefault,
         viewModel = viewModel,
         sheetState = sheetState,
-        categoryTypes = if (pagerState.currentPage == 0) TipoTransaccion.INGRESOS else TipoTransaccion.GASTOS,
+        categoryTypes = if (pagerState.currentPage == 0) com.gastosdiarios.gavio.data.domain.enums.TipoTransaccion.INGRESOS else com.gastosdiarios.gavio.data.domain.enums.TipoTransaccion.GASTOS,
         onBack = { onBack() },
         content = { paddingValues ->
 
@@ -94,16 +94,16 @@ fun CategoryScreen(
                         0 -> { // Ingresos tab
                             val ingresosActions = object : CategoryActions {
                                 override fun onEditClick(
-                                    item: UserCreateCategoryModel,
+                                    item: com.gastosdiarios.gavio.data.domain.model.UserCreateCategoryModel,
                                     iconSelect: Int
                                 ) {
                                     viewModel.selectedParaEditar(item, iconSelect)
                                 }
 
-                                override fun onDeleteClick(item: UserCreateCategoryModel) {
+                                override fun onDeleteClick(item: com.gastosdiarios.gavio.data.domain.model.UserCreateCategoryModel) {
                                     viewModel.eliminarItemSelected(
                                         item,
-                                        typeCategory = TipoTransaccion.INGRESOS
+                                        typeCategory = com.gastosdiarios.gavio.data.domain.enums.TipoTransaccion.INGRESOS
                                     )
                                 }
                             }
@@ -118,16 +118,16 @@ fun CategoryScreen(
                         1 -> { // Gastos tab
                             val gastosActions = object : CategoryActions {
                                 override fun onEditClick(
-                                    item: UserCreateCategoryModel,
+                                    item: com.gastosdiarios.gavio.data.domain.model.UserCreateCategoryModel,
                                     iconSelect: Int
                                 ) {
                                     viewModel.selectedParaEditar(item, iconSelect)
                                 }
 
-                                override fun onDeleteClick(item: UserCreateCategoryModel) {
+                                override fun onDeleteClick(item: com.gastosdiarios.gavio.data.domain.model.UserCreateCategoryModel) {
                                     viewModel.eliminarItemSelected(
                                         item,
-                                        typeCategory = TipoTransaccion.GASTOS
+                                        typeCategory = com.gastosdiarios.gavio.data.domain.enums.TipoTransaccion.GASTOS
                                     )
                                 }
                             }
@@ -176,7 +176,7 @@ fun StateContentCategoryIngresos(
         }
 
         is UiStateList.Success -> {
-            val list = (uiStateIngresos as UiStateList.Success<UserCreateCategoryModel>).data
+            val list = (uiStateIngresos as UiStateList.Success<com.gastosdiarios.gavio.data.domain.model.UserCreateCategoryModel>).data
             ListContentTypeCategory(
                 list = list,
                 viewModel = viewModel,
@@ -220,7 +220,7 @@ fun StateContentCategoryGastos(
         }
 
         is UiStateList.Success -> {
-            val list = (uiStateGastos as UiStateList.Success<UserCreateCategoryModel>).data
+            val list = (uiStateGastos as UiStateList.Success<com.gastosdiarios.gavio.data.domain.model.UserCreateCategoryModel>).data
             ListContentTypeCategory(
                 list = list,
                 viewModel = viewModel,
@@ -235,10 +235,10 @@ fun StateContentCategoryGastos(
 @OptIn(ExperimentalMaterial3Api::class)
 @Composable
 fun PantallaDeCategoriasCreadas(
-    uiStateDefault: CategoryDefaultModel,
+    uiStateDefault: com.gastosdiarios.gavio.data.domain.model.CategoryDefaultModel,
     viewModel: CategoryViewModel,
     sheetState: SheetState,
-    categoryTypes: TipoTransaccion,
+    categoryTypes: com.gastosdiarios.gavio.data.domain.enums.TipoTransaccion,
     onBack: () -> Unit,
     content: @Composable (PaddingValues) -> Unit = {},
 ) {
@@ -278,7 +278,7 @@ fun PantallaDeCategoriasCreadas(
 
 @Composable
 fun ListContentTypeCategory(
-    list: List<UserCreateCategoryModel>,
+    list: List<com.gastosdiarios.gavio.data.domain.model.UserCreateCategoryModel>,
     viewModel: CategoryViewModel,
     categoryActions: CategoryActions,
     modifier: Modifier,

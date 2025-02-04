@@ -3,8 +3,8 @@ package com.gastosdiarios.gavio.presentation.configuration.actualizarMaximoFecha
 import androidx.lifecycle.ViewModel
 import androidx.lifecycle.viewModelScope
 import com.gastosdiarios.gavio.data.ui_state.FechaMaximaUiState
-import com.gastosdiarios.gavio.domain.model.modelFirebase.UserPreferences
-import com.gastosdiarios.gavio.domain.repository.DataBaseManager
+import com.gastosdiarios.gavio.data.domain.model.modelFirebase.UserPreferences
+import com.gastosdiarios.gavio.data.repository.DataBaseManager
 import dagger.hilt.android.lifecycle.HiltViewModel
 import kotlinx.coroutines.flow.MutableStateFlow
 import kotlinx.coroutines.flow.StateFlow
@@ -27,7 +27,7 @@ class ActualizarMaximoFechaViewModel @Inject constructor(
 
     private fun getFechaMaxima() {
         viewModelScope.launch {
-            val data: UserPreferences? = dbm.getUserPreferences()
+            val data: com.gastosdiarios.gavio.data.domain.model.modelFirebase.UserPreferences? = dbm.getUserPreferences()
             _uiState.update { it.copy(selectedOption = data?.limitMonth ?: 0) }
         }
     }

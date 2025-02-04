@@ -14,13 +14,13 @@ import androidx.compose.ui.Modifier
 import androidx.compose.ui.graphics.ColorFilter
 import androidx.compose.ui.res.painterResource
 import androidx.compose.ui.unit.dp
-import com.gastosdiarios.gavio.domain.model.CategoryCreate
+import com.gastosdiarios.gavio.data.domain.model.CategoryCreate
 
 @Composable
 fun CategoryItemGastos(
-    category: CategoryCreate,
+    category: com.gastosdiarios.gavio.data.domain.model.CategoryCreate,
     isSelected: Boolean,
-    onCategorySelected: (CategoryCreate) -> Unit
+    onCategorySelected: (com.gastosdiarios.gavio.data.domain.model.CategoryCreate) -> Unit
 ) {
     val iconColor =
         if (isSelected) MaterialTheme.colorScheme.inversePrimary else MaterialTheme.colorScheme.onSurfaceVariant

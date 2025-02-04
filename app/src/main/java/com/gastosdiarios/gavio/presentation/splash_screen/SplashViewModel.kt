@@ -3,8 +3,8 @@ package com.gastosdiarios.gavio.presentation.splash_screen
 import androidx.lifecycle.ViewModel
 import androidx.lifecycle.viewModelScope
 import com.gastosdiarios.gavio.data.ui_state.SplashUiState
-import com.gastosdiarios.gavio.domain.repository.AuthFirebaseImp
-import com.gastosdiarios.gavio.domain.repository.DataBaseManager
+import com.gastosdiarios.gavio.data.repository.AuthFirebaseImp
+import com.gastosdiarios.gavio.data.repository.DataBaseManager
 import dagger.hilt.android.lifecycle.HiltViewModel
 import kotlinx.coroutines.flow.MutableStateFlow
 import kotlinx.coroutines.flow.StateFlow
@@ -15,7 +15,7 @@ import javax.inject.Inject
 
 @HiltViewModel
 class SplashViewModel @Inject constructor(
-    private val dbm:DataBaseManager,
+    private val dbm: DataBaseManager,
     private val authFirebaseImp: AuthFirebaseImp
 ) : ViewModel() {
 

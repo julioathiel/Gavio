@@ -20,16 +20,16 @@ import androidx.compose.ui.res.stringResource
 import androidx.compose.ui.text.input.KeyboardCapitalization
 import androidx.compose.ui.unit.dp
 import com.gastosdiarios.gavio.R
-import com.gastosdiarios.gavio.domain.enums.TipoTransaccion
-import com.gastosdiarios.gavio.domain.model.CategoryDefaultModel
-import com.gastosdiarios.gavio.domain.model.UserCreateCategoryModel
+import com.gastosdiarios.gavio.data.domain.enums.TipoTransaccion
+import com.gastosdiarios.gavio.data.domain.model.CategoryDefaultModel
+import com.gastosdiarios.gavio.data.domain.model.UserCreateCategoryModel
 import com.gastosdiarios.gavio.presentation.configuration.categorias_creadas.CategoryViewModel
 
 @Composable
 fun ContentBottomSheet(
     onDismiss: () -> Unit,
-    categoryTypes: TipoTransaccion,
-    uiStateDefault: CategoryDefaultModel,
+    categoryTypes: com.gastosdiarios.gavio.data.domain.enums.TipoTransaccion,
+    uiStateDefault: com.gastosdiarios.gavio.data.domain.model.CategoryDefaultModel,
     viewModel: CategoryViewModel,
 ) {
     val enabledButton =
@@ -78,44 +78,44 @@ fun ContentBottomSheet(
         Button(
             onClick = {
                 when(categoryTypes){
-                    TipoTransaccion.INGRESOS ->{
+                    com.gastosdiarios.gavio.data.domain.enums.TipoTransaccion.INGRESOS ->{
                         if (uiStateDefault.isSelectedEditItem) {
                             viewModel.actualizandoItem(
-                                UserCreateCategoryModel(
+                                com.gastosdiarios.gavio.data.domain.model.UserCreateCategoryModel(
                                     uid = uiStateDefault.uid,
                                     categoryName = uiStateDefault.titleBottomSheet,
                                     categoryIcon = uiStateDefault.selectedCategory!!.icon.toString(),
-                                    categoryType = TipoTransaccion.INGRESOS
+                                    categoryType = com.gastosdiarios.gavio.data.domain.enums.TipoTransaccion.INGRESOS
                                 )
                             )
                         } else {
                             //para crear un item de ingresos nuevo
                             viewModel.createNewCategory(
-                                UserCreateCategoryModel(
+                                com.gastosdiarios.gavio.data.domain.model.UserCreateCategoryModel(
                                     categoryName = uiStateDefault.titleBottomSheet,
                                     categoryIcon = uiStateDefault.selectedCategory!!.icon.toString(),
-                                    categoryType = TipoTransaccion.INGRESOS
+                                    categoryType = com.gastosdiarios.gavio.data.domain.enums.TipoTransaccion.INGRESOS
                                 )
                             )
                         }
                     }
-                    TipoTransaccion.GASTOS ->{
+                    com.gastosdiarios.gavio.data.domain.enums.TipoTransaccion.GASTOS ->{
                         if (uiStateDefault.isSelectedEditItem) {
                             viewModel.actualizandoItem(
-                                UserCreateCategoryModel(
+                                com.gastosdiarios.gavio.data.domain.model.UserCreateCategoryModel(
                                     uid = uiStateDefault.uid,
                                     categoryName = uiStateDefault.titleBottomSheet,
                                     categoryIcon = uiStateDefault.selectedCategory!!.icon.toString(),
-                                    categoryType = TipoTransaccion.GASTOS
+                                    categoryType = com.gastosdiarios.gavio.data.domain.enums.TipoTransaccion.GASTOS
                                 )
                             )
                         } else {
                             //para crear un item de gastos nuevo
                             viewModel.createNewCategory(
-                                UserCreateCategoryModel(
+                                com.gastosdiarios.gavio.data.domain.model.UserCreateCategoryModel(
                                     categoryName = uiStateDefault.titleBottomSheet,
                                     categoryIcon = uiStateDefault.selectedCategory!!.icon.toString(),
-                                    categoryType = TipoTransaccion.GASTOS
+                                    categoryType = com.gastosdiarios.gavio.data.domain.enums.TipoTransaccion.GASTOS
                                 )
                             )
                         }

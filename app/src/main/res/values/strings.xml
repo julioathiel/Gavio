@@ -165,4 +165,6 @@
     <string name="pagado_con_exito">Pagado con exito</string>
     <string name="no_hay_dias_restantes">No hay dias restantes</string>
     <string name="elije_una_feccha_primero">Elije una fecha primero.</string>
+    <string name="reminder">recordatorios\n</string>
+    <string name="reminder_channel_desc">Recibe recordatorios para que no olvides tus gastos programados.</string>
 </resources>

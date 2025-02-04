@@ -35,9 +35,9 @@ import com.gastosdiarios.gavio.data.commons.CommonsLoadingScreen
 import com.gastosdiarios.gavio.data.commons.ErrorScreen
 import com.gastosdiarios.gavio.data.commons.TopAppBarOnBack
 import com.gastosdiarios.gavio.data.ui_state.UiStateSingle
-import com.gastosdiarios.gavio.domain.enums.ItemConfAvanzada
-import com.gastosdiarios.gavio.domain.enums.ThemeMode
-import com.gastosdiarios.gavio.domain.model.modelFirebase.UserPreferences
+import com.gastosdiarios.gavio.data.domain.enums.ItemConfAvanzada
+import com.gastosdiarios.gavio.data.domain.enums.ThemeMode
+import com.gastosdiarios.gavio.data.domain.model.modelFirebase.UserPreferences
 
 @Composable
 fun AjustesScreen(
@@ -49,19 +49,19 @@ fun AjustesScreen(
     when (uiState) {
         UiStateSingle.Loading -> {}
         is UiStateSingle.Success -> {
-            val data = (uiState as UiStateSingle.Success<UserPreferences?>).data
+            val data = (uiState as UiStateSingle.Success<com.gastosdiarios.gavio.data.domain.model.modelFirebase.UserPreferences?>).data
             var isSecurity: Boolean by remember {
                 mutableStateOf(data?.biometricSecurity ?: false)
             }
-            var checkButton: ThemeMode by remember {
+            var checkButton: com.gastosdiarios.gavio.data.domain.enums.ThemeMode by remember {
                 mutableStateOf(
-                    data?.themeMode ?: ThemeMode.MODE_AUTO
+                    data?.themeMode ?: com.gastosdiarios.gavio.data.domain.enums.ThemeMode.MODE_AUTO
                 )
             }
 
             LaunchedEffect(key1 = uiState) {
                 isSecurity = data?.biometricSecurity ?: false
-                checkButton = data?.themeMode ?: ThemeMode.MODE_AUTO
+                checkButton = data?.themeMode ?: com.gastosdiarios.gavio.data.domain.enums.ThemeMode.MODE_AUTO
             }
         }
 
@@ -78,20 +78,20 @@ fun AjustesScreen(
                     when (uiState) {
                         UiStateSingle.Loading -> {}
                         is UiStateSingle.Success -> {
-                            val data = (uiState as UiStateSingle.Success<UserPreferences?>).data
+                            val data = (uiState as UiStateSingle.Success<com.gastosdiarios.gavio.data.domain.model.modelFirebase.UserPreferences?>).data
                             Icon(
                                 painter = painterResource(
                                     id = when (data?.themeMode) {
-                                        ThemeMode.MODE_AUTO -> R.drawable.ic_rounded_routine
-                                        ThemeMode.MODE_DAY -> R.drawable.ic_light_mode
-                                        ThemeMode.MODE_NIGHT -> R.drawable.ic_dark_mode
+                                        com.gastosdiarios.gavio.data.domain.enums.ThemeMode.MODE_AUTO -> R.drawable.ic_rounded_routine
+                                        com.gastosdiarios.gavio.data.domain.enums.ThemeMode.MODE_DAY -> R.drawable.ic_light_mode
+                                        com.gastosdiarios.gavio.data.domain.enums.ThemeMode.MODE_NIGHT -> R.drawable.ic_dark_mode
                                         null -> R.drawable.ic_rounded_routine
                                     }
                                 ),
                                 contentDescription = when (data?.themeMode) {
-                                    ThemeMode.MODE_AUTO -> stringResource(id = R.string.mode_auto)
-                                    ThemeMode.MODE_DAY -> stringResource(id = R.string.mode_day)
-                                    ThemeMode.MODE_NIGHT -> stringResource(id = R.string.mode_night)
+                                    com.gastosdiarios.gavio.data.domain.enums.ThemeMode.MODE_AUTO -> stringResource(id = R.string.mode_auto)
+                                    com.gastosdiarios.gavio.data.domain.enums.ThemeMode.MODE_DAY -> stringResource(id = R.string.mode_day)
+                                    com.gastosdiarios.gavio.data.domain.enums.ThemeMode.MODE_NIGHT -> stringResource(id = R.string.mode_night)
                                     null -> stringResource(id = R.string.mode_auto)
                                 }.toString(), modifier = Modifier.padding(end = 16.dp)
                             )
@@ -107,7 +107,7 @@ fun AjustesScreen(
         when (val state = uiState) {
             UiStateSingle.Loading -> CommonsLoadingScreen(Modifier.fillMaxSize())
             is UiStateSingle.Success -> {
-                val data = (uiState as UiStateSingle.Success<UserPreferences?>).data
+                val data = (uiState as UiStateSingle.Success<com.gastosdiarios.gavio.data.domain.model.modelFirebase.UserPreferences?>).data
                 ContentAjustesAvanzados(
                     modifier = Modifier
                         .padding(paddingValues)
@@ -155,20 +155,20 @@ fun SwitchWith(
 fun ContentAjustesAvanzados(
     modifier: Modifier,
     viewModel: AjustesViewModel,
-    data: UserPreferences?
+    data: com.gastosdiarios.gavio.data.domain.model.modelFirebase.UserPreferences?
 ) {
     val uiState by viewModel.uiState.collectAsState()
 
     var isSecurity: Boolean by remember { mutableStateOf(data?.biometricSecurity ?: false) }
-    var checkButton: ThemeMode by remember {
+    var checkButton: com.gastosdiarios.gavio.data.domain.enums.ThemeMode by remember {
         mutableStateOf(
-            data?.themeMode ?: ThemeMode.MODE_AUTO
+            data?.themeMode ?: com.gastosdiarios.gavio.data.domain.enums.ThemeMode.MODE_AUTO
         )
     }
 
     LaunchedEffect(key1 = uiState) {
         isSecurity = data?.biometricSecurity ?: false
-        checkButton = data?.themeMode ?: ThemeMode.MODE_AUTO
+        checkButton = data?.themeMode ?: com.gastosdiarios.gavio.data.domain.enums.ThemeMode.MODE_AUTO
     }
 
     Column(
@@ -177,12 +177,12 @@ fun ContentAjustesAvanzados(
             .padding(horizontal = dimensionResource(id = R.dimen.padding_medium)),
     ) {
         HorizontalDivider()
-        ThemeMode.entries.forEach { option ->
+        com.gastosdiarios.gavio.data.domain.enums.ThemeMode.entries.forEach { option ->
             Row(verticalAlignment = Alignment.CenterVertically) {
                 val title = when (option) {
-                    ThemeMode.MODE_AUTO -> stringResource(id = R.string.mode_auto)
-                    ThemeMode.MODE_DAY -> stringResource(id = R.string.mode_day)
-                    ThemeMode.MODE_NIGHT -> stringResource(id = R.string.mode_night)
+                    com.gastosdiarios.gavio.data.domain.enums.ThemeMode.MODE_AUTO -> stringResource(id = R.string.mode_auto)
+                    com.gastosdiarios.gavio.data.domain.enums.ThemeMode.MODE_DAY -> stringResource(id = R.string.mode_day)
+                    com.gastosdiarios.gavio.data.domain.enums.ThemeMode.MODE_NIGHT -> stringResource(id = R.string.mode_night)
                 }
                 Text(text = title, modifier = Modifier.weight(1f))
                 RadioButton(
@@ -200,9 +200,9 @@ fun ContentAjustesAvanzados(
         HorizontalDivider()
 
         Spacer(modifier = Modifier.size(20.dp))
-        ItemConfAvanzada.entries.forEach { item ->
+        com.gastosdiarios.gavio.data.domain.enums.ItemConfAvanzada.entries.forEach { item ->
             when (item) {
-                ItemConfAvanzada.SEGURIDAD -> {
+                com.gastosdiarios.gavio.data.domain.enums.ItemConfAvanzada.SEGURIDAD -> {
                     SwitchWith(
                         switchText = "Seguridad",
                         isChecked = isSecurity,

@@ -7,14 +7,14 @@ import androidx.lifecycle.ViewModel
 import androidx.lifecycle.viewModelScope
 import com.gastosdiarios.gavio.R
 import com.gastosdiarios.gavio.data.ui_state.UiStateList
-import com.gastosdiarios.gavio.domain.enums.TipoTransaccion
-import com.gastosdiarios.gavio.domain.model.DataList
-import com.gastosdiarios.gavio.domain.model.RefreshDataModel
-import com.gastosdiarios.gavio.domain.model.modelFirebase.TransactionModel
-import com.gastosdiarios.gavio.domain.repository.DataBaseManager
-import com.gastosdiarios.gavio.domain.repository.repositoriesFirestrore.GastosPorCategoriaFirestore
-import com.gastosdiarios.gavio.domain.repository.repositoriesFirestrore.TransactionsFirestore
-import com.gastosdiarios.gavio.domain.repository.repositoriesFirestrore.UserDataFirestore
+import com.gastosdiarios.gavio.data.domain.enums.TipoTransaccion
+import com.gastosdiarios.gavio.data.domain.model.DataList
+import com.gastosdiarios.gavio.data.domain.model.RefreshDataModel
+import com.gastosdiarios.gavio.data.domain.model.modelFirebase.TransactionModel
+import com.gastosdiarios.gavio.data.repository.DataBaseManager
+import com.gastosdiarios.gavio.data.repository.repositoriesFirestrore.GastosPorCategoriaFirestore
+import com.gastosdiarios.gavio.data.repository.repositoriesFirestrore.TransactionsFirestore
+import com.gastosdiarios.gavio.data.repository.repositoriesFirestrore.UserDataFirestore
 import com.gastosdiarios.gavio.utils.MathUtils
 import dagger.hilt.android.lifecycle.HiltViewModel
 import dagger.hilt.android.qualifiers.ApplicationContext
@@ -41,7 +41,7 @@ class TransactionsViewModel @Inject constructor(
 ) : ViewModel() {
     private val tag = "transactionViewModel"
 
-    private val _uiState = MutableStateFlow<UiStateList<TransactionModel>>(UiStateList.Loading)
+    private val _uiState = MutableStateFlow<UiStateList<com.gastosdiarios.gavio.data.domain.model.modelFirebase.TransactionModel>>(UiStateList.Loading)
     val uiState = _uiState.onStart { getAllTransactions() }
         .catch { throwable ->
             _uiState.update {
@@ -56,17 +56,21 @@ class TransactionsViewModel @Inject constructor(
     private val _snackbarMessage = MutableStateFlow<Int?>(null)
     val snackbarMessage: StateFlow<Int?> get() = _snackbarMessage
 
-    private val _isRefreshing = MutableStateFlow(RefreshDataModel(isRefreshing = false))
-    val isRefreshing: StateFlow<RefreshDataModel> = _isRefreshing.asStateFlow()
+    private val _isRefreshing = MutableStateFlow(
+        com.gastosdiarios.gavio.data.domain.model.RefreshDataModel(
+            isRefreshing = false
+        )
+    )
+    val isRefreshing: StateFlow<com.gastosdiarios.gavio.data.domain.model.RefreshDataModel> = _isRefreshing.asStateFlow()
 
-    private val _dataList = MutableStateFlow(DataList<TransactionModel>())
-    val dataList: StateFlow<DataList<TransactionModel>> = _dataList.asStateFlow()
+    private val _dataList = MutableStateFlow(com.gastosdiarios.gavio.data.domain.model.DataList<com.gastosdiarios.gavio.data.domain.model.modelFirebase.TransactionModel>())
+    val dataList: StateFlow<com.gastosdiarios.gavio.data.domain.model.DataList<com.gastosdiarios.gavio.data.domain.model.modelFirebase.TransactionModel>> = _dataList.asStateFlow()
 
 
     private fun getAllTransactions() {
         viewModelScope.launch(Dispatchers.IO) {
             try {
-                val data: List<TransactionModel> = dbm.getTransactions()
+                val data: List<com.gastosdiarios.gavio.data.domain.model.modelFirebase.TransactionModel> = dbm.getTransactions()
                 if (data.isEmpty()) {
                     _uiState.update { UiStateList.Empty }
                 } else {
@@ -81,7 +85,7 @@ class TransactionsViewModel @Inject constructor(
     fun refreshData() {
         viewModelScope.launch(Dispatchers.IO) {
             try {
-                val data: List<TransactionModel> = dbm.getTransactions()
+                val data: List<com.gastosdiarios.gavio.data.domain.model.modelFirebase.TransactionModel> = dbm.getTransactions()
                 if (data.isEmpty()) {
                     _uiState.update { UiStateList.Empty }
                 } else {
@@ -103,10 +107,10 @@ class TransactionsViewModel @Inject constructor(
 
 
             val sumTotalIngresos =
-                _dataList.value.selectedItems.filter { it.tipoTransaccion == TipoTransaccion.INGRESOS }
+                _dataList.value.selectedItems.filter { it.tipoTransaccion == com.gastosdiarios.gavio.data.domain.enums.TipoTransaccion.INGRESOS }
                     .sumOf { it.cash?.toDouble() ?: 0.0 }
             val sumTotalGastos =
-                _dataList.value.selectedItems.filter { it.tipoTransaccion == TipoTransaccion.GASTOS }
+                _dataList.value.selectedItems.filter { it.tipoTransaccion == com.gastosdiarios.gavio.data.domain.enums.TipoTransaccion.GASTOS }
                     .sumOf { it.cash?.toDouble() ?: 0.0 }
 
             //nuevo currentMoney
@@ -122,7 +126,7 @@ class TransactionsViewModel @Inject constructor(
                     return@launch
                 }
                 dbm.deleteTransaction(item)
-                if (item.tipoTransaccion == TipoTransaccion.GASTOS) {
+                if (item.tipoTransaccion == com.gastosdiarios.gavio.data.domain.enums.TipoTransaccion.GASTOS) {
                     deleteGastosPorCategoria(item.title.orEmpty())
                 }
             }
@@ -139,7 +143,7 @@ class TransactionsViewModel @Inject constructor(
         title: String,
         nuevoValor: String,
         description: String,
-        item: TransactionModel
+        item: com.gastosdiarios.gavio.data.domain.model.modelFirebase.TransactionModel
     ) {
         viewModelScope.launch {
             try {
@@ -149,7 +153,7 @@ class TransactionsViewModel @Inject constructor(
                 val dataTotalIngresos = data?.totalIngresos ?: 0.0
                 val dataTotalGastos = data?.totalGastos ?: 0.0
 
-                if (item.tipoTransaccion == TipoTransaccion.GASTOS && nuevoValor.toDouble() > dataTotalIngresos) {
+                if (item.tipoTransaccion == com.gastosdiarios.gavio.data.domain.enums.TipoTransaccion.GASTOS && nuevoValor.toDouble() > dataTotalIngresos) {
                     _snackbarMessage.value =
                         R.string.error_el_gasto_no_puede_ser_superior_a_los_ingresos
 
@@ -160,7 +164,7 @@ class TransactionsViewModel @Inject constructor(
                 } else {
                     when (item.tipoTransaccion) {
                         //si es true estamos actualizando dinero de tipo ingresos
-                        TipoTransaccion.INGRESOS -> {
+                        com.gastosdiarios.gavio.data.domain.enums.TipoTransaccion.INGRESOS -> {
                             // Ajustar el total de ingresos según si el nuevo valor es mayor o menor al anterior.
                             if (nuevoValor > item.cash.toString()) {
                                 val diferencia =
@@ -194,7 +198,7 @@ class TransactionsViewModel @Inject constructor(
                             }
                         }
 
-                        TipoTransaccion.GASTOS -> {
+                        com.gastosdiarios.gavio.data.domain.enums.TipoTransaccion.GASTOS -> {
                             //si es false estamos actualizando dinero de tipo gastos
                             if (nuevoValor > cashViejo.toString()) {
                                 val diferencia =
@@ -291,7 +295,7 @@ class TransactionsViewModel @Inject constructor(
     }
 
     //FUNCION QUE SE USA PARA EDITAR UN ITEM DE LA LISTA
-    private fun updateItemList(item: TransactionModel) {
+    private fun updateItemList(item: com.gastosdiarios.gavio.data.domain.model.modelFirebase.TransactionModel) {
         viewModelScope.launch {
             try {
                 transactionsFirestore.update(item).wait()
@@ -318,7 +322,7 @@ class TransactionsViewModel @Inject constructor(
         }
     }
 
-    private fun updateGastosCategory(title: String, cash: String, itemModel: TransactionModel) {
+    private fun updateGastosCategory(title: String, cash: String, itemModel: com.gastosdiarios.gavio.data.domain.model.modelFirebase.TransactionModel) {
         viewModelScope.launch(Dispatchers.IO) {
             val data = dbm.getGastosPorCategoria()
 
@@ -351,7 +355,7 @@ class TransactionsViewModel @Inject constructor(
     }
 
 
-    fun onClick(item: TransactionModel) {
+    fun onClick(item: com.gastosdiarios.gavio.data.domain.model.modelFirebase.TransactionModel) {
         _dataList.update { currentDataList ->
             if (currentDataList.selectionMode) {
                 val updatedSelectedItems = currentDataList.selectedItems.toMutableList()
@@ -370,7 +374,7 @@ class TransactionsViewModel @Inject constructor(
         }
     }
 
-    fun onLongClick(item: TransactionModel) {
+    fun onLongClick(item: com.gastosdiarios.gavio.data.domain.model.modelFirebase.TransactionModel) {
         _dataList.update { currentDataList ->
             val updatedSelectedItems = currentDataList.selectedItems.toMutableList()
             if (updatedSelectedItems.any { it.uid == item.uid }) {
@@ -405,7 +409,7 @@ class TransactionsViewModel @Inject constructor(
         }
     }
 
-    fun delete(item: TransactionModel) {
+    fun delete(item: com.gastosdiarios.gavio.data.domain.model.modelFirebase.TransactionModel) {
         viewModelScope.launch(Dispatchers.IO) {
             try {
                 transactionsFirestore.delete(item)
@@ -416,7 +420,7 @@ class TransactionsViewModel @Inject constructor(
         }
     }
 
-    fun clearSelection(item: TransactionModel) {
+    fun clearSelection(item: com.gastosdiarios.gavio.data.domain.model.modelFirebase.TransactionModel) {
         isCreateFalse()
         _dataList.update { it.copy(selectionMode = false, selectedItems = emptyList()) }
         onClick(item)

@@ -2,24 +2,20 @@ package com.gastosdiarios.gavio.presentation.welcome.initial
 
 
 import android.content.Context
-import android.content.Intent
 import android.util.Log
 import android.widget.Toast
-import androidx.activity.compose.ManagedActivityResultLauncher
 import androidx.credentials.CredentialManager
 import androidx.credentials.CustomCredential
 import androidx.credentials.GetCredentialRequest
 import androidx.credentials.GetCredentialResponse
 import androidx.credentials.exceptions.GetCredentialException
-import androidx.credentials.exceptions.NoCredentialException
 import androidx.lifecycle.ViewModel
 import androidx.lifecycle.viewModelScope
 import com.gastosdiarios.gavio.R
-import com.gastosdiarios.gavio.data.constants.Constants.PROVIDER_GOOGLE
-import com.gastosdiarios.gavio.domain.model.modelFirebase.UserModel
-import com.gastosdiarios.gavio.domain.repository.CloudFirestore
+import com.gastosdiarios.gavio.utils.Constants.PROVIDER_GOOGLE
+import com.gastosdiarios.gavio.data.domain.model.modelFirebase.UserModel
+import com.gastosdiarios.gavio.data.repository.CloudFirestore
 import com.google.android.libraries.identity.googleid.GetGoogleIdOption
-import com.google.android.libraries.identity.googleid.GetSignInWithGoogleOption
 import com.google.android.libraries.identity.googleid.GoogleIdTokenCredential
 import com.google.android.libraries.identity.googleid.GoogleIdTokenParsingException
 import com.google.firebase.auth.FirebaseAuth
@@ -27,15 +23,12 @@ import com.google.firebase.auth.GoogleAuthProvider
 import com.google.firebase.auth.ktx.auth
 import com.google.firebase.ktx.Firebase
 import dagger.hilt.android.lifecycle.HiltViewModel
-import kotlinx.coroutines.CoroutineScope
 import kotlinx.coroutines.flow.MutableStateFlow
 import kotlinx.coroutines.flow.StateFlow
 import kotlinx.coroutines.launch
 import kotlinx.coroutines.tasks.await
-import java.security.MessageDigest
 import java.text.DateFormat
 import java.util.Date
-import java.util.UUID
 import javax.inject.Inject
 
 @HiltViewModel
@@ -59,7 +52,7 @@ class InitialViewModel @Inject constructor(
     private fun iniciarConFacebook() {}
 
     //sirve para autentificarse con correo y contraseña
-    private fun insertUsersFirestore(user: UserModel) {
+    private fun insertUsersFirestore(user: com.gastosdiarios.gavio.data.domain.model.modelFirebase.UserModel) {
         viewModelScope.launch {
             cloudFirestore.insertUserToFirestore(user)
         }
@@ -153,7 +146,7 @@ class InitialViewModel @Inject constructor(
                         user?.run {
                             Log.d("TAGg", "User ID: $uid")
                             insertUsersFirestore(
-                                UserModel(
+                                com.gastosdiarios.gavio.data.domain.model.modelFirebase.UserModel(
                                     userId = user.uid,
                                     name = user.displayName,
                                     email = user.email,

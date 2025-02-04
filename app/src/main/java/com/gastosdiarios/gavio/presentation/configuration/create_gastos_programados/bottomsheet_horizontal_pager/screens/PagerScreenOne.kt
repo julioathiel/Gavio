@@ -21,9 +21,9 @@ import androidx.compose.ui.unit.dp
 import com.gastosdiarios.gavio.R
 import com.gastosdiarios.gavio.data.commons.CommonsSpacer
 import com.gastosdiarios.gavio.data.commons.TextFieldDescription
-import com.gastosdiarios.gavio.domain.model.CategoriesModel
-import com.gastosdiarios.gavio.domain.model.CategoryGastos
-import com.gastosdiarios.gavio.domain.model.modelFirebase.GastosProgramadosModel
+import com.gastosdiarios.gavio.data.domain.model.CategoriesModel
+import com.gastosdiarios.gavio.data.domain.model.CategoryGastos
+import com.gastosdiarios.gavio.data.domain.model.modelFirebase.GastosProgramadosModel
 import com.gastosdiarios.gavio.presentation.configuration.create_gastos_programados.components.menuDesplegableGastosProgramados
 import com.gastosdiarios.gavio.presentation.home.components.TextFieldDinero
 
@@ -39,7 +39,10 @@ fun PagerScreenOne(
     var cantidadIngresada by remember { mutableStateOf(item.cash ?: "") }
     var subTitle by remember { mutableStateOf(item.subTitle ?: "") }
     var selectedCategory by remember { mutableStateOf<CategoriesModel?>(null) }
-    val categorySelect = CategoryGastos(name = item.title ?: "", icon = item.icon?.toInt() ?: 0)
+    val categorySelect = CategoryGastos(
+        name = item.title ?: "",
+        icon = item.icon?.toInt() ?: 0
+    )
 
     Column(
         Modifier.fillMaxSize()

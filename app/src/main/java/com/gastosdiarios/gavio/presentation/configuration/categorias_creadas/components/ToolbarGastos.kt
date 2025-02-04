@@ -15,12 +15,12 @@ import androidx.compose.ui.res.painterResource
 import androidx.compose.ui.res.stringResource
 import com.gastosdiarios.gavio.R
 import com.gastosdiarios.gavio.data.commons.TopAppBarOnBack
-import com.gastosdiarios.gavio.domain.model.CategoryDefaultModel
+import com.gastosdiarios.gavio.data.domain.model.CategoryDefaultModel
 import com.gastosdiarios.gavio.presentation.configuration.categorias_creadas.CategoryViewModel
 
 @Composable
 fun ToolbarCategoriasNuevas(
-    uiStateDefault: CategoryDefaultModel,
+    uiStateDefault: com.gastosdiarios.gavio.data.domain.model.CategoryDefaultModel,
     viewModel: CategoryViewModel,
     onClickAction: () -> Unit,
     onBack: () -> Unit

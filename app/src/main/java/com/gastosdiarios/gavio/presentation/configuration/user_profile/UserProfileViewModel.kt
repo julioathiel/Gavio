@@ -3,8 +3,8 @@ package com.gastosdiarios.gavio.presentation.configuration.user_profile
 import android.util.Log
 import androidx.lifecycle.ViewModel
 import androidx.lifecycle.viewModelScope
-import com.gastosdiarios.gavio.domain.repository.AuthFirebaseImp
-import com.gastosdiarios.gavio.domain.repository.CloudFirestore
+import com.gastosdiarios.gavio.data.repository.AuthFirebaseImp
+import com.gastosdiarios.gavio.data.repository.CloudFirestore
 import com.google.firebase.auth.FirebaseAuth
 import com.google.firebase.auth.FirebaseUser
 import dagger.hilt.android.lifecycle.HiltViewModel

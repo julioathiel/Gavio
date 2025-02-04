@@ -24,15 +24,19 @@ import androidx.compose.runtime.setValue
 import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.focus.FocusRequester
+import androidx.compose.ui.platform.LocalContext
 import androidx.compose.ui.res.dimensionResource
 import com.gastosdiarios.gavio.R
-import com.gastosdiarios.gavio.domain.enums.Modo
-import com.gastosdiarios.gavio.domain.enums.TipoTransaccion
-import com.gastosdiarios.gavio.domain.model.CategoriesModel
-import com.gastosdiarios.gavio.domain.model.modelFirebase.GastosProgramadosModel
+import com.gastosdiarios.gavio.data.domain.enums.Modo
+import com.gastosdiarios.gavio.data.domain.enums.TipoTransaccion
+import com.gastosdiarios.gavio.data.domain.model.Alarm
+import com.gastosdiarios.gavio.data.domain.model.CategoriesModel
+import com.gastosdiarios.gavio.data.domain.model.Time
+import com.gastosdiarios.gavio.data.domain.model.modelFirebase.GastosProgramadosModel
 import com.gastosdiarios.gavio.presentation.configuration.create_gastos_programados.CreateGastosProgramadosViewModel
 import com.gastosdiarios.gavio.presentation.configuration.create_gastos_programados.bottomsheet_horizontal_pager.screens.listHorizontalPagerScreens
 import com.gastosdiarios.gavio.utils.DateUtils
+import com.gastosdiarios.gavio.utils.setUpAlarm
 import kotlinx.coroutines.launch
 
 @Composable
@@ -47,8 +51,10 @@ fun ContentBottomSheetGastosProgramados(
     val focusRequester = remember { FocusRequester() }
     var selectedCategory by remember { mutableStateOf<CategoriesModel?>(null) }
     var selectedDate by remember { mutableStateOf(item.date ?: "") }
+    var timeInMillis by remember { mutableStateOf(Time(hour = item.hour ?: 0, minute = item.minute ?: 0)) }
     var dineroProgramado by remember { mutableStateOf(item.cash ?: "") }
     var subTitleProgramado by remember { mutableStateOf(item.subTitle ?: "") }
+    var time by remember { mutableStateOf(Time(hour = item.hour ?: 0, minute = item.minute ?: 0)) }
 
     val list = listHorizontalPagerScreens(
         item = item,
@@ -57,7 +63,8 @@ fun ContentBottomSheetGastosProgramados(
         onSelectedCategory = { selectedCategory = it },
         onEnabledButtonChanged = { enabledButton = it },
         selectedDate = { selectedDate = DateUtils.formatSelectedDate(it) },
-        focusRequester = focusRequester
+        focusRequester = focusRequester,
+        time = { time = Time(it.value.hour, it.value.minute) }
     )
 
 
@@ -121,18 +128,61 @@ fun ContentBottomSheetGastosProgramados(
                                 Text("Atras")
                             }
 
+
+                            Button(
+                                onClick = {
+                                    scope.launch {
+                                        val nextPage = (state.currentPage + 1) % state.pageCount
+                                        state.scrollToPage(nextPage)
+                                    }
+                                },
+                                modifier = Modifier
+                                    .height(dimensionResource(id = R.dimen.padding_altura_boton))
+                                    .fillMaxWidth(),
+                                enabled = enabledButton
+                            ) {
+                                Text("Siguiente")
+                            }
+                        }
+                    }
+
+                    2 -> {
+                        Row(
+                            modifier = Modifier
+                                .align(Alignment.BottomCenter)
+                                .fillMaxWidth()
+                                .padding(dimensionResource(id = R.dimen.padding_medium)),
+                            horizontalArrangement = Arrangement.SpaceBetween
+                        ) {
+                            OutlinedButton(
+                                onClick = {
+                                    scope.launch {
+                                        val nextPage = (state.currentPage - 1) % state.pageCount
+                                        state.scrollToPage(nextPage)
+                                    }
+                                },
+                                modifier = Modifier.height(dimensionResource(id = R.dimen.padding_altura_boton)),
+                            ) {
+                                Text("Atras")
+                            }
+
                             val newValor = item.copy(
                                 title = selectedCategory?.name,
                                 subTitle = subTitleProgramado,
                                 cash = dineroProgramado,
+                                select = false,
                                 date = selectedDate,
                                 icon = selectedCategory?.icon.toString(),
-                                categoryType = categoryTypes
+                                categoryType = categoryTypes,
+                                hour = time.hour,
+                                minute = time.minute
                             )
                             Log.d("TAGG", "ContentBottomSheetGastosProgramados: $newValor")
-                            RealizarAccion(modo, viewModel, newValor, selectedDate, onDismiss)
+                            RealizarAccion(modo, viewModel, newValor, selectedDate,
+                                timeInMillis.toString(), onDismiss )
                         }
                     }
+
                 }
             }
         }
@@ -145,15 +195,27 @@ fun RealizarAccion(
     viewModel: CreateGastosProgramadosViewModel,
     item: GastosProgramadosModel,
     selectedDate: String,
+    timeInMillis: String,
     onDismiss: () -> Unit
 ) {
+    val context = LocalContext.current
     when (modo) {
         Modo.AGREGAR -> {
-            Log.d("TAGG", "RealizarAccion: $modo")
+
             Button(
                 modifier = Modifier.height(dimensionResource(id = R.dimen.padding_altura_boton)),
                 onClick = {
                     viewModel.create(item)
+                    val timeInMillis = DateUtils.convertDateAndTimeToMillis(selectedDate, item.hour ?: 0, item.minute ?: 0)
+                    val alarm = Alarm(
+                        id = timeInMillis,
+                        icon = item.icon.toString().toIntOrNull() ?: 0,
+                        title = item.title ?: "",
+                        message = item.subTitle ?: "",
+                        timeInMillis = timeInMillis,
+                        gastosProgramadosId = item.uid ?: ""
+                    )
+                    setUpAlarm(context, alarm)
                     onDismiss()
                 },
                 enabled = selectedDate.isNotEmpty()
@@ -163,14 +225,24 @@ fun RealizarAccion(
         }
 
         Modo.EDITAR -> {
-            Log.d("TAGG", "RealizarAccion: $modo")
             Button(
                 modifier = Modifier.height(dimensionResource(id = R.dimen.padding_altura_boton)),
                 onClick = {
                     viewModel.update(item)
+                    val timeInMillis = DateUtils.convertDateAndTimeToMillis(selectedDate, item.hour ?: 0, item.minute ?: 0)
+                    val alarm = Alarm(
+                        id = timeInMillis,
+                        icon = item.icon.toString().toIntOrNull() ?: 0,
+                        title = item.title ?: "",
+                        message = item.subTitle ?: "",
+                        timeInMillis = timeInMillis,
+                        gastosProgramadosId = item.uid ?: "",
+                        cashGastosprogramadosId = item.cash ?: ""
+                    )
+                    setUpAlarm(context, alarm)
                     onDismiss()
                 },
-                enabled = selectedDate.isNotEmpty()
+                enabled = timeInMillis.isNotEmpty()
             ) {
                 Text("Guardar")
             }

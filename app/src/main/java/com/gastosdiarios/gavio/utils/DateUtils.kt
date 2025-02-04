@@ -1,7 +1,10 @@
 package com.gastosdiarios.gavio.utils
 
+import android.icu.util.Calendar
 import android.util.Log
+import androidx.core.graphics.set
 import java.text.DateFormatSymbols
+import java.text.SimpleDateFormat
 import java.time.Instant
 import java.time.LocalDate
 import java.time.ZoneId
@@ -81,5 +84,17 @@ object DateUtils {
 
     fun toLocalDate(fecha: String): LocalDate {
         return LocalDate.parse(fecha, DateTimeFormatter.ISO_LOCAL_DATE)
+    }
+
+    //convierte a un valor numerico
+    fun convertDateAndTimeToMillis(date: String, hour: Int, minute: Int): Long {
+        val dateFormat = SimpleDateFormat("yyyy-MM-dd", Locale.getDefault())
+        val calendar = Calendar.getInstance()
+        calendar.time = dateFormat.parse(date) ?: return 0
+        calendar.set(Calendar.HOUR_OF_DAY, hour)
+        calendar.set(Calendar.MINUTE, minute)
+        calendar.set(Calendar.SECOND, 0)
+        calendar.set(Calendar.MILLISECOND, 0)
+        return calendar.timeInMillis
     }
 }

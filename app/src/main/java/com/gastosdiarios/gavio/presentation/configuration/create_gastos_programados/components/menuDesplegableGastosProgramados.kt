@@ -31,23 +31,26 @@ import androidx.compose.ui.res.painterResource
 import androidx.compose.ui.semantics.contentDescription
 import androidx.compose.ui.semantics.semantics
 import androidx.compose.ui.unit.dp
-import com.gastosdiarios.gavio.domain.model.CategoriesModel
-import com.gastosdiarios.gavio.domain.model.CategoryGastos
-import com.gastosdiarios.gavio.domain.model.categoriaDefault
-import com.gastosdiarios.gavio.domain.model.defaultCategoriesGastosList
-import com.gastosdiarios.gavio.domain.model.userCategoriesGastosList
-import com.gastosdiarios.gavio.domain.model.userCategoriesIngresosList
+import com.gastosdiarios.gavio.data.domain.model.CategoriesModel
+import com.gastosdiarios.gavio.data.domain.model.CategoryGastos
+import com.gastosdiarios.gavio.data.domain.model.categoriaDefault
+import com.gastosdiarios.gavio.data.domain.model.defaultCategoriesGastosList
+import com.gastosdiarios.gavio.data.domain.model.userCategoriesGastosList
+import com.gastosdiarios.gavio.data.domain.model.userCategoriesIngresosList
 
 @OptIn(ExperimentalMaterial3Api::class)
 @Composable
-fun menuDesplegableGastosProgramados(categorySelect: CategoryGastos): CategoriesModel {
+fun menuDesplegableGastosProgramados(categorySelect: com.gastosdiarios.gavio.data.domain.model.CategoryGastos): com.gastosdiarios.gavio.data.domain.model.CategoriesModel {
 
     var expanded by remember { mutableStateOf(false) }
 
     // Recordar la lista de categorías para evitar la recomposición innecesaria
-    val categories: List<CategoriesModel> =
-        remember(userCategoriesIngresosList, userCategoriesGastosList) {
-            categoriaDefault + userCategoriesGastosList + defaultCategoriesGastosList.sortedBy { it.name }
+    val categories: List<com.gastosdiarios.gavio.data.domain.model.CategoriesModel> =
+        remember(
+            com.gastosdiarios.gavio.data.domain.model.userCategoriesIngresosList,
+            com.gastosdiarios.gavio.data.domain.model.userCategoriesGastosList
+        ) {
+            com.gastosdiarios.gavio.data.domain.model.categoriaDefault + com.gastosdiarios.gavio.data.domain.model.userCategoriesGastosList + com.gastosdiarios.gavio.data.domain.model.defaultCategoriesGastosList.sortedBy { it.name }
         }
 
     val selectedItemInitial = categories.find { it.name == categorySelect.name }

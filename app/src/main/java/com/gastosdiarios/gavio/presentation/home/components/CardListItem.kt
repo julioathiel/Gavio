@@ -43,7 +43,7 @@ import androidx.compose.ui.unit.dp
 import androidx.compose.ui.unit.sp
 import com.gastosdiarios.gavio.R
 import com.gastosdiarios.gavio.data.commons.ProfileIcon
-import com.gastosdiarios.gavio.domain.model.modelFirebase.GastosProgramadosModel
+import com.gastosdiarios.gavio.data.domain.model.modelFirebase.GastosProgramadosModel
 import com.gastosdiarios.gavio.presentation.home.HomeViewModel
 import com.gastosdiarios.gavio.utils.CurrencyUtils
 
@@ -52,7 +52,7 @@ import com.gastosdiarios.gavio.utils.CurrencyUtils
 fun CardListItem(
     modifier: Modifier,
     viewModel: HomeViewModel,
-    item: GastosProgramadosModel,
+    item: com.gastosdiarios.gavio.data.domain.model.modelFirebase.GastosProgramadosModel,
     onPagarItem: () -> Unit,
     onRemoveItem: () -> Unit
 ) {

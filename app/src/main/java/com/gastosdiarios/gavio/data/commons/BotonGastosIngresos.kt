@@ -16,38 +16,38 @@ import androidx.compose.ui.graphics.Color
 import androidx.compose.ui.res.colorResource
 import androidx.compose.ui.unit.dp
 import com.gastosdiarios.gavio.R
-import com.gastosdiarios.gavio.domain.enums.TipoTransaccion
+import com.gastosdiarios.gavio.data.domain.enums.TipoTransaccion
 
 @Composable
 fun BotonGastosIngresos(
     modifier: Modifier = Modifier,
     enabledBotonGastos: Boolean,
     botonActivado: Int,
-    onTipoSeleccionado: (TipoTransaccion) -> Unit
+    onTipoSeleccionado: (com.gastosdiarios.gavio.data.domain.enums.TipoTransaccion) -> Unit
 ) {
     var selectedIndex by remember { mutableIntStateOf(botonActivado) }
-    val options = listOf(TipoTransaccion.GASTOS, TipoTransaccion.INGRESOS)
+    val options = listOf(com.gastosdiarios.gavio.data.domain.enums.TipoTransaccion.GASTOS, com.gastosdiarios.gavio.data.domain.enums.TipoTransaccion.INGRESOS)
     SingleChoiceSegmentedButtonRow (modifier = modifier){
         options.forEachIndexed { index, label ->
             val isSelected = index == selectedIndex
             val color = if (isSelected) {
                 when (label) {
-                    TipoTransaccion.GASTOS -> Color(0xFFFFEBEE)
-                    TipoTransaccion.INGRESOS -> colorResource(id = R.color.fondoVerdeDinero)
+                    com.gastosdiarios.gavio.data.domain.enums.TipoTransaccion.GASTOS -> Color(0xFFFFEBEE)
+                    com.gastosdiarios.gavio.data.domain.enums.TipoTransaccion.INGRESOS -> colorResource(id = R.color.fondoVerdeDinero)
                 }
             } else {
                 MaterialTheme.colorScheme.onSurfaceVariant
             }
             val colorText = if (isSelected) {
                 when (label) {
-                    TipoTransaccion.GASTOS -> colorResource(id = R.color.rojoDinero)
-                    TipoTransaccion.INGRESOS -> colorResource(id = R.color.verdeDinero)
+                    com.gastosdiarios.gavio.data.domain.enums.TipoTransaccion.GASTOS -> colorResource(id = R.color.rojoDinero)
+                    com.gastosdiarios.gavio.data.domain.enums.TipoTransaccion.INGRESOS -> colorResource(id = R.color.verdeDinero)
                 }
             } else {
                 Color.Transparent //los bordes no se veran
             }
 
-            val enabledButton = enabledBotonGastos || label != TipoTransaccion.GASTOS
+            val enabledButton = enabledBotonGastos || label != com.gastosdiarios.gavio.data.domain.enums.TipoTransaccion.GASTOS
 
             SegmentedButton(
                 modifier = modifier,

@@ -21,22 +21,22 @@ import androidx.compose.ui.text.style.TextOverflow
 import androidx.compose.ui.unit.dp
 import com.gastosdiarios.gavio.R
 import com.gastosdiarios.gavio.data.commons.ProfileIcon
-import com.gastosdiarios.gavio.domain.enums.TipoTransaccion
-import com.gastosdiarios.gavio.domain.model.modelFirebase.TransactionModel
+import com.gastosdiarios.gavio.data.domain.enums.TipoTransaccion
+import com.gastosdiarios.gavio.data.domain.model.modelFirebase.TransactionModel
 import com.gastosdiarios.gavio.presentation.transaction.TransactionsViewModel
 import com.gastosdiarios.gavio.utils.CurrencyUtils
 
 @OptIn(ExperimentalFoundationApi::class)
 @Composable
 fun ItemTransactions(
-    item: TransactionModel,
+    item: com.gastosdiarios.gavio.data.domain.model.modelFirebase.TransactionModel,
     viewModel: TransactionsViewModel,
     isSelect: Boolean,
     onClick: () -> Unit,
     onLongClick: () -> Unit
 ) {
     val data by viewModel.dataList.collectAsState()
-    val textColor = if (item.tipoTransaccion == TipoTransaccion.INGRESOS) {
+    val textColor = if (item.tipoTransaccion == com.gastosdiarios.gavio.data.domain.enums.TipoTransaccion.INGRESOS) {
         //si el usuario eligio ingreso, el color de los numeros sera verde
         colorResource(id = R.color.verdeDinero)
     } else MaterialTheme.colorScheme.onSurfaceVariant//sin color

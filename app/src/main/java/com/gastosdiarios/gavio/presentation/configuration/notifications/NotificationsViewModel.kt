@@ -1,19 +1,11 @@
 package com.gastosdiarios.gavio.presentation.configuration.notifications
 
-import android.app.AlarmManager
-import android.app.PendingIntent
 import android.content.Context
-import android.content.Intent
-import android.os.Build
-import android.util.Log
 import android.widget.Toast
 import androidx.lifecycle.ViewModel
 import androidx.lifecycle.viewModelScope
-import com.gastosdiarios.gavio.data.NotificationProgrammed
-import com.gastosdiarios.gavio.data.constants.Constants.NOTIFICATION_ID
+import com.gastosdiarios.gavio.data.repository.DataBaseManager
 import com.gastosdiarios.gavio.data.ui_state.UiStateSingle
-import com.gastosdiarios.gavio.domain.model.modelFirebase.UserPreferences
-import com.gastosdiarios.gavio.domain.repository.DataBaseManager
 import dagger.hilt.android.lifecycle.HiltViewModel
 import dagger.hilt.android.qualifiers.ApplicationContext
 import kotlinx.coroutines.flow.MutableStateFlow
@@ -33,7 +25,7 @@ class NotificationsViewModel @Inject constructor(
     val dbm: DataBaseManager
 ) : ViewModel() {
 
-    private val _uiState = MutableStateFlow<UiStateSingle<UserPreferences?>>(UiStateSingle.Loading)
+    private val _uiState = MutableStateFlow<UiStateSingle<com.gastosdiarios.gavio.data.domain.model.modelFirebase.UserPreferences?>>(UiStateSingle.Loading)
     val uiState = _uiState.onStart { getTime() }
         .catch { throwable ->
             _uiState.update { UiStateSingle.Error(throwable = throwable) }
@@ -47,48 +39,8 @@ class NotificationsViewModel @Inject constructor(
         }
     }
 
-    fun notificationProgrammed(
-        hour: Int? = null,
-        minute: Int? = null
-    ) {
-        // Verificar si el usuario especificó una hora y un minuto, de lo contrario, usar los predeterminados
-        val finalHour = hour ?: 21
-        val finalMinute = minute ?: 0
-        // Configurar la alarma para la hora especificada por el usuario o para las 21:00 horas si no se especifica ninguna hora y minuto
-        settingAlarm(finalHour, finalMinute)
-    }
 
-    private fun settingAlarm(
-        hour: Int,
-        minute: Int
-    ) {
-        val intent = Intent(context, NotificationProgrammed::class.java)
-        val pendingIntent = PendingIntent.getBroadcast(
-            context,
-            NOTIFICATION_ID,
-            intent,
-            PendingIntent.FLAG_IMMUTABLE or PendingIntent.FLAG_UPDATE_CURRENT
-        )
-        // Configurar la alarma para la hora y el minuto seleccionados
-        val alarmManager = context.getSystemService(Context.ALARM_SERVICE) as AlarmManager
 
-        val (selectedCalendar) = adjustSelectedTime(hour, minute)
-
-        if (Build.VERSION.SDK_INT >= Build.VERSION_CODES.TIRAMISU && !alarmManager.canScheduleExactAlarms()) {
-            //
-        } else {
-            try {
-                // Configurar la alarma para que se repita todos los días a la misma hora
-                alarmManager.setExact(
-                    AlarmManager.RTC_WAKEUP,
-                    selectedCalendar.timeInMillis,
-                    pendingIntent
-                )
-            } catch (e: SecurityException) {
-                Log.d("alarma", "Error de seguridad al configurar la alarma: ${e.message}")
-            }
-        }
-    }
 
     private fun adjustSelectedTime(hour: Int, minute: Int): Pair<Calendar, Calendar> {
         val currentCalendar = Calendar.getInstance()
@@ -119,7 +71,6 @@ class NotificationsViewModel @Inject constructor(
         val newHour = String.format(Locale.US, "%02d", hour)
         setHoraMinuto(newHour.toInt(), minute)
         // Obtener la hora y el minuto de selectedTime
-        notificationProgrammed(hour, minute)
 
         val (selectedCalendar, currentCalendar) = adjustSelectedTime(hour, minute)
 

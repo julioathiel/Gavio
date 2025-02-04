@@ -1,6 +1,6 @@
 package com.gastosdiarios.gavio.utils
 
-import com.gastosdiarios.gavio.domain.model.RefreshDataModel
+import com.gastosdiarios.gavio.data.domain.model.RefreshDataModel
 import kotlinx.coroutines.CoroutineScope
 import kotlinx.coroutines.delay
 import kotlinx.coroutines.flow.MutableStateFlow
@@ -11,7 +11,7 @@ import kotlin.time.Duration.Companion.seconds
 object RefreshDataUtils {
     fun refreshData(
         viewModelScope: CoroutineScope,
-        isRefreshing: MutableStateFlow<RefreshDataModel>,
+        isRefreshing: MutableStateFlow<com.gastosdiarios.gavio.data.domain.model.RefreshDataModel>,
         dataLoading: suspend () -> Unit
     ) {
         viewModelScope.launch {

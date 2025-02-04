@@ -46,10 +46,10 @@ import com.gastosdiarios.gavio.data.commons.CommonsLoaderData
 import com.gastosdiarios.gavio.data.commons.CommonsLoadingScreen
 import com.gastosdiarios.gavio.data.commons.ErrorScreen
 import com.gastosdiarios.gavio.data.commons.TopAppBarOnBack
-import com.gastosdiarios.gavio.data.constants.Constants.HORAS_PREDEFINIDAS
-import com.gastosdiarios.gavio.data.constants.Constants.MINUTOS_PREDEFINIDOS
+import com.gastosdiarios.gavio.utils.Constants.HORAS_PREDEFINIDAS
+import com.gastosdiarios.gavio.utils.Constants.MINUTOS_PREDEFINIDOS
 import com.gastosdiarios.gavio.data.ui_state.UiStateSingle
-import com.gastosdiarios.gavio.domain.model.modelFirebase.UserPreferences
+import com.gastosdiarios.gavio.data.domain.model.modelFirebase.UserPreferences
 import java.text.SimpleDateFormat
 import java.time.LocalTime
 import java.util.Calendar
@@ -93,7 +93,7 @@ fun NotificationsScreen(
 fun ContentNotifications(
     modifier: Modifier,
     viewModel: NotificationsViewModel,
-    data: UserPreferences?
+    data: com.gastosdiarios.gavio.data.domain.model.modelFirebase.UserPreferences?
 ) {
     var selectedTime by remember {
         mutableStateOf(
@@ -253,7 +253,7 @@ fun TimePickerDialog(
     title: String = "Select Time",
     onCancel: () -> Unit,
     onConfirm: () -> Unit,
-    toggle: @Composable () -> Unit = {},
+
     content: @Composable () -> Unit,
 ) {
     Dialog(
@@ -288,7 +288,7 @@ fun TimePickerDialog(
                         .height(40.dp)
                         .fillMaxWidth()
                 ) {
-                    toggle()
+
                     Spacer(modifier = Modifier.weight(1f))
                     TextButton(onClick = onCancel) {
                         Text("Cancel")

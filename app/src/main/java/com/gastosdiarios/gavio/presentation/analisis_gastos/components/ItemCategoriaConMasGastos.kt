@@ -17,19 +17,19 @@ import androidx.compose.ui.graphics.Color
 import androidx.compose.ui.unit.dp
 import com.gastosdiarios.gavio.R
 import com.gastosdiarios.gavio.data.commons.ProfileIcon
-import com.gastosdiarios.gavio.domain.model.modelFirebase.GastosPorCategoriaModel
+import com.gastosdiarios.gavio.data.domain.model.modelFirebase.GastosPorCategoriaModel
 import com.gastosdiarios.gavio.presentation.analisis_gastos.AnalisisGastosViewModel
 import com.gastosdiarios.gavio.utils.CurrencyUtils
 
 @Composable
 fun ItemCategoriaConMasGastos(
-    uiStateList: List<GastosPorCategoriaModel>,
+    uiStateList: List<com.gastosdiarios.gavio.data.domain.model.modelFirebase.GastosPorCategoriaModel>,
     viewModel: AnalisisGastosViewModel
 ) {
     val porcentaje: Int? by viewModel.porcentajeGasto.collectAsState()
     val icon by viewModel.myIcon.collectAsState()
     // obteniendo el maximo total  gastado
-    val category: GastosPorCategoriaModel = uiStateList.maxBy { it.totalGastado ?: 0.0 }
+    val category: com.gastosdiarios.gavio.data.domain.model.modelFirebase.GastosPorCategoriaModel = uiStateList.maxBy { it.totalGastado ?: 0.0 }
     val form = category.totalGastado ?: 0.0
 
     //muestra al usuario el total como $ 30.000,00

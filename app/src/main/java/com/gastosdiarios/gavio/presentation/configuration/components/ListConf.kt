@@ -20,13 +20,13 @@ import androidx.compose.ui.graphics.ColorFilter
 import androidx.compose.ui.platform.LocalContext
 import androidx.compose.ui.res.painterResource
 import androidx.compose.ui.unit.dp
-import com.gastosdiarios.gavio.domain.enums.ItemConfigurationEnum
+import com.gastosdiarios.gavio.data.domain.enums.ItemConfigurationEnum
 
 @Composable
 fun ListConf(
     modifier: Modifier,
-    items: List<ItemConfigurationEnum>,
-    onItemClick: (ItemConfigurationEnum) -> Unit
+    items: List<com.gastosdiarios.gavio.data.domain.enums.ItemConfigurationEnum>,
+    onItemClick: (com.gastosdiarios.gavio.data.domain.enums.ItemConfigurationEnum) -> Unit
 ) {
     val context = LocalContext.current
 

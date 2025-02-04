@@ -1,6 +1,6 @@
 package com.gastosdiarios.gavio.data.ui_state
 
-import com.gastosdiarios.gavio.domain.model.modelFirebase.UserData
+import com.gastosdiarios.gavio.data.domain.model.modelFirebase.UserData
 
 sealed class UserDataUiState {
     data object Loading : UserDataUiState()

@@ -1,8 +1,8 @@
 package com.gastosdiarios.gavio.bar_graph_custom
 
 
-import com.gastosdiarios.gavio.domain.model.modelFirebase.BarDataModel
-import com.gastosdiarios.gavio.domain.repository.repositoriesFirestrore.BarDataFirestore
+import com.gastosdiarios.gavio.data.domain.model.modelFirebase.BarDataModel
+import com.gastosdiarios.gavio.data.repository.repositoriesFirestrore.BarDataFirestore
 import kotlinx.coroutines.CoroutineScope
 import kotlinx.coroutines.Dispatchers
 import kotlinx.coroutines.launch
@@ -17,7 +17,7 @@ class CircularBuffer(
 
      suspend fun adjustBufferCapacityIfNeeded() {
         coroutineScope.launch {
-            val currentList: List<BarDataModel> = db.get()
+            val currentList: List<com.gastosdiarios.gavio.data.domain.model.modelFirebase.BarDataModel> = db.get()
             if (currentList.size.plus(1) > capacity) {
                 // Remueve los primeros itemsToRemove elementos
                 val itemsToRemove = currentList.size.plus(1) - capacity
@@ -27,7 +27,7 @@ class CircularBuffer(
         }
     }
 
-    fun updateBarGraphItem(item: BarDataModel, listaGuardada: List<BarDataModel>) {
+    fun updateBarGraphItem(item: com.gastosdiarios.gavio.data.domain.model.modelFirebase.BarDataModel, listaGuardada: List<com.gastosdiarios.gavio.data.domain.model.modelFirebase.BarDataModel>) {
         coroutineScope.launch {
             val existingItem = listaGuardada.find { it.month == item.month }
             val uid = existingItem?.uid
@@ -41,19 +41,19 @@ class CircularBuffer(
     }
 
 
-     suspend fun createBarGraph(item: BarDataModel) {
+     suspend fun createBarGraph(item: com.gastosdiarios.gavio.data.domain.model.modelFirebase.BarDataModel) {
         coroutineScope.launch { db.create(item) }
     }
 
-    private suspend fun updateBarGraph(item: BarDataModel) {
+    private suspend fun updateBarGraph(item: com.gastosdiarios.gavio.data.domain.model.modelFirebase.BarDataModel) {
         coroutineScope.launch { db.update(item) }
     }
 
-    private suspend fun deleteBarGraph(item: BarDataModel) {
+    private suspend fun deleteBarGraph(item: com.gastosdiarios.gavio.data.domain.model.modelFirebase.BarDataModel) {
         coroutineScope.launch { db.delete(item) }
     }
 
-    suspend fun getBarGraphList(): List<BarDataModel> {
+    suspend fun getBarGraphList(): List<com.gastosdiarios.gavio.data.domain.model.modelFirebase.BarDataModel> {
         return db.get()
     }
 }

@@ -50,8 +50,8 @@ import com.gastosdiarios.gavio.data.commons.ErrorScreen
 import com.gastosdiarios.gavio.data.commons.TextFieldDescription
 import com.gastosdiarios.gavio.data.commons.TopAppBarOnBack
 import com.gastosdiarios.gavio.data.ui_state.UiStateList
-import com.gastosdiarios.gavio.domain.model.Action
-import com.gastosdiarios.gavio.domain.model.modelFirebase.TransactionModel
+import com.gastosdiarios.gavio.data.domain.model.Action
+import com.gastosdiarios.gavio.data.domain.model.modelFirebase.TransactionModel
 import com.gastosdiarios.gavio.presentation.configuration.create_gastos_programados.components.DialogDelete
 import com.gastosdiarios.gavio.presentation.home.components.TextFieldDinero
 import com.gastosdiarios.gavio.presentation.transaction.components.ItemFecha
@@ -82,12 +82,12 @@ fun TransactionsScreen(
     }
 
     val actions = listOf(
-        Action(
+        com.gastosdiarios.gavio.data.domain.model.Action(
             icon = Icons.Default.Create,
             contentDescription = "editar",
             onClick = { viewModel.isCreateTrue() }
         ),
-        Action(
+        com.gastosdiarios.gavio.data.domain.model.Action(
             icon = Icons.Default.Delete,
             contentDescription = "delete",
             onClick = { viewModel.isDeleteTrue() }
@@ -127,7 +127,7 @@ fun TransactionsScreen(
         sheetContent = {
             when {
                 data.isCreate -> {
-                    val item = data.selectedItems.firstOrNull() ?: TransactionModel()
+                    val item = data.selectedItems.firstOrNull() ?: com.gastosdiarios.gavio.data.domain.model.modelFirebase.TransactionModel()
 
                     ModalBottomSheet(onDismissRequest = { viewModel.isCreateFalse() },
                         sheetState = rememberModalBottomSheetState(skipPartiallyExpanded = true),
@@ -160,8 +160,8 @@ fun TransactionsScreen(
                     }
 
                     is UiStateList.Success -> {
-                        val list: List<TransactionModel> =
-                            (uiState as UiStateList.Success<TransactionModel>).data
+                        val list: List<com.gastosdiarios.gavio.data.domain.model.modelFirebase.TransactionModel> =
+                            (uiState as UiStateList.Success<com.gastosdiarios.gavio.data.domain.model.modelFirebase.TransactionModel>).data
                         ContentList(
                             viewModel,
                             list = list,
@@ -192,7 +192,7 @@ fun TransactionsScreen(
 @Composable
 fun ContentList(
     viewModel: TransactionsViewModel,
-    list: List<TransactionModel>,
+    list: List<com.gastosdiarios.gavio.data.domain.model.modelFirebase.TransactionModel>,
     showCommonsLoadingData: Boolean
 ) {
     val data by viewModel.dataList.collectAsState()
@@ -240,7 +240,7 @@ fun ContentList(
 
 @Composable
 fun ContentBottomSheetTransaction(
-    item: TransactionModel,
+    item: com.gastosdiarios.gavio.data.domain.model.modelFirebase.TransactionModel,
     onDismiss: () -> Unit,
     viewModel: TransactionsViewModel
 ) {

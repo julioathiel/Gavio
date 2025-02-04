@@ -3,9 +3,9 @@ package com.gastosdiarios.gavio.presentation.configuration.ajustes_avanzados
 import androidx.lifecycle.ViewModel
 import androidx.lifecycle.viewModelScope
 import com.gastosdiarios.gavio.data.ui_state.UiStateSingle
-import com.gastosdiarios.gavio.domain.enums.ThemeMode
-import com.gastosdiarios.gavio.domain.model.modelFirebase.UserPreferences
-import com.gastosdiarios.gavio.domain.repository.DataBaseManager
+import com.gastosdiarios.gavio.data.domain.enums.ThemeMode
+import com.gastosdiarios.gavio.data.domain.model.modelFirebase.UserPreferences
+import com.gastosdiarios.gavio.data.repository.DataBaseManager
 import dagger.hilt.android.lifecycle.HiltViewModel
 import kotlinx.coroutines.flow.MutableSharedFlow
 import kotlinx.coroutines.flow.MutableStateFlow
@@ -24,10 +24,10 @@ class AjustesViewModel @Inject constructor(
     private val dbm: DataBaseManager,
 ) : ViewModel() {
 
-    private val _themeModeChanged = MutableSharedFlow<ThemeMode>()
-    val themeModeChanged: SharedFlow<ThemeMode> = _themeModeChanged.asSharedFlow()
+    private val _themeModeChanged = MutableSharedFlow<com.gastosdiarios.gavio.data.domain.enums.ThemeMode>()
+    val themeModeChanged: SharedFlow<com.gastosdiarios.gavio.data.domain.enums.ThemeMode> = _themeModeChanged.asSharedFlow()
 
-    private val _uiState = MutableStateFlow<UiStateSingle<UserPreferences?>>(UiStateSingle.Loading)
+    private val _uiState = MutableStateFlow<UiStateSingle<com.gastosdiarios.gavio.data.domain.model.modelFirebase.UserPreferences?>>(UiStateSingle.Loading)
     val uiState = _uiState.onStart { getUserPreferences() }
         .catch { throwable ->
             _uiState.update { UiStateSingle.Error(throwable = throwable) }
@@ -38,7 +38,7 @@ class AjustesViewModel @Inject constructor(
     private fun getUserPreferences() {
         viewModelScope.launch {
             try {
-                val data: UserPreferences? = dbm.getUserPreferences()
+                val data: com.gastosdiarios.gavio.data.domain.model.modelFirebase.UserPreferences? = dbm.getUserPreferences()
                 _uiState.update { UiStateSingle.Success(data) }
             } catch (e: Exception) {
                 _uiState.update { UiStateSingle.Error(throwable = e) }
@@ -69,7 +69,7 @@ class AjustesViewModel @Inject constructor(
         }
     }
 
-    fun updateThemeMode(themeMode: ThemeMode) {
+    fun updateThemeMode(themeMode: com.gastosdiarios.gavio.data.domain.enums.ThemeMode) {
         viewModelScope.launch {
             try {
                 val currentData = when (val currentState = _uiState.value) {

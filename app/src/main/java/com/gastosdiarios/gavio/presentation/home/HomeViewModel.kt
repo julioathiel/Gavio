@@ -10,26 +10,26 @@ import androidx.lifecycle.viewModelScope
 import com.gastosdiarios.gavio.R
 import com.gastosdiarios.gavio.bar_graph_custom.CircularBuffer
 import com.gastosdiarios.gavio.data.commons.SnackbarManager
-import com.gastosdiarios.gavio.data.constants.Constants.LIMIT_MONTH
+import com.gastosdiarios.gavio.utils.Constants.LIMIT_MONTH
 import com.gastosdiarios.gavio.data.ui_state.HomeUiState
 import com.gastosdiarios.gavio.data.ui_state.UiStateSingle
-import com.gastosdiarios.gavio.domain.enums.TipoTransaccion
-import com.gastosdiarios.gavio.domain.model.CategoryGastos
-import com.gastosdiarios.gavio.domain.model.CategoryIngresos
-import com.gastosdiarios.gavio.domain.model.RefreshDataModel
-import com.gastosdiarios.gavio.domain.model.UserCreateCategoriesModel
-import com.gastosdiarios.gavio.domain.model.defaultCategoriesGastosList
-import com.gastosdiarios.gavio.domain.model.defaultCategoriesIngresosList
-import com.gastosdiarios.gavio.domain.model.modelFirebase.BarDataModel
-import com.gastosdiarios.gavio.domain.model.modelFirebase.GastosPorCategoriaModel
-import com.gastosdiarios.gavio.domain.model.modelFirebase.GastosProgramadosModel
-import com.gastosdiarios.gavio.domain.model.modelFirebase.TransactionModel
-import com.gastosdiarios.gavio.domain.repository.AuthFirebaseImp
-import com.gastosdiarios.gavio.domain.repository.DataBaseManager
-import com.gastosdiarios.gavio.domain.repository.repositoriesFirestrore.BarDataFirestore
-import com.gastosdiarios.gavio.domain.repository.repositoriesFirestrore.GastosPorCategoriaFirestore
-import com.gastosdiarios.gavio.domain.repository.repositoriesFirestrore.GastosProgramadosFirestore
-import com.gastosdiarios.gavio.domain.repository.repositoriesFirestrore.TransactionsFirestore
+import com.gastosdiarios.gavio.data.domain.enums.TipoTransaccion
+import com.gastosdiarios.gavio.data.domain.model.CategoryGastos
+import com.gastosdiarios.gavio.data.domain.model.CategoryIngresos
+import com.gastosdiarios.gavio.data.domain.model.RefreshDataModel
+import com.gastosdiarios.gavio.data.domain.model.UserCreateCategoriesModel
+import com.gastosdiarios.gavio.data.domain.model.defaultCategoriesGastosList
+import com.gastosdiarios.gavio.data.domain.model.defaultCategoriesIngresosList
+import com.gastosdiarios.gavio.data.domain.model.modelFirebase.BarDataModel
+import com.gastosdiarios.gavio.data.domain.model.modelFirebase.GastosPorCategoriaModel
+import com.gastosdiarios.gavio.data.domain.model.modelFirebase.GastosProgramadosModel
+import com.gastosdiarios.gavio.data.domain.model.modelFirebase.TransactionModel
+import com.gastosdiarios.gavio.data.repository.AuthFirebaseImp
+import com.gastosdiarios.gavio.data.repository.DataBaseManager
+import com.gastosdiarios.gavio.data.repository.repositoriesFirestrore.BarDataFirestore
+import com.gastosdiarios.gavio.data.repository.repositoriesFirestrore.GastosPorCategoriaFirestore
+import com.gastosdiarios.gavio.data.repository.repositoriesFirestrore.GastosProgramadosFirestore
+import com.gastosdiarios.gavio.data.repository.repositoriesFirestrore.TransactionsFirestore
 import com.gastosdiarios.gavio.utils.DateUtils
 import com.gastosdiarios.gavio.utils.DateUtils.agregandoUnMes
 import com.gastosdiarios.gavio.utils.DateUtils.converterFechaPersonalizada
@@ -40,7 +40,6 @@ import com.google.firebase.auth.FirebaseUser
 import dagger.hilt.android.lifecycle.HiltViewModel
 import dagger.hilt.android.qualifiers.ApplicationContext
 import kotlinx.coroutines.Dispatchers
-import kotlinx.coroutines.delay
 import kotlinx.coroutines.flow.MutableStateFlow
 import kotlinx.coroutines.flow.SharingStarted
 import kotlinx.coroutines.flow.StateFlow
@@ -57,7 +56,6 @@ import java.time.LocalDate
 import java.time.format.DateTimeParseException
 import java.time.temporal.ChronoUnit
 import javax.inject.Inject
-import kotlin.time.Duration.Companion.seconds
 
 @HiltViewModel
 class HomeViewModel @Inject constructor(
@@ -88,11 +86,15 @@ class HomeViewModel @Inject constructor(
     private val _homeUiState = MutableStateFlow(HomeUiState())
     val homeUiState: StateFlow<HomeUiState> = _homeUiState.asStateFlow()
 
-    private val _isRefreshing = MutableStateFlow(RefreshDataModel(isRefreshing = false))
-    val isRefreshing: StateFlow<RefreshDataModel> = _isRefreshing.asStateFlow()
+    private val _isRefreshing = MutableStateFlow(
+        com.gastosdiarios.gavio.data.domain.model.RefreshDataModel(
+            isRefreshing = false
+        )
+    )
+    val isRefreshing: StateFlow<com.gastosdiarios.gavio.data.domain.model.RefreshDataModel> = _isRefreshing.asStateFlow()
 
-    private val _listFilter = mutableStateListOf<GastosProgramadosModel>()
-    val listFilter: List<GastosProgramadosModel> = _listFilter
+    private val _listFilter = mutableStateListOf<com.gastosdiarios.gavio.data.domain.model.modelFirebase.GastosProgramadosModel>()
+    val listFilter: List<com.gastosdiarios.gavio.data.domain.model.modelFirebase.GastosProgramadosModel> = _listFilter
 
     private val circularBuffer = CircularBuffer(capacity = LIMIT_MONTH, db = barDataFirestore)
 
@@ -124,7 +126,7 @@ class HomeViewModel @Inject constructor(
                                 // Insertar un nuevo elemento
                                 circularBuffer.adjustBufferCapacityIfNeeded()
                                 circularBuffer.createBarGraph(
-                                    BarDataModel(
+                                    com.gastosdiarios.gavio.data.domain.model.modelFirebase.BarDataModel(
                                         value = 0f,
                                         month = DateUtils.currentMonth()!!,
                                         money = "0"
@@ -138,7 +140,7 @@ class HomeViewModel @Inject constructor(
                                     categoryName = getString(R.string.saldo_restante),
                                     description = "",
                                     categoryIcon = R.drawable.ic_sueldo,
-                                    tipoTransaccion = TipoTransaccion.INGRESOS
+                                    tipoTransaccion = com.gastosdiarios.gavio.data.domain.enums.TipoTransaccion.INGRESOS
                                 )
                                 //actualizando con el nuevo valor maximo del progress
                                 _homeUiState.update {
@@ -322,7 +324,7 @@ class HomeViewModel @Inject constructor(
     }
 
     //...FUNCION QUE SE USA CUANDO SE CREA UNA TRANSACTION
-    fun cantidadIngresada(cantidadIngresada: String, tipoTransaccion: TipoTransaccion) {
+    fun cantidadIngresada(cantidadIngresada: String, tipoTransaccion: com.gastosdiarios.gavio.data.domain.enums.TipoTransaccion) {
         _homeUiState.update { _homeUiState.value.copy(cantidadIngresada = cantidadIngresada) }
         calulatorDialog(cantidadIngresada.toDouble(), tipoTransaccion)
     }
@@ -330,7 +332,7 @@ class HomeViewModel @Inject constructor(
     //...FUNCION QUE SE USA PARA CALCULAR TOTALiNGRESOS, TOTALgASTOS, CURRENTMONEY
     private fun calulatorDialog(
         cantidadIngresada: Double,
-        tipoTransaccion: TipoTransaccion
+        tipoTransaccion: com.gastosdiarios.gavio.data.domain.enums.TipoTransaccion
     ) {
         viewModelScope.launch {
             val data = dbm.getUserData()
@@ -341,12 +343,12 @@ class HomeViewModel @Inject constructor(
             val date = data?.selectedDate ?: ""
 
             val nuevoTotal = when (tipoTransaccion) {
-                TipoTransaccion.INGRESOS -> addDiner(cantidadIngresada, totalIngresos)
+                com.gastosdiarios.gavio.data.domain.enums.TipoTransaccion.INGRESOS -> addDiner(cantidadIngresada, totalIngresos)
                 else -> addDiner(cantidadIngresada, totalGastos)
             }
 
             val dinerActual = when (tipoTransaccion) {
-                TipoTransaccion.INGRESOS -> addDiner(cantidadIngresada, currentMoney)
+                com.gastosdiarios.gavio.data.domain.enums.TipoTransaccion.INGRESOS -> addDiner(cantidadIngresada, currentMoney)
                 else -> maxOf(
                     restarDinero(cantidadIngresada.toString(), currentMoney),
                     0.0
@@ -355,7 +357,7 @@ class HomeViewModel @Inject constructor(
 
             //si el usuario eligio ingresos
             when (tipoTransaccion) {
-                TipoTransaccion.INGRESOS ->
+                com.gastosdiarios.gavio.data.domain.enums.TipoTransaccion.INGRESOS ->
                     if (currentMoneyIsZero) {
                         //data.checked es true entonces significa que no hay nada aun guardado
                         insertPrimerTotalIngresos(nuevoTotal)
@@ -366,7 +368,7 @@ class HomeViewModel @Inject constructor(
                         updateIngresos(nuevoTotal)
                     }
                 //Si el usuario eligio Gastos
-                TipoTransaccion.GASTOS -> {
+                com.gastosdiarios.gavio.data.domain.enums.TipoTransaccion.GASTOS -> {
                     //si el usuario eligio gastos
                     if (dinerActual == 0.0 && nuevoTotal > 0.0) {
                         //reseteando el progress
@@ -471,18 +473,21 @@ class HomeViewModel @Inject constructor(
         viewModelScope.launch {
             val newCategories = withContext(Dispatchers.IO) {
                 dbm.getUserCategoryGastos().map { document ->
-                    val date = UserCreateCategoriesModel(
+                    val date = com.gastosdiarios.gavio.data.domain.model.UserCreateCategoriesModel(
                         nameCategory = document.categoryName ?: "",
                         categoryIcon = document.categoryIcon ?: ""
                     )
                     val icon = date.categoryIcon?.toIntOrNull() ?: 0
-                    CategoryGastos(name = date.nameCategory!!, icon = icon)
+                    com.gastosdiarios.gavio.data.domain.model.CategoryGastos(
+                        name = date.nameCategory!!,
+                        icon = icon
+                    )
                 }
             }.distinctBy { it.name } // Elimina duplicados
             // Añade solo categorías nuevas que aún no existan
             newCategories.forEach { newCategory ->
-                if (!defaultCategoriesGastosList.any { it.name == newCategory.name }) {
-                    defaultCategoriesGastosList.add(newCategory)
+                if (!com.gastosdiarios.gavio.data.domain.model.defaultCategoriesGastosList.any { it.name == newCategory.name }) {
+                    com.gastosdiarios.gavio.data.domain.model.defaultCategoriesGastosList.add(newCategory)
                 }
             }
         }
@@ -492,18 +497,21 @@ class HomeViewModel @Inject constructor(
         viewModelScope.launch {
             val newCategories = withContext(Dispatchers.IO) {
                 dbm.getUserCategoryIngresos().map { document ->
-                    val date = UserCreateCategoriesModel(
+                    val date = com.gastosdiarios.gavio.data.domain.model.UserCreateCategoriesModel(
                         nameCategory = document.categoryName ?: "",
                         categoryIcon = document.categoryIcon ?: ""
                     )
                     val icon = date.categoryIcon?.toIntOrNull() ?: 0
-                    CategoryIngresos(name = date.nameCategory!!, icon = icon)
+                    com.gastosdiarios.gavio.data.domain.model.CategoryIngresos(
+                        name = date.nameCategory!!,
+                        icon = icon
+                    )
                 }
             }.distinctBy { it.name }
             // Añade solo categorías nuevas que aún no existan
             newCategories.forEach { newCategory ->
-                if (!defaultCategoriesIngresosList.any { it.name == newCategory.name }) {
-                    defaultCategoriesIngresosList.add(newCategory)
+                if (!com.gastosdiarios.gavio.data.domain.model.defaultCategoriesIngresosList.any { it.name == newCategory.name }) {
+                    com.gastosdiarios.gavio.data.domain.model.defaultCategoriesIngresosList.add(newCategory)
                 }
             }
         }
@@ -526,16 +534,17 @@ class HomeViewModel @Inject constructor(
                 val getCantidad = getGastos.first { it.title == nameCategory }.totalGastado
                 val newTotalGastado = getCantidad!! + cantidadIngresada.toDouble()
                 // Actualizar la cantidad en la lista
-                val entity = GastosPorCategoriaModel(
-                    uid = uid,
-                    title = nameCategory,
-                    icon = icon.toString(),
-                    totalGastado = newTotalGastado
-                )
+                val entity =
+                    com.gastosdiarios.gavio.data.domain.model.modelFirebase.GastosPorCategoriaModel(
+                        uid = uid,
+                        title = nameCategory,
+                        icon = icon.toString(),
+                        totalGastado = newTotalGastado
+                    )
                 gastosPorCategoriaFirestore.update(entity)
             } else {
                 gastosPorCategoriaFirestore.create(
-                    GastosPorCategoriaModel(
+                    com.gastosdiarios.gavio.data.domain.model.modelFirebase.GastosPorCategoriaModel(
                         title = nameCategory,
                         icon = icon.toString(),
                         totalGastado = cantidadIngresada.toDouble()
@@ -550,7 +559,7 @@ class HomeViewModel @Inject constructor(
         categoryName: String,
         description: String,
         categoryIcon: Int,
-        tipoTransaccion: TipoTransaccion,
+        tipoTransaccion: com.gastosdiarios.gavio.data.domain.enums.TipoTransaccion,
     ) {
 
         viewModelScope.launch {
@@ -558,7 +567,7 @@ class HomeViewModel @Inject constructor(
             val newIndex = list.maxOfOrNull { it.index ?: 0 }?.plus(1) ?: 0
 
             transactionsFirestore.create(
-                TransactionModel(
+                com.gastosdiarios.gavio.data.domain.model.modelFirebase.TransactionModel(
                     title = categoryName,
                     subTitle = description,
                     cash = cantidad,
@@ -593,7 +602,7 @@ class HomeViewModel @Inject constructor(
                 _homeUiState.update {
                     _homeUiState.value.copy(
                         buttonIngresosActivated = 1,// el boton ingreso esta activado
-                        tipoTransaccion = TipoTransaccion.INGRESOS,// el menu de ingresos esta activado
+                        tipoTransaccion = com.gastosdiarios.gavio.data.domain.enums.TipoTransaccion.INGRESOS,// el menu de ingresos esta activado
                         enabledButtonGastos = false //el boton de gastos esta desactivado
                     )
                 }
@@ -601,7 +610,7 @@ class HomeViewModel @Inject constructor(
                 _homeUiState.update {
                     _homeUiState.value.copy(
                         buttonIngresosActivated = 0,// el boton gastos esta activado
-                        tipoTransaccion = TipoTransaccion.GASTOS,// el menu de gastos esta activado = false,// el menu de gastos esta activado
+                        tipoTransaccion = com.gastosdiarios.gavio.data.domain.enums.TipoTransaccion.GASTOS,// el menu de gastos esta activado = false,// el menu de gastos esta activado
                         enabledButtonGastos = true //el boton de gastos esta activado
                     )
 
@@ -620,7 +629,7 @@ class HomeViewModel @Inject constructor(
         }
     }
 
-    fun setIsChecked(value: TipoTransaccion) {
+    fun setIsChecked(value: com.gastosdiarios.gavio.data.domain.enums.TipoTransaccion) {
         _homeUiState.update { it.copy(tipoTransaccion = value) }
     }
 
@@ -635,7 +644,7 @@ class HomeViewModel @Inject constructor(
     fun getCurrentUser(): FirebaseUser? = authFirebaseImp.getCurrentUser()
 
     //--------------Gastos programados
-    fun pagarItem(item: GastosProgramadosModel) {
+    fun pagarItem(item: com.gastosdiarios.gavio.data.domain.model.modelFirebase.GastosProgramadosModel) {
         viewModelScope.launch {
             try {
                 val data = dbm.getUserData()
@@ -649,14 +658,14 @@ class HomeViewModel @Inject constructor(
                 } else {
                     clearItem(item)
                     //
-                    cantidadIngresada(item.cash ?: "", TipoTransaccion.GASTOS)
+                    cantidadIngresada(item.cash ?: "", com.gastosdiarios.gavio.data.domain.enums.TipoTransaccion.GASTOS)
                     //se crea para la lista de transacciones
                     crearTransaction(
                         cantidad = item.cash ?: "",
                         categoryName = item.title ?: "",
                         description = item.subTitle ?: "",
                         categoryIcon = item.icon?.toInt() ?: 0,
-                        tipoTransaccion = TipoTransaccion.GASTOS
+                        tipoTransaccion = com.gastosdiarios.gavio.data.domain.enums.TipoTransaccion.GASTOS
                     )
                     //dentro de esta funcion se verifica si no esta creado el item en la base de datos
                     crearNuevaCategoriaDeGastos(
@@ -677,7 +686,7 @@ class HomeViewModel @Inject constructor(
         }
     }
 
-    fun clearItem(item: GastosProgramadosModel) {
+    fun clearItem(item: com.gastosdiarios.gavio.data.domain.model.modelFirebase.GastosProgramadosModel) {
         viewModelScope.launch {
             try {
                 _listFilter.remove(item)

@@ -8,12 +8,12 @@ import androidx.compose.runtime.State
 import androidx.compose.runtime.mutableStateOf
 import androidx.lifecycle.ViewModel
 import androidx.lifecycle.viewModelScope
-import com.gastosdiarios.gavio.data.constants.Constants.MIN_PASS_LENGTH
-import com.gastosdiarios.gavio.data.constants.Constants.PASS_PATTERN
-import com.gastosdiarios.gavio.data.constants.Constants.PROVIDER_EMAIL
+import com.gastosdiarios.gavio.utils.Constants.MIN_PASS_LENGTH
+import com.gastosdiarios.gavio.utils.Constants.PASS_PATTERN
+import com.gastosdiarios.gavio.utils.Constants.PROVIDER_EMAIL
 import com.gastosdiarios.gavio.data.ui_state.LoginUiState
-import com.gastosdiarios.gavio.domain.model.modelFirebase.UserModel
-import com.gastosdiarios.gavio.domain.repository.CloudFirestore
+import com.gastosdiarios.gavio.data.domain.model.modelFirebase.UserModel
+import com.gastosdiarios.gavio.data.repository.CloudFirestore
 import com.google.firebase.auth.FirebaseAuth
 import com.google.firebase.auth.FirebaseAuthInvalidCredentialsException
 import com.google.firebase.auth.FirebaseAuthWeakPasswordException
@@ -64,7 +64,7 @@ class RegisterViewModel @Inject constructor(
                     if (profileTask.isSuccessful) {
                         Log.d(tag, "Perfil actualizado correctamente")
                         insertUsersFirestore(
-                            UserModel(
+                            com.gastosdiarios.gavio.data.domain.model.modelFirebase.UserModel(
                                 userId = user.uid,
                                 name = user.displayName,
                                 email = user.email,
@@ -121,7 +121,7 @@ class RegisterViewModel @Inject constructor(
     }
 
     //funcion que sirve para registrarse por correo y contraseña
-    private fun insertUsersFirestore(user: UserModel) {
+    private fun insertUsersFirestore(user: com.gastosdiarios.gavio.data.domain.model.modelFirebase.UserModel) {
         viewModelScope.launch {
            cloudFirestore.insertUserToFirestore(user)
         }

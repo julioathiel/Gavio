@@ -22,13 +22,12 @@ import androidx.compose.runtime.collectAsState
 import androidx.compose.runtime.getValue
 import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
-import androidx.compose.ui.draw.clip
 import androidx.compose.ui.graphics.Color
 import androidx.compose.ui.text.style.TextOverflow
 import androidx.compose.ui.unit.dp
 import com.gastosdiarios.gavio.R
 import com.gastosdiarios.gavio.data.commons.ProfileIcon
-import com.gastosdiarios.gavio.domain.model.modelFirebase.GastosProgramadosModel
+import com.gastosdiarios.gavio.data.domain.model.modelFirebase.GastosProgramadosModel
 import com.gastosdiarios.gavio.presentation.configuration.create_gastos_programados.CreateGastosProgramadosViewModel
 import com.gastosdiarios.gavio.utils.CurrencyUtils
 import com.gastosdiarios.gavio.utils.DateUtils
@@ -48,6 +47,8 @@ fun ReplyListItem(
     val title = item.title ?: ""
     val subtitle = item.subTitle ?: ""
     val icon = item.icon?.toInt() ?: R.drawable.ic_info
+    val hour = item.hour ?: ""
+    val minute = item.minute ?: ""
 
 
     Row(
@@ -62,6 +63,8 @@ fun ReplyListItem(
             .background(
                 if (isSelected) {
                     MaterialTheme.colorScheme.surfaceBright
+                } else if (item.select == true) {
+                    Color.Green
                 } else {
                     MaterialTheme.colorScheme.surface
                 }
@@ -85,8 +88,10 @@ fun ReplyListItem(
             )
 
             Box(
-                Modifier.align(Alignment.BottomEnd)
-                    .background(MaterialTheme.colorScheme.tertiaryContainer,
+                Modifier
+                    .align(Alignment.BottomEnd)
+                    .background(
+                        MaterialTheme.colorScheme.tertiaryContainer,
                         shape = CircleShape
                     )
             ) {
@@ -120,11 +125,18 @@ fun ReplyListItem(
 
                 Text(text = cash)
             }
-            Text(
-                text = DateUtils.converterFechaPersonalizada(date),
-                modifier = Modifier.padding(bottom = 8.dp),
-            )
-
+            Column {
+                Text(
+                    text = DateUtils.converterFechaPersonalizada(date),
+                    modifier = Modifier.padding(bottom = 8.dp),
+                )
+                Text(
+                    text = "$hour:$minute",
+                    modifier = Modifier
+                        .padding(bottom = 8.dp)
+                        .align(Alignment.End),
+                )
+            }
         }
     }
 }

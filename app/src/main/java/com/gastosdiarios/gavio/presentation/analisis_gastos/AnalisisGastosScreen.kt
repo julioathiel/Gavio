@@ -46,8 +46,8 @@ import com.gastosdiarios.gavio.data.commons.CommonsIsEmpty
 import com.gastosdiarios.gavio.data.commons.CommonsLoadingScreen
 import com.gastosdiarios.gavio.data.commons.ErrorScreen
 import com.gastosdiarios.gavio.data.ui_state.UiStateList
-import com.gastosdiarios.gavio.domain.model.modelFirebase.BarDataModel
-import com.gastosdiarios.gavio.domain.model.modelFirebase.GastosPorCategoriaModel
+import com.gastosdiarios.gavio.data.domain.model.modelFirebase.BarDataModel
+import com.gastosdiarios.gavio.data.domain.model.modelFirebase.GastosPorCategoriaModel
 import com.gastosdiarios.gavio.presentation.analisis_gastos.components.ItemCategoriaConMasGastos
 import com.gastosdiarios.gavio.presentation.analisis_gastos.components.ItemCategory
 
@@ -133,8 +133,8 @@ fun GastosPorCategoriaList(
                 }
 
                 is UiStateList.Success -> {
-                    val list: List<BarDataModel> =
-                        (uiStateListBarGraph as UiStateList.Success<BarDataModel>).data
+                    val list: List<com.gastosdiarios.gavio.data.domain.model.modelFirebase.BarDataModel> =
+                        (uiStateListBarGraph as UiStateList.Success<com.gastosdiarios.gavio.data.domain.model.modelFirebase.BarDataModel>).data
                     Card(colors = CardDefaults.cardColors(containerColor = MaterialTheme.colorScheme.surfaceContainer)) {
                         BarGraphConfigCustom(list)
                     }
@@ -166,17 +166,18 @@ fun GastosPorCategoriaList(
                 UiStateList.Loading -> {}
 
                 UiStateList.Empty -> {
-                    val sinCategoria = GastosPorCategoriaModel(
-                        uid = "0",
-                        title = "Sin categoría",
-                        icon = "",
-                        totalGastado = 0.0
-                    )
+                    val sinCategoria =
+                        com.gastosdiarios.gavio.data.domain.model.modelFirebase.GastosPorCategoriaModel(
+                            uid = "0",
+                            title = "Sin categoría",
+                            icon = "",
+                            totalGastado = 0.0
+                        )
                     ItemCategoriaConMasGastos(uiStateList = listOf(sinCategoria), viewModel)
                 }
 
                 is UiStateList.Success -> {
-                    val list = (uiState as UiStateList.Success<GastosPorCategoriaModel>).data
+                    val list = (uiState as UiStateList.Success<com.gastosdiarios.gavio.data.domain.model.modelFirebase.GastosPorCategoriaModel>).data
                     ItemCategoriaConMasGastos(uiStateList = list, viewModel)
                 }
 
@@ -217,7 +218,7 @@ fun GastosPorCategoriaList(
             }
 
             is UiStateList.Success -> {
-                val list = (uiState as UiStateList.Success<GastosPorCategoriaModel>).data
+                val list = (uiState as UiStateList.Success<com.gastosdiarios.gavio.data.domain.model.modelFirebase.GastosPorCategoriaModel>).data
                 items(list.size) { index ->
                     val (tertiaryContainer, onTertiary) = viewModel.getRandomColor(
                         isSystemInDarkTheme()

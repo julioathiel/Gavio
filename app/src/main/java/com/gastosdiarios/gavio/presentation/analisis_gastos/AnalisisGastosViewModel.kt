@@ -9,16 +9,16 @@ import androidx.core.graphics.ColorUtils.colorToHSL
 import androidx.lifecycle.ViewModel
 import androidx.lifecycle.viewModelScope
 import com.gastosdiarios.gavio.bar_graph_custom.CircularBuffer
-import com.gastosdiarios.gavio.data.constants.Constants.LIMIT_MONTH
+import com.gastosdiarios.gavio.utils.Constants.LIMIT_MONTH
 import com.gastosdiarios.gavio.data.ui_state.UiStateList
-import com.gastosdiarios.gavio.domain.enums.ThemeMode
-import com.gastosdiarios.gavio.domain.model.RefreshDataModel
-import com.gastosdiarios.gavio.domain.model.modelFirebase.BarDataModel
-import com.gastosdiarios.gavio.domain.model.modelFirebase.GastosPorCategoriaModel
-import com.gastosdiarios.gavio.domain.repository.DataBaseManager
-import com.gastosdiarios.gavio.domain.repository.repositoriesFirestrore.BarDataFirestore
-import com.gastosdiarios.gavio.domain.repository.repositoriesFirestrore.UserDataFirestore
-import com.gastosdiarios.gavio.domain.repository.repositoriesFirestrore.UserPreferencesFirestore
+import com.gastosdiarios.gavio.data.domain.enums.ThemeMode
+import com.gastosdiarios.gavio.data.domain.model.RefreshDataModel
+import com.gastosdiarios.gavio.data.domain.model.modelFirebase.BarDataModel
+import com.gastosdiarios.gavio.data.domain.model.modelFirebase.GastosPorCategoriaModel
+import com.gastosdiarios.gavio.data.repository.DataBaseManager
+import com.gastosdiarios.gavio.data.repository.repositoriesFirestrore.BarDataFirestore
+import com.gastosdiarios.gavio.data.repository.repositoriesFirestrore.UserDataFirestore
+import com.gastosdiarios.gavio.data.repository.repositoriesFirestrore.UserPreferencesFirestore
 import com.gastosdiarios.gavio.ui.theme.md_theme_dark_primary
 import com.gastosdiarios.gavio.ui.theme.md_theme_dark_surfaceContainer
 import com.gastosdiarios.gavio.utils.DateUtils
@@ -52,7 +52,7 @@ class AnalisisGastosViewModel @Inject constructor(
     private val tag = "analisisGastosViewModel"
 
     private val _uiState =
-        MutableStateFlow<UiStateList<GastosPorCategoriaModel>>(UiStateList.Loading)
+        MutableStateFlow<UiStateList<com.gastosdiarios.gavio.data.domain.model.modelFirebase.GastosPorCategoriaModel>>(UiStateList.Loading)
     var uiState = _uiState.onStart {
         getAllListGastos()
     }
@@ -66,12 +66,16 @@ class AnalisisGastosViewModel @Inject constructor(
 
     private val circularBuffer = CircularBuffer(capacity = LIMIT_MONTH, db = barDataFirestore)
 
-    private val _listBarDataModel = MutableStateFlow<UiStateList<BarDataModel>>(UiStateList.Loading)
+    private val _listBarDataModel = MutableStateFlow<UiStateList<com.gastosdiarios.gavio.data.domain.model.modelFirebase.BarDataModel>>(UiStateList.Loading)
     val listBarDataModel = _listBarDataModel.onStart { updateBarGraphList() }
         .stateIn(viewModelScope, SharingStarted.WhileSubscribed(5000L), UiStateList.Loading)
 
-    private val _isRefreshing = MutableStateFlow(RefreshDataModel(isRefreshing = false))
-    val isRefreshing: StateFlow<RefreshDataModel> = _isRefreshing.asStateFlow()
+    private val _isRefreshing = MutableStateFlow(
+        com.gastosdiarios.gavio.data.domain.model.RefreshDataModel(
+            isRefreshing = false
+        )
+    )
+    val isRefreshing: StateFlow<com.gastosdiarios.gavio.data.domain.model.RefreshDataModel> = _isRefreshing.asStateFlow()
 
     private val _showTwoColumns = MutableStateFlow(false)
     val showTwoColumns: StateFlow<Boolean> = _showTwoColumns.asStateFlow()
@@ -85,8 +89,8 @@ class AnalisisGastosViewModel @Inject constructor(
     private var _icon = MutableStateFlow<String?>(null)
     val myIcon: StateFlow<String?> = _icon.asStateFlow()
 
-    private val _isDarkMode = MutableStateFlow(ThemeMode.MODE_AUTO)
-    val isDarkMode: StateFlow<ThemeMode> = _isDarkMode.asStateFlow()
+    private val _isDarkMode = MutableStateFlow(com.gastosdiarios.gavio.data.domain.enums.ThemeMode.MODE_AUTO)
+    val isDarkMode: StateFlow<com.gastosdiarios.gavio.data.domain.enums.ThemeMode> = _isDarkMode.asStateFlow()
 
 
     private fun getAllListGastos() {
@@ -110,7 +114,7 @@ class AnalisisGastosViewModel @Inject constructor(
                 if (data != null) {
                     _isDarkMode.update { data }
                 } else {
-                    _isDarkMode.update { ThemeMode.MODE_AUTO }
+                    _isDarkMode.update { com.gastosdiarios.gavio.data.domain.enums.ThemeMode.MODE_AUTO }
                 }
             } catch (e: Exception) {
                 UiStateList.Error(throwable = e)
@@ -153,7 +157,7 @@ class AnalisisGastosViewModel @Inject constructor(
                 val existingItem = listaGuardada.find { it.month == mesActual } // Usar find
                 if (existingItem != null && existingItem.value!! < porcentajeMes) {
                     circularBuffer.updateBarGraphItem(
-                        BarDataModel(
+                        com.gastosdiarios.gavio.data.domain.model.modelFirebase.BarDataModel(
                             value = porcentajeMes,
                             month = mesActual,
                             money = maximoGastos.toString()
@@ -173,7 +177,7 @@ class AnalisisGastosViewModel @Inject constructor(
     private fun updateBarGraphList() {
         viewModelScope.launch(Dispatchers.IO) {
             try {
-                val data: List<BarDataModel> = circularBuffer.getBarGraphList()
+                val data: List<com.gastosdiarios.gavio.data.domain.model.modelFirebase.BarDataModel> = circularBuffer.getBarGraphList()
                 if (data.isEmpty()) {
                     _listBarDataModel.update { UiStateList.Empty }
                 } else {
@@ -191,7 +195,7 @@ class AnalisisGastosViewModel @Inject constructor(
         viewModelScope.launch {
             _isDarkMode.collect { mode ->
                 color = when (mode) {
-                    ThemeMode.MODE_AUTO -> {
+                    com.gastosdiarios.gavio.data.domain.enums.ThemeMode.MODE_AUTO -> {
                         if (isSystemInDarkTheme) {
                             getRandomDarkColor()
                         } else {
@@ -199,8 +203,8 @@ class AnalisisGastosViewModel @Inject constructor(
                         }
                     }
 
-                    ThemeMode.MODE_DAY -> getRandomLightColor()
-                    ThemeMode.MODE_NIGHT -> getRandomDarkColor()
+                    com.gastosdiarios.gavio.data.domain.enums.ThemeMode.MODE_DAY -> getRandomLightColor()
+                    com.gastosdiarios.gavio.data.domain.enums.ThemeMode.MODE_NIGHT -> getRandomDarkColor()
                 }
             }
         }

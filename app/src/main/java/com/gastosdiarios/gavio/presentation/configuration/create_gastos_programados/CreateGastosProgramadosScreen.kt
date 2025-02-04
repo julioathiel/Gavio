@@ -39,10 +39,10 @@ import com.gastosdiarios.gavio.data.commons.CommonsLoadingScreen
 import com.gastosdiarios.gavio.data.commons.ErrorScreen
 import com.gastosdiarios.gavio.data.commons.TopAppBarOnBack
 import com.gastosdiarios.gavio.data.ui_state.UiStateList
-import com.gastosdiarios.gavio.domain.enums.Modo
-import com.gastosdiarios.gavio.domain.enums.TipoTransaccion
-import com.gastosdiarios.gavio.domain.model.Action
-import com.gastosdiarios.gavio.domain.model.modelFirebase.GastosProgramadosModel
+import com.gastosdiarios.gavio.data.domain.enums.Modo
+import com.gastosdiarios.gavio.data.domain.enums.TipoTransaccion
+import com.gastosdiarios.gavio.data.domain.model.Action
+import com.gastosdiarios.gavio.data.domain.model.modelFirebase.GastosProgramadosModel
 import com.gastosdiarios.gavio.presentation.configuration.create_gastos_programados.components.ContentBottomSheetGastosProgramados
 import com.gastosdiarios.gavio.presentation.configuration.create_gastos_programados.components.DialogDelete
 import com.gastosdiarios.gavio.presentation.configuration.create_gastos_programados.components.ReplyListItem
@@ -59,7 +59,7 @@ fun CreateGastosProgramadosScreen(
     val isRefreshing by viewModel.isRefreshing.collectAsState()
 
     val actions = listOf(
-        Action(
+       Action(
             icon = Icons.Default.Create,
             contentDescription = "editar",
             onClick = { viewModel.isCreateTrue() }

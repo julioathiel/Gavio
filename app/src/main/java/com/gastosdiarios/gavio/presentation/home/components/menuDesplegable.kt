@@ -32,35 +32,35 @@ import androidx.compose.ui.semantics.contentDescription
 import androidx.compose.ui.semantics.semantics
 import androidx.compose.ui.unit.dp
 import com.gastosdiarios.gavio.data.ui_state.HomeUiState
-import com.gastosdiarios.gavio.domain.enums.TipoTransaccion
-import com.gastosdiarios.gavio.domain.model.CategoriesModel
-import com.gastosdiarios.gavio.domain.model.categoriaDefault
-import com.gastosdiarios.gavio.domain.model.defaultCategoriesGastosList
-import com.gastosdiarios.gavio.domain.model.defaultCategoriesIngresosList
-import com.gastosdiarios.gavio.domain.model.userCategoriesGastosList
-import com.gastosdiarios.gavio.domain.model.userCategoriesIngresosList
+import com.gastosdiarios.gavio.data.domain.enums.TipoTransaccion
+import com.gastosdiarios.gavio.data.domain.model.CategoriesModel
+import com.gastosdiarios.gavio.data.domain.model.categoriaDefault
+import com.gastosdiarios.gavio.data.domain.model.defaultCategoriesGastosList
+import com.gastosdiarios.gavio.data.domain.model.defaultCategoriesIngresosList
+import com.gastosdiarios.gavio.data.domain.model.userCategoriesGastosList
+import com.gastosdiarios.gavio.data.domain.model.userCategoriesIngresosList
 
 @OptIn(ExperimentalMaterial3Api::class)
 @Composable
-fun menuDesplegable(homeUiState: HomeUiState, modifier: Modifier): CategoriesModel {
+fun menuDesplegable(homeUiState: HomeUiState, modifier: Modifier): com.gastosdiarios.gavio.data.domain.model.CategoriesModel {
 
     var expanded by remember { mutableStateOf(false) }
 
     // Recordar la lista de categorías para evitar la recomposición innecesaria
-    val categories: List<CategoriesModel> = remember(
+    val categories: List<com.gastosdiarios.gavio.data.domain.model.CategoriesModel> = remember(
         homeUiState.tipoTransaccion,
-        userCategoriesIngresosList,
-        userCategoriesGastosList
+        com.gastosdiarios.gavio.data.domain.model.userCategoriesIngresosList,
+        com.gastosdiarios.gavio.data.domain.model.userCategoriesGastosList
     ) {
-        if (homeUiState.tipoTransaccion == TipoTransaccion.INGRESOS) {
-            categoriaDefault +
-                    userCategoriesIngresosList +
-                    defaultCategoriesIngresosList
+        if (homeUiState.tipoTransaccion == com.gastosdiarios.gavio.data.domain.enums.TipoTransaccion.INGRESOS) {
+            com.gastosdiarios.gavio.data.domain.model.categoriaDefault +
+                    com.gastosdiarios.gavio.data.domain.model.userCategoriesIngresosList +
+                    com.gastosdiarios.gavio.data.domain.model.defaultCategoriesIngresosList
                         .sortedBy { it.name }
         } else {
-            categoriaDefault +
-                    userCategoriesGastosList +
-                    defaultCategoriesGastosList
+            com.gastosdiarios.gavio.data.domain.model.categoriaDefault +
+                    com.gastosdiarios.gavio.data.domain.model.userCategoriesGastosList +
+                    com.gastosdiarios.gavio.data.domain.model.defaultCategoriesGastosList
                         .sortedBy { it.name }
         }
     }

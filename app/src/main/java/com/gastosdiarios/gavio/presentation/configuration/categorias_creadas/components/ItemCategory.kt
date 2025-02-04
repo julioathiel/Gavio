@@ -21,12 +21,12 @@ import androidx.compose.ui.res.painterResource
 import androidx.compose.ui.unit.dp
 import com.gastosdiarios.gavio.R
 import com.gastosdiarios.gavio.data.commons.EditDeleteAlertDialog
-import com.gastosdiarios.gavio.domain.model.UserCreateCategoryModel
+import com.gastosdiarios.gavio.data.domain.model.UserCreateCategoryModel
 import com.gastosdiarios.gavio.presentation.configuration.categorias_creadas.CategoryActions
 
 @Composable
 fun ItemCategory(
-    item: UserCreateCategoryModel,
+    item: com.gastosdiarios.gavio.data.domain.model.UserCreateCategoryModel,
     categoryActions: CategoryActions
 ) {
     var showMenu by remember { mutableStateOf(false) }

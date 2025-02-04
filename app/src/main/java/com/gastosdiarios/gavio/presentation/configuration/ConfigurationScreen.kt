@@ -44,8 +44,8 @@ import androidx.compose.ui.res.stringResource
 import androidx.compose.ui.unit.dp
 import androidx.hilt.navigation.compose.hiltViewModel
 import com.gastosdiarios.gavio.R
-import com.gastosdiarios.gavio.domain.enums.ItemConfigurationEnum
-import com.gastosdiarios.gavio.domain.model.OpcionEliminarModel
+import com.gastosdiarios.gavio.data.domain.enums.ItemConfigurationEnum
+import com.gastosdiarios.gavio.data.domain.model.OpcionEliminarModel
 import com.gastosdiarios.gavio.presentation.configuration.components.ListConf
 import com.gastosdiarios.gavio.presentation.configuration.components.ShareSheetButton
 import kotlinx.coroutines.launch
@@ -76,19 +76,19 @@ fun ConfigurationScreen(
 
 
     ListConf(modifier = modifier.fillMaxSize(),
-        items = ItemConfigurationEnum.entries,
+        items = com.gastosdiarios.gavio.data.domain.enums.ItemConfigurationEnum.entries,
         onItemClick = { item ->
             when (item) {
-                ItemConfigurationEnum.ELIMINAR_EDITAR_PERFIL -> onToUserProfileScreen()
-                ItemConfigurationEnum.CATEGORIASNUEVAS -> onToCategoriasGastosScreen()
-                ItemConfigurationEnum.CREATE_GASTOS_PROGRAMADOS -> onToCreateGastosProgramadosScreen()
-                ItemConfigurationEnum.UPDATEDATE -> onToActualizarMaximoFechaScreen()
-                ItemConfigurationEnum.RECORDATORIOS -> onToRecordatorioScreen()
-                ItemConfigurationEnum.RESET -> viewModel.setShowBottomSheet(true)
-                ItemConfigurationEnum.COMPARTIR -> viewModel.setShowShare(true)
-                ItemConfigurationEnum.ACERCADE -> onToAcercaDeScreen()
-                ItemConfigurationEnum.AJUSTES_AVANZADOS -> onToAjustesScreen()
-                ItemConfigurationEnum.EXPORTAR_DATOS -> onToExportarDatosScreen()
+                com.gastosdiarios.gavio.data.domain.enums.ItemConfigurationEnum.ELIMINAR_EDITAR_PERFIL -> onToUserProfileScreen()
+                com.gastosdiarios.gavio.data.domain.enums.ItemConfigurationEnum.CATEGORIASNUEVAS -> onToCategoriasGastosScreen()
+                com.gastosdiarios.gavio.data.domain.enums.ItemConfigurationEnum.CREATE_GASTOS_PROGRAMADOS -> onToCreateGastosProgramadosScreen()
+                com.gastosdiarios.gavio.data.domain.enums.ItemConfigurationEnum.UPDATEDATE -> onToActualizarMaximoFechaScreen()
+                com.gastosdiarios.gavio.data.domain.enums.ItemConfigurationEnum.RECORDATORIOS -> onToRecordatorioScreen()
+                com.gastosdiarios.gavio.data.domain.enums.ItemConfigurationEnum.RESET -> viewModel.setShowBottomSheet(true)
+                com.gastosdiarios.gavio.data.domain.enums.ItemConfigurationEnum.COMPARTIR -> viewModel.setShowShare(true)
+                com.gastosdiarios.gavio.data.domain.enums.ItemConfigurationEnum.ACERCADE -> onToAcercaDeScreen()
+                com.gastosdiarios.gavio.data.domain.enums.ItemConfigurationEnum.AJUSTES_AVANZADOS -> onToAjustesScreen()
+                com.gastosdiarios.gavio.data.domain.enums.ItemConfigurationEnum.EXPORTAR_DATOS -> onToExportarDatosScreen()
             }
         }
     )
@@ -138,13 +138,13 @@ fun ContentBottomSheetReset(
     onToCongratulationsScreen: () -> Unit,
     onDismiss: () -> Unit,
     onAccept: () -> Unit,
-    opcionesEliminar: List<OpcionEliminarModel>,
-    onConfirm: (Set<OpcionEliminarModel>) -> Unit
+    opcionesEliminar: List<com.gastosdiarios.gavio.data.domain.model.OpcionEliminarModel>,
+    onConfirm: (Set<com.gastosdiarios.gavio.data.domain.model.OpcionEliminarModel>) -> Unit
 ) {
     val uiState by viewModel.configurationUiState.collectAsState()
     var isRotate by remember { mutableStateOf(false) }
     var isActivated by remember { mutableStateOf(false) }
-    var selectedOptions by remember { mutableStateOf(setOf<OpcionEliminarModel>()) }
+    var selectedOptions by remember { mutableStateOf(setOf<com.gastosdiarios.gavio.data.domain.model.OpcionEliminarModel>()) }
 
     LaunchedEffect(key1 = uiState.resetPending) {
         if (uiState.resetPending) {

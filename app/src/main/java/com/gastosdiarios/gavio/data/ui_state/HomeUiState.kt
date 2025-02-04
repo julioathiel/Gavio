@@ -1,7 +1,7 @@
 package com.gastosdiarios.gavio.data.ui_state
 
 import android.net.Uri
-import com.gastosdiarios.gavio.domain.enums.TipoTransaccion
+import com.gastosdiarios.gavio.data.domain.enums.TipoTransaccion
 
 data class HomeUiState(
     val selectedImageUri: Uri? = null,

@@ -10,22 +10,29 @@ import androidx.compose.ui.unit.dp
 import androidx.compose.ui.unit.sp
 import com.gastosdiarios.gavio.data.commons.CommonsLoadingScreen
 import com.gastosdiarios.gavio.data.ui_state.UiStateList
-import com.gastosdiarios.gavio.domain.model.modelFirebase.BarDataModel
+import com.gastosdiarios.gavio.data.domain.model.modelFirebase.BarDataModel
 import com.gastosdiarios.gavio.presentation.analisis_gastos.AnalisisGastosViewModel
 import java.util.Calendar
 import java.util.Locale
 
 @Composable
 fun BarGraphConfigCustom(
-    listBarGraph: List<BarDataModel>,
+    listBarGraph: List<com.gastosdiarios.gavio.data.domain.model.modelFirebase.BarDataModel>,
     calendar: Calendar = Calendar.getInstance()
 ) {
-    listBarGraph.map { BarDataModel(it.uid, it.value, it.month, it.money) }
+    listBarGraph.map {
+        com.gastosdiarios.gavio.data.domain.model.modelFirebase.BarDataModel(
+            it.uid,
+            it.value,
+            it.month,
+            it.money
+        )
+    }
     val mesActual = calendar.getDisplayName(Calendar.MONTH, Calendar.SHORT, Locale.getDefault())
 
 
     //Configuración del gráfico de barras
-    val config = BarGraphConfig<BarDataModel>()
+    val config = BarGraphConfig<com.gastosdiarios.gavio.data.domain.model.modelFirebase.BarDataModel>()
         .data(listBarGraph.reversed())
         .dataBar(
             selectedBarColor = MaterialTheme.colorScheme.primary,
