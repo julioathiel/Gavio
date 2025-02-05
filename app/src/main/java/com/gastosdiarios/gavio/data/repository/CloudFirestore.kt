@@ -34,7 +34,7 @@ open class CloudFirestore @Inject constructor(
 ) {
     private val tag = "cloudFirestore"
 
-    suspend fun insertUserToFirestore(user: com.gastosdiarios.gavio.data.domain.model.modelFirebase.UserModel) {
+    suspend fun insertUserToFirestore(user: UserModel) {
         try {
             val userId = auth.currentUser?.uid ?: return
             val existingUser = getUsersCollection().document(userId).get().await()
@@ -55,10 +55,10 @@ open class CloudFirestore @Inject constructor(
         }
     }
 
-    private suspend fun initializeUserData(user: com.gastosdiarios.gavio.data.domain.model.modelFirebase.UserModel) {
+    private suspend fun initializeUserData(user: UserModel) {
         //operacion creada para que funcione de forma atomicas las operaciones de escritura
         try {
-            val mesActual = DateUtils.currentMonth()
+            val month = DateUtils.currentMonthNumber()
             val uidItem = UUID.randomUUID().toString()
             val userUid = user.userId ?: ""
 
@@ -68,7 +68,7 @@ open class CloudFirestore @Inject constructor(
 
                 transaction.set(
                     userRef,
-                    com.gastosdiarios.gavio.data.domain.model.modelFirebase.UserModel(
+                    UserModel(
                         userId = userUid,
                         name = user.name,
                         email = user.email,
@@ -82,7 +82,7 @@ open class CloudFirestore @Inject constructor(
                 val userDataRef = getUserData().document(userUid)
                 transaction.set(
                     userDataRef,
-                    com.gastosdiarios.gavio.data.domain.model.modelFirebase.UserData(
+                   UserData(
                         userId = userUid,
                         totalGastos = 0.0,
                         totalIngresos = 0.0,
@@ -96,13 +96,13 @@ open class CloudFirestore @Inject constructor(
                 val userPreferencesRef = getUserPreferences().document(userUid)
                 transaction.set(
                     userPreferencesRef,
-                    com.gastosdiarios.gavio.data.domain.model.modelFirebase.UserPreferences(
+                    UserPreferences(
                         userId = userUid,
                         biometricSecurity = false,
                         limitMonth = 31,
                         hour = 21,
                         minute = 0,
-                        themeMode = com.gastosdiarios.gavio.data.domain.enums.ThemeMode.MODE_AUTO
+                        themeMode = ThemeMode.MODE_AUTO
                     )
                 )
 
@@ -112,11 +112,11 @@ open class CloudFirestore @Inject constructor(
                     .document(uidItem)
                 transaction.set(
                     barDataRef,
-                    com.gastosdiarios.gavio.data.domain.model.modelFirebase.BarDataModel(
+                    BarDataModel(
                         uid = uidItem,
                         value = 0f,
-                        month = mesActual,
-                        money = "0"
+                        money = "0",
+                        monthNumber = month,
                     )
                 )
 
@@ -208,12 +208,24 @@ open class CloudFirestore @Inject constructor(
 
     private fun getUsersCollection(): CollectionReference = collections.collection(COLLECTION_USERS)
     fun getBarDataCollection(): CollectionReference = collections.collection(COLLECTION_BAR_DATA)
-    fun getGastosPorCategoriaCollection(): CollectionReference = collections.collection(COLLECTION_GASTOS_POR_CATEGORIA)
-    fun getAllTransactionsCollection(): CollectionReference = collections.collection(COLLECTION_TRANSACTIONS)
-    fun getAllGastosProgramadosCollection(): CollectionReference = collections.collection(COLLECTION_GASTOS_PROGRAMADOS)
-    fun getUserCategoryGastosCollection(): CollectionReference = collections.collection(COLLECTION_USER_CATEGORY_GASTOS)
-    fun getUserCategoryIngresosCollection(): CollectionReference = collections.collection(COLLECTION_USER_CATEGORY_INGRESOS)
+    fun getGastosPorCategoriaCollection(): CollectionReference =
+        collections.collection(COLLECTION_GASTOS_POR_CATEGORIA)
+
+    fun getAllTransactionsCollection(): CollectionReference =
+        collections.collection(COLLECTION_TRANSACTIONS)
+
+    fun getAllGastosProgramadosCollection(): CollectionReference =
+        collections.collection(COLLECTION_GASTOS_PROGRAMADOS)
+
+    fun getUserCategoryGastosCollection(): CollectionReference =
+        collections.collection(COLLECTION_USER_CATEGORY_GASTOS)
+
+    fun getUserCategoryIngresosCollection(): CollectionReference =
+        collections.collection(COLLECTION_USER_CATEGORY_INGRESOS)
+
     fun getShareCollection(): CollectionReference = collections.collection(COLLECTION_SHARE)
-    fun getUserPreferences(): CollectionReference = collections.collection(COLLECTION_USER_PREFERENCES)
+    fun getUserPreferences(): CollectionReference =
+        collections.collection(COLLECTION_USER_PREFERENCES)
+
     fun getUserData(): CollectionReference = collections.collection(COLLECTION_USER_DATA)
 }

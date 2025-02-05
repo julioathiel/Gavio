@@ -15,21 +15,22 @@ class BarDataFirestore @Inject constructor(
     private val cloudFirestore: CloudFirestore,
     private val authFirebaseImp: AuthFirebaseImp
 ) :
-    ListBaseRepository<com.gastosdiarios.gavio.data.domain.model.modelFirebase.BarDataModel> {
+    ListBaseRepository<BarDataModel> {
 
     private val tag = "barDataFirestore"
 
-    override suspend fun get(): List<com.gastosdiarios.gavio.data.domain.model.modelFirebase.BarDataModel> {
+    override suspend fun get(): List<BarDataModel> {
         return try {
             val uidUser = authFirebaseImp.getCurrentUser()?.uid ?: return emptyList()
 
             cloudFirestore.getBarDataCollection()
                 .document(uidUser)
                 .collection(COLLECTION_LIST)
+               // .orderBy("monthNumber") // Ordenar por el número de mes
                 .get()
                 .await()
                 .documents.mapNotNull { snapShot ->
-                    snapShot.toObject(com.gastosdiarios.gavio.data.domain.model.modelFirebase.BarDataModel::class.java)
+                    snapShot.toObject(BarDataModel::class.java)
                 }
         } catch (e: Exception) {
             Log.d(tag, "Error en get de BarDataFirestore: ${e.message}")
@@ -37,17 +38,10 @@ class BarDataFirestore @Inject constructor(
         }
     }
 
-    override suspend fun create(entity: com.gastosdiarios.gavio.data.domain.model.modelFirebase.BarDataModel) {
+    override suspend fun create(entity: BarDataModel) {
         try {
             val uidUser = authFirebaseImp.getCurrentUser()?.uid ?: return
             val uidItem = UUID.randomUUID().toString()
-
-//            val item = BarDataModel(
-//                uid = uidItem,
-//                value = entity.value,
-//                month = entity.month,
-//                money = entity.money,
-//            )
 
             cloudFirestore.getBarDataCollection().document(uidUser)
                 .collection(COLLECTION_LIST).document(uidItem).set(entity.copy(uid= uidItem)).await()
@@ -56,7 +50,7 @@ class BarDataFirestore @Inject constructor(
         }
     }
 
-    override suspend fun update(entity: com.gastosdiarios.gavio.data.domain.model.modelFirebase.BarDataModel) {
+    override suspend fun update(entity: BarDataModel) {
         try {
             val uidUser = authFirebaseImp.getCurrentUser()?.uid ?: return
             val uidItem = entity.uid ?: return
@@ -72,7 +66,7 @@ class BarDataFirestore @Inject constructor(
         }
     }
 
-    override suspend fun delete(entity: com.gastosdiarios.gavio.data.domain.model.modelFirebase.BarDataModel) {
+    override suspend fun delete(entity: BarDataModel) {
         try {
             val uidUser = authFirebaseImp.getCurrentUser()?.uid ?: return
             val uidItem = entity.uid ?: return

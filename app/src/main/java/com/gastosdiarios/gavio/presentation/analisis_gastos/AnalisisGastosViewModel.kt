@@ -52,7 +52,7 @@ class AnalisisGastosViewModel @Inject constructor(
     private val tag = "analisisGastosViewModel"
 
     private val _uiState =
-        MutableStateFlow<UiStateList<com.gastosdiarios.gavio.data.domain.model.modelFirebase.GastosPorCategoriaModel>>(UiStateList.Loading)
+        MutableStateFlow<UiStateList<GastosPorCategoriaModel>>(UiStateList.Loading)
     var uiState = _uiState.onStart {
         getAllListGastos()
     }
@@ -66,16 +66,12 @@ class AnalisisGastosViewModel @Inject constructor(
 
     private val circularBuffer = CircularBuffer(capacity = LIMIT_MONTH, db = barDataFirestore)
 
-    private val _listBarDataModel = MutableStateFlow<UiStateList<com.gastosdiarios.gavio.data.domain.model.modelFirebase.BarDataModel>>(UiStateList.Loading)
+    private val _listBarDataModel = MutableStateFlow<UiStateList<BarDataModel>>(UiStateList.Loading)
     val listBarDataModel = _listBarDataModel.onStart { updateBarGraphList() }
         .stateIn(viewModelScope, SharingStarted.WhileSubscribed(5000L), UiStateList.Loading)
 
-    private val _isRefreshing = MutableStateFlow(
-        com.gastosdiarios.gavio.data.domain.model.RefreshDataModel(
-            isRefreshing = false
-        )
-    )
-    val isRefreshing: StateFlow<com.gastosdiarios.gavio.data.domain.model.RefreshDataModel> = _isRefreshing.asStateFlow()
+    private val _isRefreshing = MutableStateFlow(RefreshDataModel(isRefreshing = false))
+    val isRefreshing: StateFlow<RefreshDataModel> = _isRefreshing.asStateFlow()
 
     private val _showTwoColumns = MutableStateFlow(false)
     val showTwoColumns: StateFlow<Boolean> = _showTwoColumns.asStateFlow()
@@ -89,8 +85,8 @@ class AnalisisGastosViewModel @Inject constructor(
     private var _icon = MutableStateFlow<String?>(null)
     val myIcon: StateFlow<String?> = _icon.asStateFlow()
 
-    private val _isDarkMode = MutableStateFlow(com.gastosdiarios.gavio.data.domain.enums.ThemeMode.MODE_AUTO)
-    val isDarkMode: StateFlow<com.gastosdiarios.gavio.data.domain.enums.ThemeMode> = _isDarkMode.asStateFlow()
+    private val _isDarkMode = MutableStateFlow(ThemeMode.MODE_AUTO)
+    val isDarkMode: StateFlow<ThemeMode> = _isDarkMode.asStateFlow()
 
 
     private fun getAllListGastos() {
@@ -114,7 +110,7 @@ class AnalisisGastosViewModel @Inject constructor(
                 if (data != null) {
                     _isDarkMode.update { data }
                 } else {
-                    _isDarkMode.update { com.gastosdiarios.gavio.data.domain.enums.ThemeMode.MODE_AUTO }
+                    _isDarkMode.update { ThemeMode.MODE_AUTO }
                 }
             } catch (e: Exception) {
                 UiStateList.Error(throwable = e)
@@ -146,24 +142,22 @@ class AnalisisGastosViewModel @Inject constructor(
     }
 
     //-------------------------------CIRCULAR BUFFER ---------------------------------//
+
     // Función para insertar datos en la base de datos a través de CircularBuffer
     private fun insertGraph(maximoGastos: Double, porcentajeMes: Float) {
-        Log.d(tag, "")
         try {
             viewModelScope.launch(Dispatchers.Main) {
-                val mesActual = DateUtils.currentMonth()
+                val mesActual = DateUtils.currentMonthNumber()
                 // Obtener la lista actual de datos de gráficos
                 val listaGuardada = barDataFirestore.get()
-                val existingItem = listaGuardada.find { it.month == mesActual } // Usar find
+                val existingItem = listaGuardada.find { it.monthNumber == mesActual }
+                val newBarData = BarDataModel(
+                    value = porcentajeMes,
+                    money = maximoGastos.toString(),
+                    monthNumber = mesActual
+                )
                 if (existingItem != null && existingItem.value!! < porcentajeMes) {
-                    circularBuffer.updateBarGraphItem(
-                        com.gastosdiarios.gavio.data.domain.model.modelFirebase.BarDataModel(
-                            value = porcentajeMes,
-                            month = mesActual,
-                            money = maximoGastos.toString()
-                        ),
-                        listaGuardada
-                    )
+                    circularBuffer.updateBarGraphItem(newBarData, listaGuardada)
                 }
                 // Actualizar la lista de datos de gráficos después de la inserción
                 updateBarGraphList()
@@ -177,17 +171,19 @@ class AnalisisGastosViewModel @Inject constructor(
     private fun updateBarGraphList() {
         viewModelScope.launch(Dispatchers.IO) {
             try {
-                val data: List<com.gastosdiarios.gavio.data.domain.model.modelFirebase.BarDataModel> = circularBuffer.getBarGraphList()
+                val data: List<BarDataModel> = circularBuffer.getBarDataList()
+                Log.d(tag, "updateBarGraphList: $data")
                 if (data.isEmpty()) {
                     _listBarDataModel.update { UiStateList.Empty }
                 } else {
-                    _listBarDataModel.update { UiStateList.Success(data.reversed()) }
+                    _listBarDataModel.update { UiStateList.Success(data) }
                 }
             } catch (e: Exception) {
                 Log.e(tag, "Error en updateBarGraphList: ${e.message}")
             }
         }
     }
+
 //------------------------------- FIN CIRCULAR BUFFER ---------------------------------//
 
     fun getRandomColor(isSystemInDarkTheme: Boolean): Pair<Color, Color> {
@@ -195,7 +191,7 @@ class AnalisisGastosViewModel @Inject constructor(
         viewModelScope.launch {
             _isDarkMode.collect { mode ->
                 color = when (mode) {
-                    com.gastosdiarios.gavio.data.domain.enums.ThemeMode.MODE_AUTO -> {
+                    ThemeMode.MODE_AUTO -> {
                         if (isSystemInDarkTheme) {
                             getRandomDarkColor()
                         } else {
@@ -203,8 +199,8 @@ class AnalisisGastosViewModel @Inject constructor(
                         }
                     }
 
-                    com.gastosdiarios.gavio.data.domain.enums.ThemeMode.MODE_DAY -> getRandomLightColor()
-                    com.gastosdiarios.gavio.data.domain.enums.ThemeMode.MODE_NIGHT -> getRandomDarkColor()
+                    ThemeMode.MODE_DAY -> getRandomLightColor()
+                    ThemeMode.MODE_NIGHT -> getRandomDarkColor()
                 }
             }
         }

@@ -1,39 +1,19 @@
 package com.gastosdiarios.gavio.bar_graph_custom
 
-import androidx.compose.foundation.layout.fillMaxSize
+import android.util.Log
 import androidx.compose.material3.MaterialTheme
 import androidx.compose.runtime.Composable
-import androidx.compose.runtime.collectAsState
-import androidx.compose.runtime.getValue
-import androidx.compose.ui.Modifier
 import androidx.compose.ui.unit.dp
 import androidx.compose.ui.unit.sp
-import com.gastosdiarios.gavio.data.commons.CommonsLoadingScreen
-import com.gastosdiarios.gavio.data.ui_state.UiStateList
 import com.gastosdiarios.gavio.data.domain.model.modelFirebase.BarDataModel
-import com.gastosdiarios.gavio.presentation.analisis_gastos.AnalisisGastosViewModel
-import java.util.Calendar
-import java.util.Locale
+import com.gastosdiarios.gavio.utils.DateUtils
 
 @Composable
-fun BarGraphConfigCustom(
-    listBarGraph: List<com.gastosdiarios.gavio.data.domain.model.modelFirebase.BarDataModel>,
-    calendar: Calendar = Calendar.getInstance()
-) {
-    listBarGraph.map {
-        com.gastosdiarios.gavio.data.domain.model.modelFirebase.BarDataModel(
-            it.uid,
-            it.value,
-            it.month,
-            it.money
-        )
-    }
-    val mesActual = calendar.getDisplayName(Calendar.MONTH, Calendar.SHORT, Locale.getDefault())
-
-
+fun BarGraphConfigCustom(listBarGraph: List<BarDataModel>) {
+    listBarGraph.map { BarDataModel(it.uid, it.value, it.money, it.monthNumber, it.index) }
     //Configuración del gráfico de barras
-    val config = BarGraphConfig<com.gastosdiarios.gavio.data.domain.model.modelFirebase.BarDataModel>()
-        .data(listBarGraph.reversed())
+    val config = BarGraphConfig<BarDataModel>()
+        .data(listBarGraph)
         .dataBar(
             selectedBarColor = MaterialTheme.colorScheme.primary,
             unSelectedBarColor = MaterialTheme.colorScheme.secondaryContainer,
@@ -78,7 +58,7 @@ fun BarGraphConfigCustom(
         )
         .dataToValue { it.value ?: 0f }
         .dataToLabel { it.money ?: "0" }
-        .dataToMonth { it.month ?: mesActual!! }
+        .dataToMonth { DateUtils.getMonthName(it.monthNumber ?: 0) }
         .build()
     BarGraph(config = config)
 }

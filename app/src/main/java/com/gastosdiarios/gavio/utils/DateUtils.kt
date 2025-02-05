@@ -1,8 +1,6 @@
 package com.gastosdiarios.gavio.utils
 
 import android.icu.util.Calendar
-import android.util.Log
-import androidx.core.graphics.set
 import java.text.DateFormatSymbols
 import java.text.SimpleDateFormat
 import java.time.Instant
@@ -10,7 +8,6 @@ import java.time.LocalDate
 import java.time.ZoneId
 import java.time.ZoneOffset
 import java.time.format.DateTimeFormatter
-import java.time.format.DateTimeParseException
 import java.time.format.TextStyle
 import java.time.temporal.ChronoUnit
 import java.util.Locale
@@ -24,11 +21,27 @@ object DateUtils {
         return LocalDate.now()
     }
 
-    fun currentMonth(): String? {
-        //retorna el mes actual en formato de texto
-        // ene., feb., mar., etc.
-        val fechaActual = obtenerFechaActual()
-        return fechaActual.month.getDisplayName(TextStyle.SHORT, Locale.getDefault())
+    fun currentMonthNumber(): Int {
+        val now = obtenerFechaActual()
+        return now.monthValue
+    }
+
+    fun getMonthName(monthNumber: Int): String {
+        return when (monthNumber) {
+            1 -> "ene."
+            2 -> "feb."
+            3 -> "mar."
+            4 -> "abr."
+            5 -> "may."
+            6 -> "jun."
+            7 -> "jul."
+            8 -> "ago."
+            9 -> "sep."
+            10 -> "oct."
+            11 -> "nov."
+            12 -> "dic."
+            else -> "" // O manejar el error de otra manera
+        }
     }
 
     fun converterFechaPersonalizada(date: String): String {

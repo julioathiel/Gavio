@@ -14,11 +14,11 @@ import javax.inject.Inject
 class GastosPorCategoriaFirestore @Inject constructor(
     private val cloudFirestore: CloudFirestore,
     private val authFirebaseImp: AuthFirebaseImp
-) : ListBaseRepository<com.gastosdiarios.gavio.data.domain.model.modelFirebase.GastosPorCategoriaModel> {
+) : ListBaseRepository<GastosPorCategoriaModel> {
 
     private val tagData = "gastosPorCategoriaFirestore"
 
-    override suspend fun get(): List<com.gastosdiarios.gavio.data.domain.model.modelFirebase.GastosPorCategoriaModel> {
+    override suspend fun get(): List<GastosPorCategoriaModel> {
         val uidUser = authFirebaseImp.getCurrentUser()?.uid ?: return emptyList()
         return try {
             cloudFirestore.getGastosPorCategoriaCollection()
@@ -27,7 +27,7 @@ class GastosPorCategoriaFirestore @Inject constructor(
                 .get()
                 .await()
                 .documents.mapNotNull { snapShot ->
-                    snapShot.toObject(com.gastosdiarios.gavio.data.domain.model.modelFirebase.GastosPorCategoriaModel::class.java)
+                    snapShot.toObject(GastosPorCategoriaModel::class.java)
                 }
         } catch (e: Exception) {
             Log.d(tagData, "Error al obtener la lista de gastos por categorias: ${e.message}")
@@ -35,7 +35,7 @@ class GastosPorCategoriaFirestore @Inject constructor(
         }
     }
 
-    override suspend fun create(entity: com.gastosdiarios.gavio.data.domain.model.modelFirebase.GastosPorCategoriaModel) {
+    override suspend fun create(entity: GastosPorCategoriaModel) {
         try {
             val uidUser = authFirebaseImp.getCurrentUser()?.uid ?: return
             val uidItem = UUID.randomUUID().toString()
@@ -51,7 +51,7 @@ class GastosPorCategoriaFirestore @Inject constructor(
     }
 
 
-    override suspend fun update(entity: com.gastosdiarios.gavio.data.domain.model.modelFirebase.GastosPorCategoriaModel) {
+    override suspend fun update(entity: GastosPorCategoriaModel) {
         try {
             val uidUser = authFirebaseImp.getCurrentUser()?.uid ?: return
             val uidItem = entity.uid ?: return
@@ -64,7 +64,7 @@ class GastosPorCategoriaFirestore @Inject constructor(
     }
 
 
-    override suspend fun delete(entity: com.gastosdiarios.gavio.data.domain.model.modelFirebase.GastosPorCategoriaModel) {
+    override suspend fun delete(entity: GastosPorCategoriaModel) {
         try {
             val uidUser = authFirebaseImp.getCurrentUser()?.uid ?: return
             val uidItem = entity.uid ?: return

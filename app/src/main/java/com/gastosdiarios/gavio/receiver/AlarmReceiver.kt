@@ -21,6 +21,7 @@ import com.gastosdiarios.gavio.data.domain.model.Alarm
 import com.gastosdiarios.gavio.data.repository.repositoriesFirestrore.GastosProgramadosFirestore
 import com.gastosdiarios.gavio.utils.Constants.ALARM_CHANNEL_NAME
 import com.gastosdiarios.gavio.utils.Constants.ALARM_ID
+import com.gastosdiarios.gavio.utils.Constants.NOTIFICATION_ID
 import com.gastosdiarios.gavio.utils.Constants.STOP_ALARM
 import com.gastosdiarios.gavio.utils.cancelAlarm
 import dagger.hilt.android.AndroidEntryPoint
@@ -104,6 +105,8 @@ class AlarmReceiver : BroadcastReceiver() {
                 }
                 if (reminder != null) {
                     cancelAlarm(context, reminder)
+                    //cancela la notificacion para que no siga apareciendo
+                    NotificationManagerCompat.from(context).cancel(NOTIFICATION_ID)
                 }
             }
 
@@ -125,20 +128,12 @@ class AlarmReceiver : BroadcastReceiver() {
                 }
                 if (reminder != null) {
                     cancelAlarm(context, reminder)
+                    NotificationManagerCompat.from(context).cancel(NOTIFICATION_ID)
                 }
             }
 
             else -> {
                 val smallIconId = reminder?.icon ?: R.drawable.ic_ahorro
-                val me: Person = Person.Builder()
-                    .setName("You") // Puedes poner tu nombre o un alias
-                    .build()
-
-                // Crear un objeto Person para el otro usuario (si aplica)
-                val otherUser: Person = Person.Builder()
-                    .setName(reminder?.title) // El nombre del otro usuario
-                    .setIcon(androidx.core.graphics.drawable.IconCompat.createWithResource(context, smallIconId)) // Icono del otro usuario
-                    .build()
 
                 if (Build.VERSION.SDK_INT >= Build.VERSION_CODES.TIRAMISU) {
                     // Se ejecuta si el dispositivo tiene Android 13 (Tiramisu) o una versión superior.
@@ -171,7 +166,7 @@ class AlarmReceiver : BroadcastReceiver() {
                     val notification = NotificationCompat.Builder(context, ALARM_CHANNEL_NAME)
                         .setSmallIcon(reminder?.icon ?: R.drawable.ic_ahorro)
                         .setContentTitle(reminder?.title) // Título
-                        .setContentText(String.format("debes pagar: %s", reminder?.cashGastosprogramadosId.toString())) // Total a pagar (o texto principal)
+                        .setContentText(String.format("debes pagar: ${reminder?.cashGastosprogramadosId}") )// Total a pagar (o texto principal)
                         .setSubText(reminder?.message) // Subtítulo
                         .setLargeIcon(BitmapFactory.decodeResource(context.resources, smallIconId))
                         .addAction(R.drawable.ic_add_task, "Hecho", donePendingIntent)

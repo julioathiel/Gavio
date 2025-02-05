@@ -35,7 +35,7 @@ class ConfigurationViewModel @Inject constructor(
 
     private fun getShareLink() {
         viewModelScope.launch(Dispatchers.IO) {
-            val data: com.gastosdiarios.gavio.data.domain.model.ShareDataModel = dbm.getSharedLink()
+            val data: ShareDataModel = dbm.getSharedLink()
             if (data.shareUrl != null) {
                 _configurationUiState.update { it.copy(sharedLink = data.shareUrl) }
             }
@@ -59,11 +59,11 @@ class ConfigurationViewModel @Inject constructor(
     private fun deleteGraphBar() {
         viewModelScope.launch(Dispatchers.IO) {
             dbm.deleteAllGraphBar()
-            val month = DateUtils.currentMonth()
-            val entity = com.gastosdiarios.gavio.data.domain.model.modelFirebase.BarDataModel(
+            val month = DateUtils.currentMonthNumber()
+            val entity = BarDataModel(
                 value = 0f,
-                month = month,
-                money = "0"
+                money = "0",
+                monthNumber = month
             )
             dataBarDataFirestore.create(entity)
         }
@@ -108,19 +108,19 @@ class ConfigurationViewModel @Inject constructor(
 
     // Opciones de eliminación adicionales que son opcionales para el usuario
     val opcionesEliminar = listOf(
-        com.gastosdiarios.gavio.data.domain.model.OpcionEliminarModel(
+        OpcionEliminarModel(
             "Datos estadísticos del gráfico",
             ::deleteGraphBar
         ),
-        com.gastosdiarios.gavio.data.domain.model.OpcionEliminarModel(
+        OpcionEliminarModel(
             "Categorías de ingresos creadas",
             ::deleteUserCreaCatIngresos
         ),
-        com.gastosdiarios.gavio.data.domain.model.OpcionEliminarModel(
+        OpcionEliminarModel(
             "Categorías de gastos creadas",
             ::deleteUserCreaCatGastos
         ),
-        com.gastosdiarios.gavio.data.domain.model.OpcionEliminarModel(
+        OpcionEliminarModel(
             "Gastos programados",
             ::deleteGastosProgramados
         )

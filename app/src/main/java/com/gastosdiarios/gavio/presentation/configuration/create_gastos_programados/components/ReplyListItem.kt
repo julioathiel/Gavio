@@ -6,10 +6,13 @@ import androidx.compose.foundation.combinedClickable
 import androidx.compose.foundation.layout.Box
 import androidx.compose.foundation.layout.Column
 import androidx.compose.foundation.layout.Row
+import androidx.compose.foundation.layout.fillMaxHeight
 import androidx.compose.foundation.layout.fillMaxSize
 import androidx.compose.foundation.layout.fillMaxWidth
+import androidx.compose.foundation.layout.height
 import androidx.compose.foundation.layout.padding
 import androidx.compose.foundation.layout.size
+import androidx.compose.foundation.layout.width
 import androidx.compose.foundation.shape.CircleShape
 import androidx.compose.foundation.shape.RoundedCornerShape
 import androidx.compose.material.icons.Icons
@@ -54,6 +57,7 @@ fun ReplyListItem(
     Row(
         modifier = Modifier
             .fillMaxWidth()
+            .fillMaxWidth()
             .combinedClickable(
                 onClick = {
                     onClick()
@@ -63,20 +67,29 @@ fun ReplyListItem(
             .background(
                 if (isSelected) {
                     MaterialTheme.colorScheme.surfaceBright
-                } else if (item.select == true) {
-                    Color.Green
-                } else {
+                }else {
                     MaterialTheme.colorScheme.surface
                 }
             )
-            .padding(start = 16.dp, end = 16.dp, top = 5.dp, bottom = 20.dp)
+            .padding(end = 16.dp, top = 5.dp, bottom = 20.dp)
     ) {
+        if (item.select == true) {
+            Box(
+                modifier = Modifier
+                    .fillMaxHeight().padding(end = 16.dp)
+                    .height(30.dp)
+                    .width(8.dp) // Ancho de la barra
+                    .background(Color.Green) // Color de la barra
+            )
+        }
+
         Box(
             Modifier.background(
                 MaterialTheme.colorScheme.surfaceContainer,
                 shape = RoundedCornerShape(10.dp)
             )
         ) {
+
             ProfileIcon(
                 drawableResource = icon,
                 description = title,
