@@ -9,6 +9,6 @@ data class TransactionModel(
     val cash: String? = null,
     val tipoTransaccion: TipoTransaccion? = null,
     val date: String? = null,
-    val icon: String? = null,
+    val icon: Int? = null,
     val index: Int? = null,
 )

@@ -1,6 +1,10 @@
 package com.gastosdiarios.gavio.presentation.configuration.create_gastos_programados.components
 
+
+import android.content.Context
+import android.icu.util.Calendar
 import android.util.Log
+import android.widget.Toast
 import androidx.compose.foundation.layout.Arrangement
 import androidx.compose.foundation.layout.Box
 import androidx.compose.foundation.layout.Column
@@ -38,6 +42,7 @@ import com.gastosdiarios.gavio.presentation.configuration.create_gastos_programa
 import com.gastosdiarios.gavio.utils.DateUtils
 import com.gastosdiarios.gavio.utils.setUpAlarm
 import kotlinx.coroutines.launch
+import kotlin.time.Duration.Companion.milliseconds
 
 @Composable
 fun ContentBottomSheetGastosProgramados(
@@ -51,10 +56,17 @@ fun ContentBottomSheetGastosProgramados(
     val focusRequester = remember { FocusRequester() }
     var selectedCategory by remember { mutableStateOf<CategoriesModel?>(null) }
     var selectedDate by remember { mutableStateOf(item.date ?: "") }
-    var timeInMillis by remember { mutableStateOf(Time(hour = item.hour ?: 0, minute = item.minute ?: 0)) }
+    var timeInMillis by remember {
+        mutableStateOf(
+            Time(
+                hour = item.hour ?: 0,
+                minute = item.minute ?: 0
+            )
+        )
+    }
     var dineroProgramado by remember { mutableStateOf(item.cash ?: "") }
     var subTitleProgramado by remember { mutableStateOf(item.subTitle ?: "") }
-    var time by remember { mutableStateOf(Time(hour = item.hour ?: 0, minute = item.minute ?: 0)) }
+
 
     val list = listHorizontalPagerScreens(
         item = item,
@@ -64,7 +76,7 @@ fun ContentBottomSheetGastosProgramados(
         onEnabledButtonChanged = { enabledButton = it },
         selectedDate = { selectedDate = DateUtils.formatSelectedDate(it) },
         focusRequester = focusRequester,
-        time = { time = Time(it.value.hour, it.value.minute) }
+        time = { timeInMillis = Time(it.value.hour, it.value.minute) }
     )
 
 
@@ -172,14 +184,16 @@ fun ContentBottomSheetGastosProgramados(
                                 cash = dineroProgramado,
                                 select = false,
                                 date = selectedDate,
-                                icon = selectedCategory?.icon.toString(),
+                                icon = selectedCategory?.icon,
                                 categoryType = categoryTypes,
-                                hour = time.hour,
-                                minute = time.minute
+                                hour = timeInMillis.hour,
+                                minute = timeInMillis.minute
                             )
-                            Log.d("TAGG", "ContentBottomSheetGastosProgramados: $newValor")
-                            RealizarAccion(modo, viewModel, newValor, selectedDate,
-                                timeInMillis.toString(), onDismiss )
+
+                            RealizarAccion(
+                                modo, viewModel, newValor, selectedDate,
+                                timeInMillis, onDismiss
+                            )
                         }
                     }
 
@@ -195,7 +209,7 @@ fun RealizarAccion(
     viewModel: CreateGastosProgramadosViewModel,
     item: GastosProgramadosModel,
     selectedDate: String,
-    timeInMillis: String,
+    timeInMillis: Time,
     onDismiss: () -> Unit
 ) {
     val context = LocalContext.current
@@ -206,19 +220,24 @@ fun RealizarAccion(
                 modifier = Modifier.height(dimensionResource(id = R.dimen.padding_altura_boton)),
                 onClick = {
                     viewModel.create(item)
-                    val timeInMillis = DateUtils.convertDateAndTimeToMillis(selectedDate, item.hour ?: 0, item.minute ?: 0)
+                    val time = DateUtils.convertDateAndTimeToMillis(
+                        selectedDate,
+                        item.hour ?: timeInMillis.hour,
+                        item.minute ?: timeInMillis.minute
+                    )
+                    set(context, time)
                     val alarm = Alarm(
-                        id = timeInMillis,
+                        id = time,
                         icon = item.icon.toString().toIntOrNull() ?: 0,
                         title = item.title ?: "",
                         message = item.subTitle ?: "",
-                        timeInMillis = timeInMillis,
+                        timeInMillis = time,
                         gastosProgramadosId = item.uid ?: ""
                     )
                     setUpAlarm(context, alarm)
                     onDismiss()
                 },
-                enabled = selectedDate.isNotEmpty()
+                enabled = timeInMillis.hour != 0 || timeInMillis.minute != 0
             ) {
                 Text("Guardar")
             }
@@ -229,23 +248,46 @@ fun RealizarAccion(
                 modifier = Modifier.height(dimensionResource(id = R.dimen.padding_altura_boton)),
                 onClick = {
                     viewModel.update(item)
-                    val timeInMillis = DateUtils.convertDateAndTimeToMillis(selectedDate, item.hour ?: 0, item.minute ?: 0)
+                    val time: Long = DateUtils.convertDateAndTimeToMillis(
+                        selectedDate,
+                        item.hour ?: 0,
+                        item.minute ?: 0
+                    )
+                    Log.d("timein", " la alarma se activara el dia ${time.milliseconds}")
+                    set(context, time)
                     val alarm = Alarm(
-                        id = timeInMillis,
-                        icon = item.icon.toString().toIntOrNull() ?: 0,
+                        id = time,
+                        icon = item.icon ?: 0,
                         title = item.title ?: "",
                         message = item.subTitle ?: "",
-                        timeInMillis = timeInMillis,
+                        timeInMillis = time,
                         gastosProgramadosId = item.uid ?: "",
                         cashGastosprogramadosId = item.cash ?: ""
                     )
                     setUpAlarm(context, alarm)
                     onDismiss()
                 },
-                enabled = timeInMillis.isNotEmpty()
+                  enabled = timeInMillis.hour != 0 || timeInMillis.minute != 0
             ) {
                 Text("Guardar")
             }
         }
     }
+}
+
+fun set(context: Context, time: Long) {
+    val calendar = Calendar.getInstance()
+    calendar.timeInMillis = time
+
+    val year = calendar.get(Calendar.YEAR)
+    val month = calendar.get(Calendar.MONTH) + 1 // Los meses empiezan en 0
+    val day = calendar.get(Calendar.DAY_OF_MONTH)
+    val hour = calendar.get(Calendar.HOUR_OF_DAY)
+    val minute = calendar.get(Calendar.MINUTE)
+    val second = calendar.get(Calendar.SECOND)
+    Toast.makeText(
+        context,
+        "La alarma se activará el día: $day/$month/$year a las $hour:$minute",
+        Toast.LENGTH_LONG
+    ).show()
 }

@@ -39,7 +39,7 @@ class AlarmReceiver : BroadcastReceiver() {
     lateinit var gastosProgramadosFirestore: GastosProgramadosFirestore
 
     override fun onReceive(context: Context?, intent: Intent?) {
-        Log.d("alarmaReceiver", "onReceive: ${intent?.action}")
+
         val alarmManager = context?.getSystemService(Context.ALARM_SERVICE) as AlarmManager
         val reminderJson = intent?.getStringExtra(ALARM_ID)
         val reminder = reminderJson?.let { Json.decodeFromString<Alarm>(it) }
@@ -180,7 +180,7 @@ class AlarmReceiver : BroadcastReceiver() {
                 mediaPlayer.setOnCompletionListener {
                     mediaPlayer.release()
                 }
-              //  mediaPlayer.start()
+                mediaPlayer.start()
             }
         }
     }

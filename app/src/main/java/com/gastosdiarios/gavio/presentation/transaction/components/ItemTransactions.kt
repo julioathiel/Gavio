@@ -29,14 +29,14 @@ import com.gastosdiarios.gavio.utils.CurrencyUtils
 @OptIn(ExperimentalFoundationApi::class)
 @Composable
 fun ItemTransactions(
-    item: com.gastosdiarios.gavio.data.domain.model.modelFirebase.TransactionModel,
+    item: TransactionModel,
     viewModel: TransactionsViewModel,
     isSelect: Boolean,
     onClick: () -> Unit,
     onLongClick: () -> Unit
 ) {
     val data by viewModel.dataList.collectAsState()
-    val textColor = if (item.tipoTransaccion == com.gastosdiarios.gavio.data.domain.enums.TipoTransaccion.INGRESOS) {
+    val textColor = if (item.tipoTransaccion == TipoTransaccion.INGRESOS) {
         //si el usuario eligio ingreso, el color de los numeros sera verde
         colorResource(id = R.color.verdeDinero)
     } else MaterialTheme.colorScheme.onSurfaceVariant//sin color
@@ -59,7 +59,7 @@ fun ItemTransactions(
 
         //contenedor de icono
         ProfileIcon(
-            drawableResource = item.icon.orEmpty().toInt(),
+            drawableResource = item.icon ?: R.drawable.ic_info,
             description = item.title.orEmpty(),
             modifier = Modifier.clip(CircleShape),
             sizeBox = 48,

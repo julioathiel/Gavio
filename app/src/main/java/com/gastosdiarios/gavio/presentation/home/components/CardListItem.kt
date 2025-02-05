@@ -1,5 +1,6 @@
 package com.gastosdiarios.gavio.presentation.home.components
 
+import android.util.Log
 import androidx.compose.foundation.background
 import androidx.compose.foundation.layout.Arrangement
 import androidx.compose.foundation.layout.Column
@@ -52,7 +53,7 @@ import com.gastosdiarios.gavio.utils.CurrencyUtils
 fun CardListItem(
     modifier: Modifier,
     viewModel: HomeViewModel,
-    item: com.gastosdiarios.gavio.data.domain.model.modelFirebase.GastosProgramadosModel,
+    item: GastosProgramadosModel,
     onPagarItem: () -> Unit,
     onRemoveItem: () -> Unit
 ) {
@@ -134,8 +135,11 @@ fun CardListItem(
             verticalAlignment = Alignment.CenterVertically,
             horizontalArrangement = Arrangement.End
         ) {
+          val info =   R.drawable.ic_tarjeta_credito.toString()
+            Log.d("CardListItem", "CardListItem: ${item.icon}")
+
             ProfileIcon(
-                drawableResource = item.icon.orEmpty().toInt(),
+                drawableResource = item.icon ?: R.drawable.ic_info,
                 description = item.title ?: "",
                 sizeBox = 50,
                 boxRounded = 10,

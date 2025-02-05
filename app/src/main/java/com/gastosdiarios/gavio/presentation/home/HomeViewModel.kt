@@ -575,7 +575,7 @@ class HomeViewModel @Inject constructor(
                     cash = cantidad,
                     tipoTransaccion = tipoTransaccion,
                     date = obtenerFechaActual().toString(),
-                    icon = categoryIcon.toString(),
+                    icon = categoryIcon,
                     index = newIndex
                 )
             )

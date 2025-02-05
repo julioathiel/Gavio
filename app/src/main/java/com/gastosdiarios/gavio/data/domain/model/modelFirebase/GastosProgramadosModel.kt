@@ -9,7 +9,7 @@ data class GastosProgramadosModel(
     val cash: String? = null,
     val select: Boolean? = null,
     val date: String? = null,
-    val icon: String? = null,
+    val icon: Int? = null,
     val index: Int? = null,
     val categoryType: TipoTransaccion? = null,
     val hour: Int? = null,
