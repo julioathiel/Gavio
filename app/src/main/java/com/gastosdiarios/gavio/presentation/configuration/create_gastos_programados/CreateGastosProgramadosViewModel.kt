@@ -132,7 +132,6 @@ class CreateGastosProgramadosViewModel @Inject constructor(
         viewModelScope.launch(Dispatchers.IO) {
             try {
                 val data = gastosProgramadosFirestore.get()
-
                 if (data.isEmpty()) {
                     _uiState.update { UiStateList.Empty }
                 } else {

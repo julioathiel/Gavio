@@ -21,11 +21,6 @@ fun TextFieldDescription(
         modifier = modifier,
         singleLine = true,
         maxLines = 1,
-        colors = TextFieldDefaults.colors(
-            unfocusedContainerColor = MaterialTheme.colorScheme.surfaceContainer,
-            focusedContainerColor = MaterialTheme.colorScheme.surfaceContainer,
-        )
-    ,
         //para mostrar la primer letra de la palabra en mayuscula
         keyboardOptions = KeyboardOptions(capitalization = KeyboardCapitalization.Words)
     )

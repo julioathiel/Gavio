@@ -1,6 +1,7 @@
 package com.gastosdiarios.gavio.presentation.configuration.create_gastos_programados.components
 
 import androidx.compose.foundation.ExperimentalFoundationApi
+import androidx.compose.foundation.Image
 import androidx.compose.foundation.background
 import androidx.compose.foundation.combinedClickable
 import androidx.compose.foundation.layout.Box
@@ -29,6 +30,8 @@ import androidx.compose.runtime.remember
 import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.graphics.Color
+import androidx.compose.ui.graphics.ColorFilter
+import androidx.compose.ui.res.painterResource
 import androidx.compose.ui.text.style.TextOverflow
 import androidx.compose.ui.tooling.preview.Preview
 import androidx.compose.ui.unit.dp
@@ -61,7 +64,7 @@ fun ReplyListItem(
     Row(
         modifier = Modifier
             .fillMaxWidth()
-            .wrapContentHeight()
+            .height(100.dp)
             .combinedClickable(
                 onClick = {
                     onClick()
@@ -76,25 +79,24 @@ fun ReplyListItem(
                 },
 
                 )
-            .padding(end = 16.dp, top = 5.dp, bottom = 20.dp)
+            .padding(start = 16.dp,end = 16.dp, top = 5.dp, bottom = 20.dp)
     ) {
         if (item.select == true) {
             Box(
                 modifier = Modifier
                     .fillMaxHeight()
-                    .padding(end = 8.dp)
-                    .width(4.dp) // Ancho de la barra
+                    .width(2.dp) // Ancho de la barra
                     .background(
                         Color.Green,
-                        shape = RoundedCornerShape(topEnd = 30.dp, bottomEnd = 30.dp)
+                        shape = RoundedCornerShape(topEnd = 20.dp, bottomEnd = 20.dp)
                     ) // Color de la barra
             )
         } else {
+            //linea que se pinta de color segun estado
             Box(
                 modifier = Modifier
                     .fillMaxHeight()
-                    .padding(end = 8.dp)
-                    .width(8.dp)
+                    .width(2.dp)
                     .background(Color.Transparent) // Color de la barra
             )
         }

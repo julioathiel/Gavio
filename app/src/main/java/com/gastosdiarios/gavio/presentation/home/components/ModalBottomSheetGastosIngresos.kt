@@ -64,7 +64,7 @@ fun AddTransactionDialog(
     val homeUiState by homeViewModel.homeUiState.collectAsState()
     var cantidadIngresada by remember { mutableStateOf("") }
     var description by remember { mutableStateOf("") }
-    var selectedCategory by remember { mutableStateOf<com.gastosdiarios.gavio.data.domain.model.CategoriesModel?>(null) }
+    var selectedCategory by remember { mutableStateOf<CategoriesModel?>(null) }
     val focusRequester = remember { FocusRequester() }
     val sheetState = rememberModalBottomSheetState(skipPartiallyExpanded = true)
     val scope = rememberCoroutineScope()
@@ -89,14 +89,15 @@ fun AddTransactionDialog(
                         }
                         CommonsSpacer(width = 0.dp, height = 16.dp)
 
-                        val categorySelected: com.gastosdiarios.gavio.data.domain.model.CategoriesModel =
+                        val categorySelected: CategoriesModel =
                             menuDesplegable(homeUiState, modifier)
                         selectedCategory = categorySelected
-                        CommonsSpacer(width = 0.dp, height = 30.dp)
+                        CommonsSpacer(width = 0.dp, height = 10.dp)
                         Text(
                             text = stringResource(R.string.descripcion),
                             modifier = Modifier.align(Alignment.Start)
                         )
+                        CommonsSpacer(width = 0.dp, height = 10.dp)
                         //Description
                         TextFieldDescription(
                             description = description,
@@ -104,17 +105,17 @@ fun AddTransactionDialog(
                         ) { newDescription ->
                             description = newDescription
                         }
-                        CommonsSpacer(width = 30.dp, height = 30.dp)
+                        CommonsSpacer(width = 30.dp, height = 20.dp)
 
                         BotonGastosIngresos(
                             modifier = modifier.height(51.dp),
                             enabledBotonGastos = homeUiState.enabledButtonGastos,
                             botonActivado = homeUiState.buttonIngresosActivated,
                             onTipoSeleccionado = { tipClass ->
-                                if (tipClass == com.gastosdiarios.gavio.data.domain.enums.TipoTransaccion.INGRESOS) {
-                                    homeViewModel.setIsChecked(com.gastosdiarios.gavio.data.domain.enums.TipoTransaccion.INGRESOS)
+                                if (tipClass == TipoTransaccion.INGRESOS) {
+                                    homeViewModel.setIsChecked(TipoTransaccion.INGRESOS)
                                 } else {
-                                    homeViewModel.setIsChecked(com.gastosdiarios.gavio.data.domain.enums.TipoTransaccion.GASTOS)
+                                    homeViewModel.setIsChecked(TipoTransaccion.GASTOS)
                                 }
                             }
                         )
@@ -146,7 +147,7 @@ fun AddTransactionDialog(
                             .fillMaxWidth()
                             .padding(horizontal = dimensionResource(id = R.dimen.padding_medium))
                             .align(Alignment.BottomCenter)
-                            .height(51.dp),
+                            .height(dimensionResource(id = R.dimen.padding_altura_boton)),
                         enabled = cantidadIngresada.isNotEmpty() && selectedCategory?.name != stringResource(
                             R.string.elige_una_categoria
                         )
@@ -170,11 +171,11 @@ fun onClick(
     homeViewModel: HomeViewModel,
     cantidadIngresada: String,
     description: String,
-    selectedCategory: com.gastosdiarios.gavio.data.domain.model.CategoriesModel,
+    selectedCategory: CategoriesModel,
     navController: NavController
 ) {
    val tipo = homeViewModel.homeUiState.value.tipoTransaccion
-   val tipoTransaccion = tipo ?: com.gastosdiarios.gavio.data.domain.enums.TipoTransaccion.INGRESOS
+   val tipoTransaccion = tipo ?: TipoTransaccion.INGRESOS
 
     if (homeUiState.fechaElegida == null) {
         homeViewModel.onDialogClose()
@@ -191,7 +192,7 @@ fun onClick(
             tipoTransaccion = tipoTransaccion
         )
         //si la seleccion del usuario es gastos entonces se crea el registro de gastos individuales
-        if (com.gastosdiarios.gavio.data.domain.enums.TipoTransaccion.GASTOS == homeUiState.tipoTransaccion) {
+        if (TipoTransaccion.GASTOS == homeUiState.tipoTransaccion) {
             //creando categoria individual
             homeViewModel.crearNuevaCategoriaDeGastos(
                 selectedCategory.name,

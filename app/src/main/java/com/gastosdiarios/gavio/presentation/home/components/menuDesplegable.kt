@@ -42,25 +42,25 @@ import com.gastosdiarios.gavio.data.domain.model.userCategoriesIngresosList
 
 @OptIn(ExperimentalMaterial3Api::class)
 @Composable
-fun menuDesplegable(homeUiState: HomeUiState, modifier: Modifier): com.gastosdiarios.gavio.data.domain.model.CategoriesModel {
+fun menuDesplegable(homeUiState: HomeUiState, modifier: Modifier): CategoriesModel {
 
     var expanded by remember { mutableStateOf(false) }
 
     // Recordar la lista de categorías para evitar la recomposición innecesaria
-    val categories: List<com.gastosdiarios.gavio.data.domain.model.CategoriesModel> = remember(
+    val categories: List<CategoriesModel> = remember(
         homeUiState.tipoTransaccion,
-        com.gastosdiarios.gavio.data.domain.model.userCategoriesIngresosList,
-        com.gastosdiarios.gavio.data.domain.model.userCategoriesGastosList
+        userCategoriesIngresosList,
+        userCategoriesGastosList
     ) {
-        if (homeUiState.tipoTransaccion == com.gastosdiarios.gavio.data.domain.enums.TipoTransaccion.INGRESOS) {
-            com.gastosdiarios.gavio.data.domain.model.categoriaDefault +
-                    com.gastosdiarios.gavio.data.domain.model.userCategoriesIngresosList +
-                    com.gastosdiarios.gavio.data.domain.model.defaultCategoriesIngresosList
+        if (homeUiState.tipoTransaccion == TipoTransaccion.INGRESOS) {
+            categoriaDefault +
+                    userCategoriesIngresosList +
+                    defaultCategoriesIngresosList
                         .sortedBy { it.name }
         } else {
-            com.gastosdiarios.gavio.data.domain.model.categoriaDefault +
-                    com.gastosdiarios.gavio.data.domain.model.userCategoriesGastosList +
-                    com.gastosdiarios.gavio.data.domain.model.defaultCategoriesGastosList
+            categoriaDefault +
+                    userCategoriesGastosList +
+                    defaultCategoriesGastosList
                         .sortedBy { it.name }
         }
     }
@@ -110,11 +110,6 @@ fun menuDesplegable(homeUiState: HomeUiState, modifier: Modifier): com.gastosdia
                         )
                     }
                 },
-                colors = TextFieldDefaults.colors(
-                    unfocusedIndicatorColor = Color.Transparent,
-                    unfocusedContainerColor = MaterialTheme.colorScheme.surfaceContainer,
-                    focusedContainerColor = MaterialTheme.colorScheme.surfaceContainer,
-                ),
                 modifier = Modifier
                     .fillMaxWidth()
                     .menuAnchor(type = MenuAnchorType.PrimaryEditable, enabled = true)
@@ -151,40 +146,3 @@ fun menuDesplegable(homeUiState: HomeUiState, modifier: Modifier): com.gastosdia
     }
     return selectedItem
 }
-
-//    @Composable
-//    fun ItemMenuDesplegable(
-//        categories: List<CategoriesModel>,
-//        onSelectedItem: (CategoriesModel) -> Unit,
-//        onExpanded: (Boolean) -> Unit
-//    ) {
-//
-//        LazyColumn(
-//            modifier = Modifier
-//                .height(300.dp)
-//                .width(400.dp) // Limit the maximum height
-//        ) {
-//            items(categories) { itemCategory ->
-//                val colorIcon =
-//                    if (itemCategory == categories.first()) Color.Transparent // Verifica si es el primer elemento
-//                    else MaterialTheme.colorScheme.onSurfaceVariant
-//
-//                DropdownMenuItem(
-//                    text = { Text(text = itemCategory.name) },
-//                    onClick = {
-//                        onSelectedItem(itemCategory)
-//                        onExpanded(false)
-//                    },
-//                    leadingIcon = {
-//                        Icon(
-//                            painter = painterResource(id = itemCategory.icon),
-//                            contentDescription = null,
-//                            modifier = Modifier.size(24.dp),
-//                            tint = colorIcon
-//                        )
-//
-//                    }
-//                )
-//            }
-//        }
-//    }

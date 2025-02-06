@@ -7,14 +7,16 @@ import android.content.BroadcastReceiver
 import android.content.Context
 import android.content.Intent
 import android.content.pm.PackageManager
+import android.graphics.Bitmap
 import android.graphics.BitmapFactory
+import android.graphics.drawable.BitmapDrawable
 import android.media.MediaPlayer
 import android.os.Build
 import android.provider.Settings
 import android.util.Log
+import androidx.compose.ui.graphics.Color
 import androidx.core.app.NotificationCompat
 import androidx.core.app.NotificationManagerCompat
-import androidx.core.app.Person
 import androidx.core.content.ContextCompat
 import com.gastosdiarios.gavio.R
 import com.gastosdiarios.gavio.data.domain.model.Alarm
@@ -37,6 +39,8 @@ const val RECHAZAR = "RECHAZAR"
 class AlarmReceiver : BroadcastReceiver() {
     @Inject
     lateinit var gastosProgramadosFirestore: GastosProgramadosFirestore
+    //Se declara mediaPlayer como una variable de clase, para que sea accesible desde cualquier parte de la clase
+    private var mediaPlayer: MediaPlayer? = null
 
     override fun onReceive(context: Context?, intent: Intent?) {
 
@@ -44,17 +48,20 @@ class AlarmReceiver : BroadcastReceiver() {
         val reminderJson = intent?.getStringExtra(ALARM_ID)
         val reminder = reminderJson?.let { Json.decodeFromString<Alarm>(it) }
 
-        val mediaPlayer: MediaPlayer =
+         mediaPlayer =
             MediaPlayer.create(context, Settings.System.DEFAULT_ALARM_ALERT_URI)
-        mediaPlayer.isLooping = true
+        mediaPlayer?.isLooping = true
 
 
         if (intent?.action == STOP_ALARM) {
             val alarmId = intent.getIntExtra(ALARM_ID, 2)
             NotificationManagerCompat.from(context).cancel(alarmId)
 
-            mediaPlayer.release()
-            mediaPlayer.stop()
+            if (mediaPlayer != null) {
+                mediaPlayer?.stop()
+                mediaPlayer?.release()
+                mediaPlayer = null
+            }
 
             val pIntent = PendingIntent.getBroadcast(
                 context,
@@ -98,13 +105,17 @@ class AlarmReceiver : BroadcastReceiver() {
                         val item = gastosProgramadosFirestore.get()
                             .firstOrNull { it.uid == gastosProgramadosId }
                         // reminder?.copy(isTaken = true)
-                        if(item != null){
+                        if (item != null) {
                             gastosProgramadosFirestore.update(item.copy(select = true))
                         }
                     }
                 }
                 if (reminder != null) {
                     cancelAlarm(context, reminder)
+                    //Se llama a stop() para detener la reproducción del sonido.
+                    mediaPlayer?.stop()
+                    //Libera todos los recursos del MediaPlayer y lo pone en un estado "muerto". Ya no se puede usar.
+                    mediaPlayer?.release()
                     //cancela la notificacion para que no siga apareciendo
                     NotificationManagerCompat.from(context).cancel(NOTIFICATION_ID)
                 }
@@ -121,20 +132,22 @@ class AlarmReceiver : BroadcastReceiver() {
                         val item = gastosProgramadosFirestore.get()
                             .firstOrNull { it.uid == gastosProgramadosId }
                         // reminder?.copy(isTaken = true)
-                        if(item != null){
+                        if (item != null) {
                             gastosProgramadosFirestore.update(item.copy(select = false))
                         }
                     }
                 }
                 if (reminder != null) {
                     cancelAlarm(context, reminder)
+                    //Detiene la reproducción del audio o video. El MediaPlayer sigue ocupando recursos y puede volver a iniciarse c
+                    mediaPlayer?.stop()
+                    //Libera todos los recursos del MediaPlayer y lo pone en un estado "muerto". Ya no se puede usar.
+                    mediaPlayer?.release()
                     NotificationManagerCompat.from(context).cancel(NOTIFICATION_ID)
                 }
             }
 
             else -> {
-                val smallIconId = reminder?.icon ?: R.drawable.ic_ahorro
-
                 if (Build.VERSION.SDK_INT >= Build.VERSION_CODES.TIRAMISU) {
                     // Se ejecuta si el dispositivo tiene Android 13 (Tiramisu) o una versión superior.
                     // A partir de Android 13, se requiere el permiso POST_NOTIFICATIONS para mostrar notificaciones.
@@ -146,16 +159,16 @@ class AlarmReceiver : BroadcastReceiver() {
                         // El usuario ha concedido el permiso POST_NOTIFICATIONS.
                         // Se puede mostrar la notificación.
                         val notification = NotificationCompat.Builder(context, ALARM_CHANNEL_NAME)
-                            .setSmallIcon(reminder?.icon ?: R.drawable.ic_ahorro)
+                            .setSmallIcon(R.drawable.ic_ahorro)
                             .setContentTitle(reminder?.title)
-                            .setContentText(reminder?.message)
-                            .setLargeIcon(BitmapFactory.decodeResource(context.resources, smallIconId))
+                            .setContentText(reminder?.message + "ERA ESTE")
+                           // .setLargeIcon(largeIconId)
                             .addAction(R.drawable.ic_add_task, "Hecho", donePendingIntent)
                             .addAction(R.drawable.ic_dark_mode, "Cerrar", closePendingIntent)
                             .build()
                         NotificationManagerCompat.from(context)
                             .notify(1, notification)
-                    }else{
+                    } else {
                         // El usuario NO ha concedido el permiso POST_NOTIFICATIONS.
                         // En este caso, no se muestra la notificación.
                         // Aquí podrías añadir código para solicitar el permiso al usuario.
@@ -163,24 +176,30 @@ class AlarmReceiver : BroadcastReceiver() {
                 } else {
                     // Se ejecuta si el dispositivo tiene Android 12 o una versión inferior.
                     // En estas versiones, el permiso POST_NOTIFICATIONS no es necesario.
+
+
                     val notification = NotificationCompat.Builder(context, ALARM_CHANNEL_NAME)
-                        .setSmallIcon(reminder?.icon ?: R.drawable.ic_ahorro)
-                        .setContentTitle(reminder?.title) // Título
-                        .setContentText(String.format("debes pagar: ${reminder?.cashGastosprogramadosId}") )// Total a pagar (o texto principal)
-                        .setSubText(reminder?.message) // Subtítulo
-                        .setLargeIcon(BitmapFactory.decodeResource(context.resources, smallIconId))
+                        .setSmallIcon(R.drawable.ic_ahorro)//icono de la app
+                        .setContentTitle(reminder?.title) // Título del gasto programado
+                        .setContentText("Tienes un gasto programado para hoy")// Total a pagar (o texto principal)
+                        .setStyle(//descripcion larga
+                            NotificationCompat.BigTextStyle()
+                                .bigText(reminder?.message)
+                        )
+                        .setLargeIcon(BitmapFactory.decodeResource(context.resources,R.drawable.ic_ahorro))//icono grande a la derecha
                         .addAction(R.drawable.ic_add_task, "Hecho", donePendingIntent)
                         .addAction(R.drawable.ic_dark_mode, "Cerrar", closePendingIntent)
                         .build()
+
 
                     NotificationManagerCompat.from(context)
                         .notify(1, notification)
 
                 }
-                mediaPlayer.setOnCompletionListener {
-                    mediaPlayer.release()
+                mediaPlayer?.setOnCompletionListener {
+                    mediaPlayer?.release()
                 }
-                mediaPlayer.start()
+             //   mediaPlayer?.start()
             }
         }
     }
