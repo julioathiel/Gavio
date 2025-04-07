@@ -7,6 +7,7 @@ import com.gastosdiarios.gavio.data.domain.enums.ThemeMode
 import com.gastosdiarios.gavio.data.domain.model.modelFirebase.UserPreferences
 import com.gastosdiarios.gavio.data.repository.DataBaseManager
 import dagger.hilt.android.lifecycle.HiltViewModel
+import kotlinx.coroutines.Dispatchers
 import kotlinx.coroutines.flow.MutableSharedFlow
 import kotlinx.coroutines.flow.MutableStateFlow
 import kotlinx.coroutines.flow.SharedFlow
@@ -17,6 +18,7 @@ import kotlinx.coroutines.flow.onStart
 import kotlinx.coroutines.flow.stateIn
 import kotlinx.coroutines.flow.update
 import kotlinx.coroutines.launch
+import kotlinx.coroutines.withContext
 import javax.inject.Inject
 
 @HiltViewModel
@@ -24,10 +26,10 @@ class AjustesViewModel @Inject constructor(
     private val dbm: DataBaseManager,
 ) : ViewModel() {
 
-    private val _themeModeChanged = MutableSharedFlow<com.gastosdiarios.gavio.data.domain.enums.ThemeMode>()
-    val themeModeChanged: SharedFlow<com.gastosdiarios.gavio.data.domain.enums.ThemeMode> = _themeModeChanged.asSharedFlow()
+    private val _themeModeChanged = MutableSharedFlow<ThemeMode>()
+    val themeModeChanged: SharedFlow<ThemeMode> = _themeModeChanged.asSharedFlow()
 
-    private val _uiState = MutableStateFlow<UiStateSingle<com.gastosdiarios.gavio.data.domain.model.modelFirebase.UserPreferences?>>(UiStateSingle.Loading)
+    private val _uiState = MutableStateFlow<UiStateSingle<UserPreferences?>>(UiStateSingle.Loading)
     val uiState = _uiState.onStart { getUserPreferences() }
         .catch { throwable ->
             _uiState.update { UiStateSingle.Error(throwable = throwable) }
@@ -36,10 +38,11 @@ class AjustesViewModel @Inject constructor(
 
 
     private fun getUserPreferences() {
-        viewModelScope.launch {
+        viewModelScope.launch(Dispatchers.IO) {
             try {
-                val data: com.gastosdiarios.gavio.data.domain.model.modelFirebase.UserPreferences? = dbm.getUserPreferences()
-                _uiState.update { UiStateSingle.Success(data) }
+                dbm.getUserPreferences().collect { db ->
+                    _uiState.update { UiStateSingle.Success(db) }
+                }
             } catch (e: Exception) {
                 _uiState.update { UiStateSingle.Error(throwable = e) }
             }
@@ -57,8 +60,10 @@ class AjustesViewModel @Inject constructor(
                 if (currentData != null) {
                     val updatedData = currentData.copy(biometricSecurity = newState)
                     try {
-                        dbm.updateBiometricSecurity(newState)
-                        _uiState.update { UiStateSingle.Success(updatedData) }
+                        withContext(Dispatchers.IO) {
+                            dbm.updateBiometricSecurity(newState)
+                            _uiState.update { UiStateSingle.Success(updatedData) }
+                        }
                     } catch (e: Exception) {
                         _uiState.update { UiStateSingle.Error(throwable = e) }
                     }
@@ -69,7 +74,7 @@ class AjustesViewModel @Inject constructor(
         }
     }
 
-    fun updateThemeMode(themeMode: com.gastosdiarios.gavio.data.domain.enums.ThemeMode) {
+    fun updateThemeMode(themeMode: ThemeMode) {
         viewModelScope.launch {
             try {
                 val currentData = when (val currentState = _uiState.value) {
@@ -80,10 +85,11 @@ class AjustesViewModel @Inject constructor(
                 if (currentData != null) {
                     val updatedData = currentData.copy(themeMode = themeMode)
                     try {
-                        dbm.updateThemeMode(themeMode)
-                        _uiState.update { UiStateSingle.Success(updatedData) }
-
-                        _themeModeChanged.emit(themeMode)
+                        withContext(Dispatchers.IO) {
+                            dbm.updateThemeMode(themeMode)
+                            _uiState.update { UiStateSingle.Success(updatedData) }
+                            _themeModeChanged.emit(themeMode)
+                        }
                     } catch (e: Exception) {
                         _uiState.update { UiStateSingle.Error(throwable = e) }
                     }

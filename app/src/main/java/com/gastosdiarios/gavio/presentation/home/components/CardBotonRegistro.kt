@@ -63,7 +63,7 @@ fun CardBotonRegistro(mostrandoDineroTotalIngresos: Double?, mostrandoDineroTota
 
                 Text(
                     text = CurrencyUtils.formattedCurrency(mostrandoDineroTotalGastos),
-                    color = colorResource(id = R.color.rojoDinero),
+                    color = MaterialTheme.colorScheme.error,//color rojo
                     style = MaterialTheme.typography.titleMedium
                 )
                 Text(text = "/", modifier = Modifier.padding(horizontal = 4.dp))

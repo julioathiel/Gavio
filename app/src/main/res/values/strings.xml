@@ -26,6 +26,7 @@
     <string name="seleccionar_fecha">Seleccionar fecha</string>
     <string name="editar">Editar</string>
     <string name="eliminar">Eliminar</string>
+    <string name="cancelar">Cancelar</string>
     <string name="guardar">Guardar</string>
     <string name="pagar">Pagar</string>
     <string name="elige_una_categoria">Elige una categoría</string>
@@ -167,4 +168,8 @@
     <string name="elije_una_feccha_primero">Elije una fecha primero.</string>
     <string name="reminder">recordatorios\n</string>
     <string name="reminder_channel_desc">Recibe recordatorios para que no olvides tus gastos programados.</string>
+    <string name="delete_first_item_content">Esta acción eliminará todos los movimientos, el dinero actual, el total de ingresos, el total de gastos y la lista de gastos por categoría. Todos los datos se perderán permanentemente</string>
+    <string name="delete_item_title">Eliminar elemento</string>
+    <string name="delete_first_item_title">Eliminar primer elemento</string>
+    <string name="delete_item_content">¿Estás seguro de que quieres eliminar este elemento?</string>
 </resources>

@@ -1,21 +1,31 @@
 package com.gastosdiarios.gavio.data.repository.repositoriesFirestrore
 
-import android.util.Log
 import com.gastosdiarios.gavio.utils.Constants.SHARE_LINK
 import com.gastosdiarios.gavio.data.domain.model.ShareDataModel
 import com.gastosdiarios.gavio.data.repository.CloudFirestore
-import kotlinx.coroutines.tasks.await
+import kotlinx.coroutines.channels.awaitClose
+import kotlinx.coroutines.flow.Flow
+import kotlinx.coroutines.flow.callbackFlow
 import javax.inject.Inject
 
 class SharedLinkFirestore @Inject constructor(private val cloudFirestore: CloudFirestore) {
     val tag = "ShareFirestore"
-    suspend fun get(): ShareDataModel {
-        return try {
-            val document = cloudFirestore.getShareCollection().document(SHARE_LINK).get().await()
-            ShareDataModel(document.getString("link"))
-        } catch (e: Exception) {
-            Log.e(tag, "Error al obtener el documento", e)
-            ShareDataModel("")
-        }
+    fun getFlow(): Flow<ShareDataModel> = callbackFlow {
+        val listenerRegistration = cloudFirestore.getShareCollection().document(SHARE_LINK)
+            .addSnapshotListener { snapshot, error ->
+                if (error != null) {
+                    close(error)
+                    return@addSnapshotListener
+                }
+                if (snapshot != null && snapshot.exists()) {
+                    val url = snapshot.toObject(ShareDataModel::class.java)
+                    if (url != null) {
+                        trySend(url)
+                    }
+                } else {
+                    trySend(ShareDataModel())
+                }
+            }
+        awaitClose { listenerRegistration.remove() }
     }
 }

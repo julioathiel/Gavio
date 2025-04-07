@@ -5,7 +5,6 @@ import android.app.Application
 import android.content.Context
 import android.content.pm.PackageManager
 import android.content.res.Resources
-import androidx.appcompat.app.AppCompatActivity
 import androidx.credentials.CredentialManager
 import com.gastosdiarios.gavio.data.commons.SnackbarManager
 import com.google.firebase.auth.FirebaseAuth
@@ -48,12 +47,6 @@ object AppModule {
     @Singleton
     fun provideContext(application: Application): Context {
         return application.applicationContext
-    }
-
-    @Provides
-    @Singleton
-    fun provideMainActivityProvider(mainActivity: AppCompatActivity): AppCompatActivity {
-        return mainActivity //deberia eliminar este provide
     }
 
     @Provides

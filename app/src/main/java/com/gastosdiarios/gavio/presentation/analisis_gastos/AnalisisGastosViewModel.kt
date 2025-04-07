@@ -9,18 +9,16 @@ import androidx.core.graphics.ColorUtils.colorToHSL
 import androidx.lifecycle.ViewModel
 import androidx.lifecycle.viewModelScope
 import com.gastosdiarios.gavio.bar_graph_custom.CircularBuffer
-import com.gastosdiarios.gavio.utils.Constants.LIMIT_MONTH
-import com.gastosdiarios.gavio.data.ui_state.UiStateList
 import com.gastosdiarios.gavio.data.domain.enums.ThemeMode
 import com.gastosdiarios.gavio.data.domain.model.RefreshDataModel
 import com.gastosdiarios.gavio.data.domain.model.modelFirebase.BarDataModel
 import com.gastosdiarios.gavio.data.domain.model.modelFirebase.GastosPorCategoriaModel
 import com.gastosdiarios.gavio.data.repository.DataBaseManager
 import com.gastosdiarios.gavio.data.repository.repositoriesFirestrore.BarDataFirestore
-import com.gastosdiarios.gavio.data.repository.repositoriesFirestrore.UserDataFirestore
-import com.gastosdiarios.gavio.data.repository.repositoriesFirestrore.UserPreferencesFirestore
+import com.gastosdiarios.gavio.data.ui_state.UiStateList
 import com.gastosdiarios.gavio.ui.theme.md_theme_dark_primary
 import com.gastosdiarios.gavio.ui.theme.md_theme_dark_surfaceContainer
+import com.gastosdiarios.gavio.utils.Constants.LIMIT_MONTH
 import com.gastosdiarios.gavio.utils.DateUtils
 import com.gastosdiarios.gavio.utils.MathUtils
 import com.gastosdiarios.gavio.utils.RefreshDataUtils
@@ -32,6 +30,12 @@ import kotlinx.coroutines.flow.SharingStarted
 import kotlinx.coroutines.flow.StateFlow
 import kotlinx.coroutines.flow.asStateFlow
 import kotlinx.coroutines.flow.catch
+import kotlinx.coroutines.flow.collectLatest
+import kotlinx.coroutines.flow.combine
+import kotlinx.coroutines.flow.first
+import kotlinx.coroutines.flow.flowOn
+import kotlinx.coroutines.flow.map
+import kotlinx.coroutines.flow.onEach
 import kotlinx.coroutines.flow.onStart
 import kotlinx.coroutines.flow.stateIn
 import kotlinx.coroutines.flow.update
@@ -44,22 +48,15 @@ class AnalisisGastosViewModel @Inject constructor(
     @ApplicationContext private val context: Context,
     private val dbm: DataBaseManager,
     private val barDataFirestore: BarDataFirestore,
-    private val userPreferencesFirestore: UserPreferencesFirestore,
-    private val userDataFirestore: UserDataFirestore
 ) : ViewModel() {
-
-
     private val tag = "analisisGastosViewModel"
 
     private val _uiState =
         MutableStateFlow<UiStateList<GastosPorCategoriaModel>>(UiStateList.Loading)
-    var uiState = _uiState.onStart {
-        getAllListGastos()
-    }
+    val uiState = _uiState.onStart { getAllListGastos() }
         .catch { throwable ->
             _uiState.value = UiStateList.Error(throwable = throwable)
-        }
-        .stateIn(
+        }.stateIn(
             viewModelScope, SharingStarted.WhileSubscribed(5000L),
             UiStateList.Loading
         )
@@ -91,30 +88,40 @@ class AnalisisGastosViewModel @Inject constructor(
 
     private fun getAllListGastos() {
         viewModelScope.launch(Dispatchers.IO) {
-            try {
-                val dataGastosPorCategoria = dbm.getGastosPorCategoria()
-                val dataTotalIngresos = userDataFirestore.get()?.totalIngresos
-                val data = userPreferencesFirestore.get()?.themeMode
+            val gastosPorCategoriaFlow = dbm.getGastosPorCategoria()
+            val totalIngresosFlow = dbm.getUserData().map { it.totalIngresos }
+            val themeModeFlow = dbm.getUserPreferences().map { it.themeMode }
 
-                if (dataGastosPorCategoria.isNotEmpty()) {
-                    _uiState.update { UiStateList.Success(dataGastosPorCategoria) }
-                } else {
-                    _uiState.update { UiStateList.Empty }
+            combine(
+                gastosPorCategoriaFlow,
+                totalIngresosFlow,
+                themeModeFlow
+            ) { gastos, ingresos, theme ->
+                Triple(gastos, ingresos, theme)
+            }.onStart { Log.d(tag, "Starting to collect data") }
+                .catch { throwable ->
+                    Log.e(tag, "Error collecting data: ${throwable.message}")
+                    _uiState.update { UiStateList.Error(throwable = throwable) }
                 }
-
-                if (dataTotalIngresos != null) {
-                    _totalIngresosRegistros.value = dataTotalIngresos
-                    calcularValorMaximo(dataTotalIngresos)
+                .onEach { (gastos, ingresos, themeMode) ->
+                    Log.d(
+                        tag,
+                        "Data collected: Gastos - ${gastos.size}, Ingresos - $ingresos, Theme - $themeMode"
+                    )
+                    if (gastos.isNotEmpty()) {
+                        _uiState.update { UiStateList.Success(gastos) }
+                    } else {
+                        _uiState.update { UiStateList.Empty }
+                    }
+                    _totalIngresosRegistros.value = ingresos
+                    if (ingresos != null) {
+                        calcularValorMaximo(ingresos)
+                    }
+                    if (themeMode != null) {
+                        _isDarkMode.value = themeMode
+                    }
                 }
-
-                if (data != null) {
-                    _isDarkMode.update { data }
-                } else {
-                    _isDarkMode.update { ThemeMode.MODE_AUTO }
-                }
-            } catch (e: Exception) {
-                UiStateList.Error(throwable = e)
-            }
+                .flowOn(Dispatchers.IO)
         }
     }
 
@@ -122,18 +129,20 @@ class AnalisisGastosViewModel @Inject constructor(
     private fun calcularValorMaximo(totalIngresos: Double) {
         viewModelScope.launch(Dispatchers.IO) {
             try {
-                val data = dbm.getGastosPorCategoria()
-                val maximoGastos = data.maxByOrNull { it.totalGastado ?: 0.0 }?.totalGastado ?: 0.0
-                val icono = data.maxByOrNull { it.totalGastado ?: 0.0 }?.icon
+                dbm.getGastosPorCategoria().collectLatest { db ->
+                    val maximoGastos =
+                        db.maxByOrNull { it.totalGastado ?: 0.0 }?.totalGastado ?: 0.0
+                    val icono = db.maxByOrNull { it.totalGastado ?: 0.0 }?.icon
 
-                val porcentajeMes: Float =
-                    MathUtils.calcularProgresoRelativo(totalIngresos, maximoGastos)
-                val porcentaje: String = MathUtils.formattedPorcentaje(porcentajeMes)
+                    val porcentajeMes: Float =
+                        MathUtils.calcularProgresoRelativo(totalIngresos, maximoGastos)
+                    val porcentaje: String = MathUtils.formattedPorcentaje(porcentajeMes)
 
-                _porcentajeGasto.value = porcentaje.toInt()
-                _icon.value = icono
+                    _porcentajeGasto.value = porcentaje.toInt()
+                    _icon.value = icono
 
-                insertGraph(maximoGastos, porcentaje.toFloat())
+                    insertGraph(maximoGastos, porcentaje.toFloat())
+                }
             } catch (e: Exception) {
                 Log.e(tag, "Error en calcularValorMaximo : ${e.message}")
                 insertGraph(0.0, 0f)
@@ -149,18 +158,19 @@ class AnalisisGastosViewModel @Inject constructor(
             viewModelScope.launch(Dispatchers.Main) {
                 val mesActual = DateUtils.currentMonthNumber()
                 // Obtener la lista actual de datos de gráficos
-                val listaGuardada = barDataFirestore.get()
-                val existingItem = listaGuardada.find { it.monthNumber == mesActual }
+                val db = dbm.getBarDataGraph().first()
+                val existingItem = db.find { it.monthNumber == mesActual }
                 val newBarData = BarDataModel(
                     value = porcentajeMes,
                     money = maximoGastos.toString(),
-                    monthNumber = mesActual
+                    monthNumber = mesActual,
+                    index = existingItem?.index
                 )
-                if (existingItem != null && existingItem.value!! < porcentajeMes) {
-                    circularBuffer.updateBarGraphItem(newBarData, listaGuardada)
+                if (existingItem != null && (existingItem.value ?: 0f) < porcentajeMes) {
+                    circularBuffer.updateBarGraphItem(newBarData, db)
                 }
                 // Actualizar la lista de datos de gráficos después de la inserción
-                updateBarGraphList()
+                //  updateBarGraphList()
             }
         } catch (e: Exception) {
             Log.e(tag, "Error en insertGraph: ${e.message}")

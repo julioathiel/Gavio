@@ -15,6 +15,7 @@ import com.google.firebase.auth.FirebaseAuthInvalidCredentialsException
 import com.google.firebase.auth.FirebaseAuthInvalidUserException
 import dagger.hilt.android.lifecycle.HiltViewModel
 import dagger.hilt.android.qualifiers.ApplicationContext
+import kotlinx.coroutines.Dispatchers
 import kotlinx.coroutines.flow.MutableStateFlow
 import kotlinx.coroutines.flow.StateFlow
 import kotlinx.coroutines.launch
@@ -54,7 +55,7 @@ class LoginViewModel @Inject constructor(
             _snackbarMessage.value = R.string.password_error
             return
         }
-        viewModelScope.launch {
+        viewModelScope.launch(Dispatchers.IO) {
             authFirebaseImp.signInWithEmailAndPassword(uiState.value.email, uiState.value.password)
                 .addOnCompleteListener { task ->
                     if (task.isSuccessful) {

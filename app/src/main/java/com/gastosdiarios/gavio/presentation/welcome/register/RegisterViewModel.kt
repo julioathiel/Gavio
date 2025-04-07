@@ -19,6 +19,7 @@ import com.google.firebase.auth.FirebaseAuthInvalidCredentialsException
 import com.google.firebase.auth.FirebaseAuthWeakPasswordException
 import com.google.firebase.auth.UserProfileChangeRequest
 import dagger.hilt.android.lifecycle.HiltViewModel
+import kotlinx.coroutines.Dispatchers
 import kotlinx.coroutines.launch
 import java.util.regex.Pattern
 import javax.inject.Inject
@@ -64,7 +65,7 @@ class RegisterViewModel @Inject constructor(
                     if (profileTask.isSuccessful) {
                         Log.d(tag, "Perfil actualizado correctamente")
                         insertUsersFirestore(
-                            com.gastosdiarios.gavio.data.domain.model.modelFirebase.UserModel(
+                            UserModel(
                                 userId = user.uid,
                                 name = user.displayName,
                                 email = user.email,
@@ -121,8 +122,8 @@ class RegisterViewModel @Inject constructor(
     }
 
     //funcion que sirve para registrarse por correo y contraseña
-    private fun insertUsersFirestore(user: com.gastosdiarios.gavio.data.domain.model.modelFirebase.UserModel) {
-        viewModelScope.launch {
+    private fun insertUsersFirestore(user: UserModel) {
+        viewModelScope.launch(Dispatchers.IO) {
            cloudFirestore.insertUserToFirestore(user)
         }
     }

@@ -15,6 +15,8 @@ import androidx.compose.foundation.lazy.rememberLazyListState
 import androidx.compose.material.icons.Icons
 import androidx.compose.material.icons.filled.Create
 import androidx.compose.material.icons.filled.Delete
+import androidx.compose.material.icons.outlined.Create
+import androidx.compose.material.icons.outlined.Delete
 import androidx.compose.material3.BottomSheetScaffold
 import androidx.compose.material3.Button
 import androidx.compose.material3.ExperimentalMaterial3Api
@@ -46,6 +48,7 @@ import com.gastosdiarios.gavio.R
 import com.gastosdiarios.gavio.data.commons.CommonsIsEmpty
 import com.gastosdiarios.gavio.data.commons.CommonsLoadingData
 import com.gastosdiarios.gavio.data.commons.CommonsLoadingScreen
+import com.gastosdiarios.gavio.data.commons.CustomAlertDialog
 import com.gastosdiarios.gavio.data.commons.ErrorScreen
 import com.gastosdiarios.gavio.data.commons.TextFieldDescription
 import com.gastosdiarios.gavio.data.commons.TopAppBarOnBack
@@ -72,6 +75,7 @@ fun TransactionsScreen(
     val isRefreshing by viewModel.isRefreshing.collectAsState()
     val data by viewModel.dataList.collectAsState()
     val uiState by viewModel.uiState.collectAsStateWithLifecycle()
+    var itemToDelete: TransactionModel? by remember { mutableStateOf(null) }
 
     snackbarMessage?.let { messageResId ->
         val context = LocalContext.current
@@ -82,15 +86,20 @@ fun TransactionsScreen(
     }
 
     val actions = listOf(
-        com.gastosdiarios.gavio.data.domain.model.Action(
-            icon = Icons.Default.Create,
+        Action(
+            icon = Icons.Outlined.Create,
             contentDescription = "editar",
             onClick = { viewModel.isCreateTrue() }
         ),
-        com.gastosdiarios.gavio.data.domain.model.Action(
-            icon = Icons.Default.Delete,
+        Action(
+            icon = Icons.Outlined.Delete,
             contentDescription = "delete",
-            onClick = { viewModel.isDeleteTrue() }
+            onClick = {
+                if (data.selectedItems.isNotEmpty()) {
+                    itemToDelete = data.selectedItems.firstOrNull()
+                    viewModel.isDeleteTrue()
+                }
+            }
         )
     )
     BottomSheetScaffold(
@@ -106,7 +115,7 @@ fun TransactionsScreen(
                     if (data.selectionMode && data.selectedItems.size > 1) {
                         IconButton(onClick = { viewModel.deleteItemSelected() }) {
                             Icon(
-                                imageVector = Icons.Default.Delete,
+                                imageVector = Icons.Outlined.Delete,
                                 contentDescription = "delete items"
                             )
                         }
@@ -127,7 +136,7 @@ fun TransactionsScreen(
         sheetContent = {
             when {
                 data.isCreate -> {
-                    val item = data.selectedItems.firstOrNull() ?: com.gastosdiarios.gavio.data.domain.model.modelFirebase.TransactionModel()
+                    val item = data.selectedItems.firstOrNull() ?: TransactionModel()
 
                     ModalBottomSheet(onDismissRequest = { viewModel.isCreateFalse() },
                         sheetState = rememberModalBottomSheetState(skipPartiallyExpanded = true),
@@ -160,8 +169,8 @@ fun TransactionsScreen(
                     }
 
                     is UiStateList.Success -> {
-                        val list: List<com.gastosdiarios.gavio.data.domain.model.modelFirebase.TransactionModel> =
-                            (uiState as UiStateList.Success<com.gastosdiarios.gavio.data.domain.model.modelFirebase.TransactionModel>).data
+                        val list: List<TransactionModel> = state.data
+                        //   (state as UiStateList.Success<TransactionModel>).data
                         ContentList(
                             viewModel,
                             list = list,
@@ -181,9 +190,29 @@ fun TransactionsScreen(
         },
         snackbarHost = { SnackbarHost(hostState = isShowSnackbar) }
     )
+    val isFirstItem = itemToDelete?.index == 0
+    val dialogTitle = if (isFirstItem) {
+        stringResource(id = R.string.delete_first_item_title)
+    } else {
+        stringResource(R.string.delete_item_title)
+    }
+    val dialogContentText = if (isFirstItem) {
+        stringResource(R.string.delete_first_item_content)
+    } else {
+        stringResource(id = R.string.delete_item_content)
+    }
 
-    DialogDelete(data.isDelete, onDismiss = { viewModel.isDeleteFalse() },
-        onConfirm = { viewModel.deleteItemSelected() }
+    DialogDelete(data.isDelete,
+        onDismiss = {
+        viewModel.isDeleteFalse()
+        itemToDelete = null
+    },
+        onConfirm = {
+            viewModel.deleteItemSelected()
+            itemToDelete = null
+        },
+        title = dialogTitle,
+        textContent = dialogContentText
     )
 }
 
@@ -192,11 +221,10 @@ fun TransactionsScreen(
 @Composable
 fun ContentList(
     viewModel: TransactionsViewModel,
-    list: List<com.gastosdiarios.gavio.data.domain.model.modelFirebase.TransactionModel>,
+    list: List<TransactionModel>,
     showCommonsLoadingData: Boolean
 ) {
     val data by viewModel.dataList.collectAsState()
-
     val listState = rememberLazyListState()
 
     LazyColumn(modifier = Modifier.fillMaxSize()) {
@@ -226,8 +254,8 @@ fun ContentList(
                 )
             }
         }
-    }
 
+    }
     LaunchedEffect(list.lastOrNull()) {
         // muestra el ultimo elemento agregado en la parte superior
         listState.scrollToItem(index = 0)
@@ -240,7 +268,7 @@ fun ContentList(
 
 @Composable
 fun ContentBottomSheetTransaction(
-    item: com.gastosdiarios.gavio.data.domain.model.modelFirebase.TransactionModel,
+    item: TransactionModel,
     onDismiss: () -> Unit,
     viewModel: TransactionsViewModel
 ) {

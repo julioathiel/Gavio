@@ -119,7 +119,7 @@ fun ItemCategory(
                         drawableResource = uiState.icon!!.toInt(),
                         description = "",
                         sizeBox = 40,
-                        colorBackground = Color.Transparent,
+                        colorBackgroundBox = Color.Transparent,
                         colorIcon = onTertiary,
                         modifier = Modifier.padding( end = 8.dp, top = 8.dp, bottom = 8.dp)
                     )
@@ -129,7 +129,7 @@ fun ItemCategory(
                         drawableResource = uiState.icon!!.toInt(),
                         description = "",
                         sizeBox = 40,
-                        colorBackground = Color.Transparent,
+                        colorBackgroundBox = Color.Transparent,
                         colorIcon = onTertiary,
                         modifier = Modifier.padding( end = 8.dp, top = 8.dp)
                     )

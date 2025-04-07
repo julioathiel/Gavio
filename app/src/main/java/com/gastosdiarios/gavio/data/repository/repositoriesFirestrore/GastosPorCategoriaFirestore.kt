@@ -7,6 +7,9 @@ import com.gastosdiarios.gavio.data.repository.AuthFirebaseImp
 import com.gastosdiarios.gavio.data.repository.CloudFirestore
 import com.gastosdiarios.gavio.data.repository.ListBaseRepository
 import com.google.firebase.firestore.FirebaseFirestoreException
+import kotlinx.coroutines.channels.awaitClose
+import kotlinx.coroutines.flow.Flow
+import kotlinx.coroutines.flow.callbackFlow
 import kotlinx.coroutines.tasks.await
 import java.util.UUID
 import javax.inject.Inject
@@ -18,21 +21,30 @@ class GastosPorCategoriaFirestore @Inject constructor(
 
     private val tagData = "gastosPorCategoriaFirestore"
 
-    override suspend fun get(): List<GastosPorCategoriaModel> {
-        val uidUser = authFirebaseImp.getCurrentUser()?.uid ?: return emptyList()
-        return try {
-            cloudFirestore.getGastosPorCategoriaCollection()
-                .document(uidUser)
-                .collection(COLLECTION_LIST)
-                .get()
-                .await()
-                .documents.mapNotNull { snapShot ->
-                    snapShot.toObject(GastosPorCategoriaModel::class.java)
-                }
-        } catch (e: Exception) {
-            Log.d(tagData, "Error al obtener la lista de gastos por categorias: ${e.message}")
-            emptyList()
+    override suspend fun getFlow(): Flow<List<GastosPorCategoriaModel>> = callbackFlow {
+        val uidUser = authFirebaseImp.getCurrentUser()?.uid ?: run {
+            close()
+            return@callbackFlow
         }
+        val listener = cloudFirestore.getGastosPorCategoriaCollection()
+            .document(uidUser)
+            .collection(COLLECTION_LIST)
+            .addSnapshotListener { snapshot, error ->
+                if (error != null) {
+                    Log.e(tagData, "lista gastos por categoria fallida", error)
+                    close(error)
+                    return@addSnapshotListener
+                }
+                if (snapshot != null) {
+                    val list = snapshot.documents.mapNotNull { snapShot ->
+                        snapShot.toObject(GastosPorCategoriaModel::class.java)
+                    }
+                    trySend(list)
+                } else {
+                    trySend(emptyList())
+                }
+            }
+        awaitClose { listener.remove() }
     }
 
     override suspend fun create(entity: GastosPorCategoriaModel) {

@@ -35,11 +35,14 @@ android {
         }
     }
     compileOptions {
-        sourceCompatibility = JavaVersion.VERSION_1_8
-        targetCompatibility = JavaVersion.VERSION_1_8
+//        sourceCompatibility = JavaVersion.VERSION_1_8
+//        targetCompatibility = JavaVersion.VERSION_1_8
+        sourceCompatibility = JavaVersion.VERSION_11
+        targetCompatibility = JavaVersion.VERSION_11
     }
     kotlinOptions {
-        jvmTarget = "1.8"
+       // jvmTarget = "1.8"
+        jvmTarget = "11"
     }
     buildFeatures {
         compose = true
@@ -62,7 +65,6 @@ dependencies {
     implementation(libs.androidx.hilt.navigation.compose)//agregado 18/12/2024
     //autenticacion biometrica
     implementation(libs.androidx.biometric)//agregado 16/12/2024
-//    implementation("androidx.appcompat:appcompat:1.6.1")
 
     //refrescar pantalla
     implementation(libs.androidx.swiperefreshlayout)

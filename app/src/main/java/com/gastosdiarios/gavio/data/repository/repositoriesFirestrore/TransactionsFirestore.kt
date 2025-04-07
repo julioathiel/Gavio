@@ -7,6 +7,9 @@ import com.gastosdiarios.gavio.data.repository.AuthFirebaseImp
 import com.gastosdiarios.gavio.data.repository.CloudFirestore
 import com.gastosdiarios.gavio.data.repository.ListBaseRepository
 import com.google.firebase.firestore.FirebaseFirestoreException
+import kotlinx.coroutines.channels.awaitClose
+import kotlinx.coroutines.flow.Flow
+import kotlinx.coroutines.flow.callbackFlow
 import kotlinx.coroutines.tasks.await
 import java.util.UUID
 import javax.inject.Inject
@@ -19,21 +22,27 @@ class TransactionsFirestore @Inject constructor(
 
     private val tagData = "transactionFirestore"
 
-    override suspend fun get(): List<TransactionModel> {
-        val uidUser = authFirebaseImp.getCurrentUser()?.uid ?: return emptyList()
-        return try {
-            cloudFirestore.getAllTransactionsCollection()
-                .document(uidUser)
-                .collection(COLLECTION_LIST)
-                .get()
-                .await()
-                .documents.mapNotNull { document ->
-                    document.toObject(TransactionModel::class.java)
+    override suspend fun getFlow(): Flow<List<TransactionModel>> = callbackFlow {
+        val uidUser = authFirebaseImp.getCurrentUser()?.uid ?: return@callbackFlow
+
+        val listenerRegistration = cloudFirestore.getAllTransactionsCollection()
+            .document(uidUser)
+            .collection(COLLECTION_LIST)
+            .addSnapshotListener { snapshot, error ->
+                if (error != null) {
+                    close(error)
+                    return@addSnapshotListener
                 }
-        } catch (e: Exception) {
-            Log.d(tagData, "Error al obtener la lista de transacciones: ${e.message}")
-            emptyList()
-        }
+                if (snapshot != null) {
+                    val list = snapshot.documents.mapNotNull { document ->
+                        document.toObject(TransactionModel::class.java)
+                    }
+                    trySend(list)
+                } else {
+                    trySend(emptyList())
+                }
+            }
+        awaitClose { listenerRegistration.remove() }
     }
 
     override suspend fun create(entity: TransactionModel) {

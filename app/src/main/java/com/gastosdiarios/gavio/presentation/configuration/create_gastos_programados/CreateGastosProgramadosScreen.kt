@@ -169,7 +169,9 @@ fun CreateGastosProgramadosScreen(
             data.selectedItems.forEach { item ->
                 viewModel.deleteItemSelected(item)
             }
-        }
+        },
+        title = "Eliminar gastos programados",
+        textContent = "Estas seguro de eliminar los gastos programados seleccionados"
     )
 
 }

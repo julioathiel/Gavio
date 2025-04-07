@@ -8,7 +8,6 @@ import androidx.compose.foundation.shape.RoundedCornerShape
 import androidx.compose.runtime.Composable
 import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
-import androidx.compose.ui.draw.clip
 import androidx.compose.ui.graphics.Color
 import androidx.compose.ui.graphics.ColorFilter
 import androidx.compose.ui.res.painterResource
@@ -22,14 +21,14 @@ fun ProfileIcon(
     sizeBox: Int = 40,
     boxRounded: Int = 1,
     sizeIcon: Int = 24,
-    colorBackground: Color,
+    colorBackgroundBox: Color,
     colorIcon: Color
 ) {
     Box(
         modifier = modifier
             .size(sizeBox.dp)
             .background(
-                color = colorBackground,
+                color = colorBackgroundBox,
                 shape = RoundedCornerShape(boxRounded.dp)
             ),
         contentAlignment = Alignment.Center

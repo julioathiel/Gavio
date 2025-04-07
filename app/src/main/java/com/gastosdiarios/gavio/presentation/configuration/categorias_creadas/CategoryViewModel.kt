@@ -3,9 +3,7 @@ package com.gastosdiarios.gavio.presentation.configuration.categorias_creadas
 import android.content.Context
 import androidx.lifecycle.ViewModel
 import androidx.lifecycle.viewModelScope
-import com.gastosdiarios.gavio.data.ui_state.UiStateList
 import com.gastosdiarios.gavio.data.domain.enums.TipoTransaccion
-import com.gastosdiarios.gavio.data.domain.model.CategoryCreate
 import com.gastosdiarios.gavio.data.domain.model.CategoryDefaultModel
 import com.gastosdiarios.gavio.data.domain.model.CategoryGastos
 import com.gastosdiarios.gavio.data.domain.model.CategoryIngresos
@@ -15,6 +13,7 @@ import com.gastosdiarios.gavio.data.domain.model.defaultCategoriesIngresosList
 import com.gastosdiarios.gavio.data.repository.DataBaseManager
 import com.gastosdiarios.gavio.data.repository.repositoriesFirestrore.UserCategoryGastosFirestore
 import com.gastosdiarios.gavio.data.repository.repositoriesFirestrore.UserCategoryIngresosFirestore
+import com.gastosdiarios.gavio.data.ui_state.UiStateList
 import com.gastosdiarios.gavio.utils.IsInternetAvailableUtils
 import dagger.hilt.android.lifecycle.HiltViewModel
 import dagger.hilt.android.qualifiers.ApplicationContext
@@ -40,7 +39,7 @@ class CategoryViewModel @Inject constructor(
 ) : ViewModel() {
 
     private val _uiStateIngresos =
-        MutableStateFlow<UiStateList<com.gastosdiarios.gavio.data.domain.model.UserCreateCategoryModel>>(UiStateList.Loading)
+        MutableStateFlow<UiStateList<UserCreateCategoryModel>>(UiStateList.Loading)
     val uiStateIngresos = _uiStateIngresos.onStart {
         getAllIngresos()
     }.catch { throwable ->
@@ -49,7 +48,7 @@ class CategoryViewModel @Inject constructor(
         .stateIn(viewModelScope, SharingStarted.WhileSubscribed(5000L), UiStateList.Loading)
 
     private val _uiStateGastos =
-        MutableStateFlow<UiStateList<com.gastosdiarios.gavio.data.domain.model.UserCreateCategoryModel>>(UiStateList.Loading)
+        MutableStateFlow<UiStateList<UserCreateCategoryModel>>(UiStateList.Loading)
     val uiStateGastos = _uiStateGastos.onStart {
         getAllGastos()
     }
@@ -58,8 +57,8 @@ class CategoryViewModel @Inject constructor(
         }
         .stateIn(viewModelScope, SharingStarted.WhileSubscribed(5000L), UiStateList.Loading)
 
-    private val _uiStateDefault = MutableStateFlow(com.gastosdiarios.gavio.data.domain.model.CategoryDefaultModel())
-    var uiStateDefault: StateFlow<com.gastosdiarios.gavio.data.domain.model.CategoryDefaultModel> = _uiStateDefault.asStateFlow()
+    private val _uiStateDefault = MutableStateFlow(CategoryDefaultModel())
+    var uiStateDefault: StateFlow<CategoryDefaultModel> = _uiStateDefault.asStateFlow()
 
     private val _dataList = MutableStateFlow(false)
     val dataList: StateFlow<Boolean> = _dataList.asStateFlow()
@@ -69,12 +68,14 @@ class CategoryViewModel @Inject constructor(
         viewModelScope.launch {
             if (IsInternetAvailableUtils.isInternetAvailable(appContext)) {
                 try {
-                    val data: List<com.gastosdiarios.gavio.data.domain.model.UserCreateCategoryModel> =
-                        withContext(Dispatchers.IO) { dbm.getUserCategoryGastos() }
-                    if (data.isEmpty()) {
-                        _uiStateGastos.update { UiStateList.Empty }
-                    } else {
-                        _uiStateGastos.update { UiStateList.Success(data) }
+                    withContext(Dispatchers.IO) {
+                        dbm.getUserCategoryGastos().collect { db ->
+                            if (db.isEmpty()) {
+                                _uiStateGastos.update { UiStateList.Empty }
+                            } else {
+                                _uiStateGastos.update { UiStateList.Success(db) }
+                            }
+                        }
                     }
                 } catch (e: Exception) {
                     _uiStateGastos.update { UiStateList.Error(throwable = e) }
@@ -89,12 +90,14 @@ class CategoryViewModel @Inject constructor(
         viewModelScope.launch {
             if (IsInternetAvailableUtils.isInternetAvailable(appContext)) {
                 try {
-                    val data: List<com.gastosdiarios.gavio.data.domain.model.UserCreateCategoryModel> =
-                        withContext(Dispatchers.IO) { dbm.getUserCategoryIngresos() }
-                    if (data.isEmpty()) {
-                        _uiStateIngresos.update { UiStateList.Empty }
-                    } else {
-                        _uiStateIngresos.update { UiStateList.Success(data) }
+                    withContext(Dispatchers.IO) {
+                        dbm.getUserCategoryIngresos().collect { db ->
+                            if (db.isEmpty()) {
+                                _uiStateIngresos.update { UiStateList.Empty }
+                            } else {
+                                _uiStateIngresos.update { UiStateList.Success(db) }
+                            }
+                        }
                     }
                 } catch (e: Exception) {
                     _uiStateIngresos.update { UiStateList.Error(throwable = e) }
@@ -105,30 +108,36 @@ class CategoryViewModel @Inject constructor(
         }
     }
 
-    fun borrandoLista(typeCategory: com.gastosdiarios.gavio.data.domain.enums.TipoTransaccion) {
+    fun borrandoLista(typeCategory: TipoTransaccion) {
         viewModelScope.launch {
-            if (typeCategory == com.gastosdiarios.gavio.data.domain.enums.TipoTransaccion.INGRESOS) {
-                val lista = dbm.getUserCategoryIngresos()
-                // Elimina todas las categorias de la base de datos
-                for (item in lista) {
-                    repositoryIngresos.delete(item)
-                    limpiandoElementoViejo(item)
+            if (typeCategory == TipoTransaccion.INGRESOS) {
+                dbm.getUserCategoryIngresos().collect { db ->
+                    // Elimina todas las categorias de la base de datos
+                    for (item in db) {
+                        repositoryIngresos.delete(item)
+                        limpiandoElementoViejo(item)
+                    }
+                    cargandoListaActualizada(typeCategory)
                 }
-                cargandoListaActualizada(typeCategory)
+
             } else {
-                val lista = dbm.getUserCategoryGastos()
-                // Elimina todas las categorias de la base de datos
-                for (item in lista) {
-                    repositoryGastos.delete(item)
-                    limpiandoElementoViejo(item)
+                dbm.getUserCategoryGastos().collect { db ->
+                    // Elimina todas las categorias de la base de datos
+                    for (item in db) {
+                        repositoryGastos.delete(item)
+                        limpiandoElementoViejo(item)
+                    }
+                    cargandoListaActualizada(typeCategory)
                 }
-                cargandoListaActualizada(typeCategory)
             }
         }
     }
 
 
-    fun selectedParaEditar(item: com.gastosdiarios.gavio.data.domain.model.UserCreateCategoryModel, iconSelect: Int) {
+    fun selectedParaEditar(
+        item: com.gastosdiarios.gavio.data.domain.model.UserCreateCategoryModel,
+        iconSelect: Int
+    ) {
         viewModelScope.launch {
             if (item.categoryType == com.gastosdiarios.gavio.data.domain.enums.TipoTransaccion.INGRESOS) {
                 _uiStateDefault.update {
@@ -161,9 +170,9 @@ class CategoryViewModel @Inject constructor(
         }
     }
 
-    fun eliminarItemSelected(item: com.gastosdiarios.gavio.data.domain.model.UserCreateCategoryModel, typeCategory: com.gastosdiarios.gavio.data.domain.enums.TipoTransaccion) {
-        viewModelScope.launch {
-            if (item.categoryType == com.gastosdiarios.gavio.data.domain.enums.TipoTransaccion.INGRESOS) {
+    fun eliminarItemSelected(item: UserCreateCategoryModel, typeCategory: TipoTransaccion) {
+        viewModelScope.launch(Dispatchers.IO) {
+            if (item.categoryType == TipoTransaccion.INGRESOS) {
                 repositoryIngresos.delete(item)
                 limpiandoElementoViejo(item)
                 cargandoListaActualizada(typeCategory)
@@ -176,48 +185,53 @@ class CategoryViewModel @Inject constructor(
         }
     }
 
-    fun actualizandoItem(item: com.gastosdiarios.gavio.data.domain.model.UserCreateCategoryModel) {
+    fun actualizandoItem(item: UserCreateCategoryModel) {
         viewModelScope.launch {
-            if (item.categoryType == com.gastosdiarios.gavio.data.domain.enums.TipoTransaccion.INGRESOS) {
-                val data = withContext(Dispatchers.IO) { dbm.getUserCategoryIngresos() }
-                val itemExisting = data.find { it.uid == item.uid }
-                if (itemExisting != null) repositoryIngresos.update(item)
-                cargandoListaActualizada(item.categoryType)
+            if (item.categoryType == TipoTransaccion.INGRESOS) {
+                withContext(Dispatchers.IO) {
+                    dbm.getUserCategoryIngresos().collect { db ->
+                        val itemExisting = db.find { it.uid == item.uid }
+                        if (itemExisting != null) repositoryIngresos.update(item)
+                        cargandoListaActualizada(item.categoryType)
+                    }
+                }
             } else {
-                val data = withContext(Dispatchers.IO) { dbm.getUserCategoryGastos() }
-                val itemExisting = data.find { it.uid == item.uid }
-                if (itemExisting != null) repositoryGastos.update(item)
-                cargandoListaActualizada(item.categoryType!!)
+                withContext(Dispatchers.IO) {
+                    dbm.getUserCategoryGastos().collect { db ->
+                        val itemExisting = db.find { it.uid == item.uid }
+                        if (itemExisting != null) repositoryGastos.update(item)
+                        cargandoListaActualizada(item.categoryType!!)
+                    }
+                }
             }
             limpiandoCampoBottomSheet()
         }
     }
 
-    private fun limpiandoElementoViejo(itemViejo: com.gastosdiarios.gavio.data.domain.model.UserCreateCategoryModel) {
-        if (itemViejo.categoryType == com.gastosdiarios.gavio.data.domain.enums.TipoTransaccion.INGRESOS) {
+    private fun limpiandoElementoViejo(itemViejo: UserCreateCategoryModel) {
+        if (itemViejo.categoryType == TipoTransaccion.INGRESOS) {
             val categoriaEliminar =
-                com.gastosdiarios.gavio.data.domain.model.CategoryIngresos(
+                CategoryIngresos(
                     itemViejo.categoryName!!,
                     itemViejo.categoryIcon!!.toInt()
                 )
-            com.gastosdiarios.gavio.data.domain.model.defaultCategoriesIngresosList.removeAll { it == categoriaEliminar }
+            defaultCategoriesIngresosList.removeAll { it == categoriaEliminar }
         } else {
             //REMUEVE EL ITEM ELIMINADO DE LA LISTA DE CATEGORIA PREDETERMINADA
-            val categoriaEliminar =
-                com.gastosdiarios.gavio.data.domain.model.CategoryGastos(
+            val categoriaEliminar = CategoryGastos(
                     itemViejo.categoryName!!,
                     itemViejo.categoryIcon!!.toInt()
                 )
-            com.gastosdiarios.gavio.data.domain.model.defaultCategoriesGastosList.removeAll { it == categoriaEliminar }
+            defaultCategoriesGastosList.removeAll { it == categoriaEliminar }
         }
     }
 
-    fun createNewCategory(item: com.gastosdiarios.gavio.data.domain.model.UserCreateCategoryModel) {
-        viewModelScope.launch {
-            if (item.categoryType == com.gastosdiarios.gavio.data.domain.enums.TipoTransaccion.INGRESOS) {
+    fun createNewCategory(item: UserCreateCategoryModel) {
+        viewModelScope.launch(Dispatchers.IO) {
+            if (item.categoryType == TipoTransaccion.INGRESOS) {
                 repositoryIngresos.create(item)
                 isActivatedTrue()//activa el boton creado para borrar todoo
-                cargandoListaActualizada(com.gastosdiarios.gavio.data.domain.enums.TipoTransaccion.INGRESOS)
+                cargandoListaActualizada(TipoTransaccion.INGRESOS)
             } else {
                 repositoryGastos.create(item)
                 isActivatedTrue()//activa el boton creado para borrar todoo
@@ -227,32 +241,36 @@ class CategoryViewModel @Inject constructor(
         limpiandoCampoBottomSheet()
     }
 
-    private fun cargandoListaActualizada(typeCategory: com.gastosdiarios.gavio.data.domain.enums.TipoTransaccion) {
+    private fun cargandoListaActualizada(typeCategory: TipoTransaccion) {
         viewModelScope.launch {
             _dataList.update { true }
             try {
-                val data = when (typeCategory) {
-                    com.gastosdiarios.gavio.data.domain.enums.TipoTransaccion.INGRESOS -> withContext(Dispatchers.IO) { dbm.getUserCategoryIngresos() }
-                    com.gastosdiarios.gavio.data.domain.enums.TipoTransaccion.GASTOS -> withContext(Dispatchers.IO) { dbm.getUserCategoryGastos() }
+                val ingresosFlow = dbm.getUserCategoryIngresos()
+                val gastosFlow = dbm.getUserCategoryGastos()
+
+                val mergedFlow = when (typeCategory) {
+                    TipoTransaccion.INGRESOS -> ingresosFlow
+                    TipoTransaccion.GASTOS -> gastosFlow
                 }
 
-
-                if (data.isEmpty()) {
-                    if (typeCategory == com.gastosdiarios.gavio.data.domain.enums.TipoTransaccion.INGRESOS) {
-                        _uiStateIngresos.update { UiStateList.Empty }
+                mergedFlow.collect { data ->
+                    if (data.isEmpty()) {
+                        if (typeCategory == TipoTransaccion.INGRESOS) {
+                            _uiStateIngresos.update { UiStateList.Empty }
+                        } else {
+                            _uiStateGastos.update { UiStateList.Empty }
+                        }
                     } else {
-                        _uiStateGastos.update { UiStateList.Empty }
-                    }
-                } else {
-                    if (typeCategory == com.gastosdiarios.gavio.data.domain.enums.TipoTransaccion.INGRESOS) {
-                        _uiStateIngresos.update { UiStateList.Success(data) }
-                    } else {
-                        _uiStateGastos.update { UiStateList.Success(data) }
+                        if (typeCategory == TipoTransaccion.INGRESOS) {
+                            _uiStateIngresos.update { UiStateList.Success(data) }
+                        } else {
+                            _uiStateGastos.update { UiStateList.Success(data) }
+                        }
                     }
                 }
                 _dataList.update { false }
             } catch (e: Exception) {
-                if (typeCategory == com.gastosdiarios.gavio.data.domain.enums.TipoTransaccion.INGRESOS) {
+                if (typeCategory == TipoTransaccion.INGRESOS) {
                     _uiStateIngresos.update { UiStateList.Error(throwable = e) }
                 }
             }

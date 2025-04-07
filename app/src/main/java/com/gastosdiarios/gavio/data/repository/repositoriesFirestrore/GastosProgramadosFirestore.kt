@@ -7,6 +7,9 @@ import com.gastosdiarios.gavio.data.repository.AuthFirebaseImp
 import com.gastosdiarios.gavio.data.repository.CloudFirestore
 import com.gastosdiarios.gavio.data.repository.ListBaseRepository
 import com.google.firebase.firestore.FirebaseFirestoreException
+import kotlinx.coroutines.channels.awaitClose
+import kotlinx.coroutines.flow.Flow
+import kotlinx.coroutines.flow.callbackFlow
 import kotlinx.coroutines.tasks.await
 import java.util.UUID
 import javax.inject.Inject
@@ -14,31 +17,40 @@ import javax.inject.Inject
 class GastosProgramadosFirestore @Inject constructor(
     private val cloudFirestore: CloudFirestore,
     private val authFirebaseImp: AuthFirebaseImp
-): ListBaseRepository<GastosProgramadosModel> {
+) : ListBaseRepository<GastosProgramadosModel> {
     private val tagData = "gastosProgramadosFirestore"
 
-    override suspend fun get(): List<GastosProgramadosModel> {
-        val uidUser = authFirebaseImp.getCurrentUser()?.uid ?: return emptyList()
-        return try {
-            cloudFirestore.getAllGastosProgramadosCollection()
-                .document(uidUser)
-                .collection(COLLECTION_LIST)
-                .get()
-                .await()
-                .documents.mapNotNull { document ->
-                    document.toObject(GastosProgramadosModel::class.java)
-                }
-        } catch (e: Exception) {
-            Log.d(tagData, "Error al obtener la lista de gastos programados: ${e.message}")
-            emptyList()
+    override suspend fun getFlow(): Flow<List<GastosProgramadosModel>> = callbackFlow {
+        val uidUser = authFirebaseImp.getCurrentUser()?.uid ?: run {
+            close(Exception("No se pudo obtener el UID del usuario actual"))
+            return@callbackFlow
         }
+        val listener = cloudFirestore.getAllGastosProgramadosCollection()
+            .document(uidUser)
+            .collection(COLLECTION_LIST)
+            .addSnapshotListener { snapshot, error ->
+                if (error != null) {
+                    close(error)
+                    return@addSnapshotListener
+                }
+                if (snapshot != null) {
+                    val list = snapshot.documents.mapNotNull { document ->
+                        document.toObject(GastosProgramadosModel::class.java)
+                    }
+                    trySend(list)
+                } else {
+                    trySend(emptyList())
+                }
+            }
+        awaitClose { listener.remove() }
     }
 
     override suspend fun deleteAll() {
         try {
             val uidUser = authFirebaseImp.getCurrentUser()?.uid
-            val collectionRef = cloudFirestore.getAllGastosProgramadosCollection().document(uidUser!!)
-                .collection(COLLECTION_LIST)
+            val collectionRef =
+                cloudFirestore.getAllGastosProgramadosCollection().document(uidUser!!)
+                    .collection(COLLECTION_LIST)
 
             // Obtener todos los documentos de la colección
             val documents = collectionRef.get().await().documents

@@ -16,7 +16,8 @@ import javax.inject.Inject
 class App : Application() {
     @Inject
     lateinit var firebaseAuth: FirebaseAuth
-    private lateinit var credentialManager: CredentialManager
+    @Inject
+    lateinit var credentialManager: CredentialManager
     private val networkReceiver by lazy { NetworkReceiver(this) }
 
     override fun onCreate() {

@@ -64,7 +64,7 @@ fun ItemTransactions(
             modifier = Modifier.clip(CircleShape),
             sizeBox = 48,
             sizeIcon = 24,
-            colorBackground = MaterialTheme.colorScheme.surfaceContainer,
+            colorBackgroundBox = MaterialTheme.colorScheme.surfaceContainer,
             colorIcon = MaterialTheme.colorScheme.primary
         )
 

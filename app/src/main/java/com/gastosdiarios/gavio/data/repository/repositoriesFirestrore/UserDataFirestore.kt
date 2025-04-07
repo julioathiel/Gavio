@@ -6,6 +6,9 @@ import com.gastosdiarios.gavio.data.repository.AuthFirebaseImp
 import com.gastosdiarios.gavio.data.repository.BaseRepository
 import com.gastosdiarios.gavio.data.repository.CloudFirestore
 import com.google.firebase.firestore.FieldValue
+import kotlinx.coroutines.channels.awaitClose
+import kotlinx.coroutines.flow.Flow
+import kotlinx.coroutines.flow.callbackFlow
 import kotlinx.coroutines.tasks.await
 import javax.inject.Inject
 
@@ -15,30 +18,37 @@ class UserDataFirestore @Inject constructor(
 ) : BaseRepository<UserData> {
     private val tag = "UserDataFirestore"
 
-    override suspend fun get(): UserData? {
-        return try {
-            val uidUser = authFirebaseImp.getCurrentUser()?.uid ?: return null
-            val snapshot = cloudFirestore.getUserData().document(uidUser).get().await()
-            if (snapshot.exists()) {
-                snapshot.toObject(UserData::class.java)
-            } else {
-                null
+    override suspend fun getFlow(): Flow<UserData> = callbackFlow {
+        val uidUser = authFirebaseImp.getCurrentUser()?.uid ?: return@callbackFlow
+
+        val listenerRegistration = cloudFirestore.getUserData().document(uidUser)
+            .addSnapshotListener { snapshot, error ->
+                if (error != null) {
+                    close(error)
+                    return@addSnapshotListener
+                }
+                if (snapshot != null && snapshot.exists()) {
+                    val item = snapshot.toObject(UserData::class.java)
+                    if (item != null) {
+                        trySend(item)
+                    }
+                } else {
+                    trySend(UserData())
+                }
             }
-        } catch (e: Exception) {
-            Log.e(tag, "Error al obtener el UserData: ${e.message}")
-            null
-        }
+        awaitClose { listenerRegistration.remove() }
     }
 
     override suspend fun delete() {}
 
     override suspend fun createOrUpdate(entity: UserData) {
-       try {
-           val uidUser = authFirebaseImp.getCurrentUser()?.uid ?: return
-           cloudFirestore.getUserData().document(uidUser).set(entity.copy(userId = uidUser)).await()
-       }catch (e:Exception){
-           Log.e(tag,"Error al crear userData: ${e.message}")
-       }
+        try {
+            val uidUser = authFirebaseImp.getCurrentUser()?.uid ?: return
+            cloudFirestore.getUserData().document(uidUser).set(entity.copy(userId = uidUser))
+                .await()
+        } catch (e: Exception) {
+            Log.e(tag, "Error al crear userData: ${e.message}")
+        }
     }
 
     suspend fun updateCurrentMoney(
@@ -124,7 +134,8 @@ class UserDataFirestore @Inject constructor(
     suspend fun deleteTotalIngresos() {
         try {
             val uidUser = authFirebaseImp.getCurrentUser()?.uid ?: return
-            cloudFirestore.getUserData().document(uidUser).update("totalIngresos", FieldValue.delete()).await()
+            cloudFirestore.getUserData().document(uidUser)
+                .update("totalIngresos", FieldValue.delete()).await()
         } catch (e: Exception) {
             Log.e(tag, "Error al eliminar totalIngresos:${e.message}")
         }
@@ -133,7 +144,8 @@ class UserDataFirestore @Inject constructor(
     suspend fun deleteTotalGastos() {
         try {
             val uidUser = authFirebaseImp.getCurrentUser()?.uid ?: return
-            cloudFirestore.getUserData().document(uidUser).update("totalGastos", FieldValue.delete()).await()
+            cloudFirestore.getUserData().document(uidUser)
+                .update("totalGastos", FieldValue.delete()).await()
         } catch (e: Exception) {
             Log.e(tag, "Error al eliminar totalGastos: ${e.message}")
         }

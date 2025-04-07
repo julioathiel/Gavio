@@ -115,10 +115,10 @@ fun UserProfileScreen(
                 }
             }
             Spacer(modifier = Modifier.height(32.dp))
-            currentUser?.uid.let { uid ->
-                if (uid != null) {
+            currentUser?.email.let { email ->
+                if (email != null) {
                     Text(
-                        text = "uid : $uid",
+                        text = "email : $email",
                         style = MaterialTheme.typography.bodyLarge
                     )
                 }

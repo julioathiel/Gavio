@@ -6,6 +6,9 @@ import com.gastosdiarios.gavio.data.domain.model.modelFirebase.UserPreferences
 import com.gastosdiarios.gavio.data.repository.AuthFirebaseImp
 import com.gastosdiarios.gavio.data.repository.BaseRepository
 import com.gastosdiarios.gavio.data.repository.CloudFirestore
+import kotlinx.coroutines.channels.awaitClose
+import kotlinx.coroutines.flow.Flow
+import kotlinx.coroutines.flow.callbackFlow
 import kotlinx.coroutines.tasks.await
 import javax.inject.Inject
 
@@ -15,20 +18,28 @@ class UserPreferencesFirestore @Inject constructor(
 ) : BaseRepository<UserPreferences> {
     private val tag = "userPreferencesFirestore"
 
-    override suspend fun get(): UserPreferences? {
-        return try {
-            val uidUser = authFirebaseImp.getCurrentUser()?.uid ?: return null
-            val snapshot = cloudFirestore.getUserPreferences().document(uidUser).get().await()
-
-            if (snapshot.exists()) {
-                snapshot.toObject(UserPreferences::class.java)
-            } else {
-                null
+    override suspend fun getFlow(): Flow<UserPreferences> = callbackFlow {
+            val uidUser = authFirebaseImp.getCurrentUser()?.uid ?: run {
+                close(Exception("No se pudo obtener el UID del usuario actual"))
+                return@callbackFlow
             }
-        } catch (e: java.lang.Exception) {
-            Log.d(tag, "error no se pudo obtener el documento userPreferences: ${e.message}")
-            null
-        }
+            val listenerRegistration = cloudFirestore.getUserPreferences().document(uidUser)
+                .addSnapshotListener { snapshot, error ->
+                    if (error != null) {
+                        close(error)
+                        return@addSnapshotListener
+                    }
+                    if (snapshot != null && snapshot.exists()) {
+                        val item = snapshot.toObject(UserPreferences::class.java)
+                        if (item != null) {
+                            trySend(item)
+                        }
+                    } else {
+                        trySend(UserPreferences())
+                    }
+                    }
+
+           awaitClose {listenerRegistration.remove() }
     }
 
     override suspend fun delete() {

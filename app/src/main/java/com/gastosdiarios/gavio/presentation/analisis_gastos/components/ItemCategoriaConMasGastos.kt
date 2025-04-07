@@ -50,7 +50,7 @@ fun ItemCategoriaConMasGastos(
                     drawableResource = icon?.toInt() ?: R.drawable.ic_info,
                     description = "icon con mas gastos",
                     sizeBox = 30,
-                    colorBackground = Color.Transparent,
+                    colorBackgroundBox = Color.Transparent,
                     colorIcon = MaterialTheme.colorScheme.primary
                 )
                 Column(
@@ -59,10 +59,7 @@ fun ItemCategoriaConMasGastos(
                         .padding(horizontal = 12.dp, vertical = 4.dp),
                     verticalArrangement = Arrangement.Center
                 ) {
-                    Text(
-                        text = category.title ?: "Sin categoría",
-                       // color = MaterialTheme.colorScheme.onTertiaryContainer
-                    )
+                    Text(text = category.title ?: "Sin categoría")
                     Text(
                         text = totalGastado,
                      //   color = MaterialTheme.colorScheme.onTertiaryContainer

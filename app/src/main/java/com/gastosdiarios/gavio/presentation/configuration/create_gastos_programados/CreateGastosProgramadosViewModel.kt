@@ -9,6 +9,7 @@ import com.gastosdiarios.gavio.data.ui_state.UiStateList
 import com.gastosdiarios.gavio.data.domain.model.DataList
 import com.gastosdiarios.gavio.data.domain.model.RefreshDataModel
 import com.gastosdiarios.gavio.data.domain.model.modelFirebase.GastosProgramadosModel
+import com.gastosdiarios.gavio.data.repository.DataBaseManager
 import com.gastosdiarios.gavio.data.repository.repositoriesFirestrore.GastosProgramadosFirestore
 import dagger.hilt.android.lifecycle.HiltViewModel
 import dagger.hilt.android.qualifiers.ApplicationContext
@@ -26,6 +27,7 @@ import javax.inject.Inject
 @HiltViewModel
 class CreateGastosProgramadosViewModel @Inject constructor(
     @ApplicationContext private val context: Context,
+    private val dbm: DataBaseManager,
     private val gastosProgramadosFirestore: GastosProgramadosFirestore
 ) : ViewModel() {
 
@@ -51,11 +53,12 @@ class CreateGastosProgramadosViewModel @Inject constructor(
     private fun getAllGastosProgramados() {
         viewModelScope.launch(Dispatchers.IO) {
             try {
-                val data: List<GastosProgramadosModel> = gastosProgramadosFirestore.get()
-                if (data.isEmpty()) {
-                    _uiState.update { UiStateList.Empty }
-                } else {
-                    _uiState.update { UiStateList.Success(data) }
+                dbm.getGastosProgramados().collect { db ->
+                    if (db.isEmpty()) {
+                        _uiState.update { UiStateList.Empty }
+                    } else {
+                        _uiState.update { UiStateList.Success(db) }
+                    }
                 }
             } catch (e: Exception) {
                 _uiState.update { UiStateList.Error(throwable = e) }
@@ -131,13 +134,14 @@ class CreateGastosProgramadosViewModel @Inject constructor(
         _dataList.update { it.copy(updateItem = true) }
         viewModelScope.launch(Dispatchers.IO) {
             try {
-                val data = gastosProgramadosFirestore.get()
-                if (data.isEmpty()) {
+                dbm.getGastosProgramados().collect { db ->
+                if (db.isEmpty()) {
                     _uiState.update { UiStateList.Empty }
                 } else {
                     _dataList.update { it.copy(updateItem = false) }
-                    _uiState.update { UiStateList.Success(data) }
+                    _uiState.update { UiStateList.Success(db) }
                 }
+            }
             } catch (e: Exception) {
                 Toast.makeText(context, "Error al actualizar la lista", Toast.LENGTH_SHORT).show()
                 Log.e("Error", e.message.toString())
@@ -178,13 +182,14 @@ class CreateGastosProgramadosViewModel @Inject constructor(
         viewModelScope.launch(Dispatchers.IO) {
             try {
                 _isRefreshing.update { it.copy(isRefreshing = true) }
-                val data: List<GastosProgramadosModel> = gastosProgramadosFirestore.get()
-                if (data.isEmpty()) {
-                    _uiState.update { UiStateList.Empty }
-                } else {
-                    _isRefreshing.update { it.copy(isRefreshing = false) }
-                    _uiState.update { UiStateList.Success(data) }
-                }
+             dbm.getGastosProgramados().collect { db ->
+                 if (db.isEmpty()) {
+                     _uiState.update { UiStateList.Empty }
+                 } else {
+                     _isRefreshing.update { it.copy(isRefreshing = false) }
+                     _uiState.update { UiStateList.Success(db) }
+                 }
+             }
             } catch (e: Exception) {
                 _uiState.update { UiStateList.Error(throwable = e) }
             }

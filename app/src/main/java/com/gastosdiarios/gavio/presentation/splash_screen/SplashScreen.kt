@@ -1,6 +1,5 @@
 package com.gastosdiarios.gavio.presentation.splash_screen
 
-import android.util.Log
 import androidx.compose.foundation.background
 import androidx.compose.foundation.layout.Box
 import androidx.compose.foundation.layout.fillMaxSize
@@ -39,8 +38,6 @@ fun MySplashScreen(
     ) {
         when (uiState.userRegistered) {
             true -> {
-                Log.d("SplashViewModel", "User registered: ${uiState.userRegistered}")
-                Log.d("SplashViewModel", "Security activated: ${uiState.securityActivated}")
                 if (uiState.securityActivated == true) {
                     onToBiometricScreen()
                 } else {
@@ -68,7 +65,7 @@ fun MySplashScreen(
                 modifier = Modifier.align(Alignment.Center),
                 sizeBox = 48,
                 sizeIcon = 48,
-                colorBackground = Color.Transparent,
+                colorBackgroundBox = Color.Transparent,
                 colorIcon = MaterialTheme.colorScheme.onBackground
             )
 

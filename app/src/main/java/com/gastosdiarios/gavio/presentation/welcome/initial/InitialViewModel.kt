@@ -23,6 +23,7 @@ import com.google.firebase.auth.GoogleAuthProvider
 import com.google.firebase.auth.ktx.auth
 import com.google.firebase.ktx.Firebase
 import dagger.hilt.android.lifecycle.HiltViewModel
+import kotlinx.coroutines.Dispatchers
 import kotlinx.coroutines.flow.MutableStateFlow
 import kotlinx.coroutines.flow.StateFlow
 import kotlinx.coroutines.launch
@@ -34,7 +35,6 @@ import javax.inject.Inject
 @HiltViewModel
 class InitialViewModel @Inject constructor(
     private val cloudFirestore: CloudFirestore,
-    private val firebaseAuth: FirebaseAuth,
     private val credentialManager: CredentialManager
 ) : ViewModel() {
     private val _state = MutableStateFlow(false)
@@ -52,8 +52,8 @@ class InitialViewModel @Inject constructor(
     private fun iniciarConFacebook() {}
 
     //sirve para autentificarse con correo y contraseña
-    private fun insertUsersFirestore(user: com.gastosdiarios.gavio.data.domain.model.modelFirebase.UserModel) {
-        viewModelScope.launch {
+    private fun insertUsersFirestore(user: UserModel) {
+        viewModelScope.launch(Dispatchers.IO) {
             cloudFirestore.insertUserToFirestore(user)
         }
     }
@@ -123,30 +123,30 @@ class InitialViewModel @Inject constructor(
 
 
     suspend fun handleSignIn(result: GetCredentialResponse, onResult: (Boolean) -> Unit) {
-// 1
+
         val credential = result.credential
         // GoogleIdToken credential
 
         when (credential) {
             is CustomCredential -> {
-// 2
+
                 if (credential.type == GoogleIdTokenCredential.TYPE_GOOGLE_ID_TOKEN_CREDENTIAL) {
                     try {
-// 3
+
                         val googleIdTokenCredential = GoogleIdTokenCredential
                             .createFrom(credential.data)
-// 4
+
                         val googleIdToken = googleIdTokenCredential.idToken
 
-// 5
+
                         val authCredential = GoogleAuthProvider.getCredential(googleIdToken, null)
-// 6
+
                         val user = Firebase.auth.signInWithCredential(authCredential).await().user
-// 7
+
                         user?.run {
                             Log.d("TAGg", "User ID: $uid")
                             insertUsersFirestore(
-                                com.gastosdiarios.gavio.data.domain.model.modelFirebase.UserModel(
+                                UserModel(
                                     userId = user.uid,
                                     name = user.displayName,
                                     email = user.email,

@@ -5,28 +5,32 @@ import androidx.compose.material3.Button
 import androidx.compose.material3.Text
 import androidx.compose.material3.TextButton
 import androidx.compose.runtime.Composable
+import androidx.compose.ui.res.stringResource
+import com.gastosdiarios.gavio.R
 
 @Composable
 fun DialogDelete(
     showDialog: Boolean,
     onDismiss: () -> Unit,
-    onConfirm: () -> Unit
+    onConfirm: () -> Unit,
+    title: String,
+    textContent:String
 ) {
     if (showDialog) {
         AlertDialog(onDismissRequest = onDismiss,
-            title = { Text("Confirmar eliminación") },
-            text = { Text("¿Estás seguro de que quieres eliminar este elemento?") },
+            title = { Text(title) },
+            text = { Text(textContent) },
             confirmButton = {
                 Button(onClick = {
                     onConfirm()
-                    onDismiss() // Dismiss the dialog after confirmation
+                    onDismiss()
                 }) {
-                    Text("Eliminar")
+                    Text(stringResource(R.string.eliminar))
                 }
             },
             dismissButton = {
                TextButton(onClick = onDismiss) {
-                    Text("Cancelar")
+                    Text(stringResource(R.string.cancelar))
                 }
             }
         )

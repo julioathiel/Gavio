@@ -135,15 +135,12 @@ fun CardListItem(
             verticalAlignment = Alignment.CenterVertically,
             horizontalArrangement = Arrangement.End
         ) {
-          val info =   R.drawable.ic_tarjeta_credito.toString()
-            Log.d("CardListItem", "CardListItem: ${item.icon}")
-
             ProfileIcon(
                 drawableResource = item.icon ?: R.drawable.ic_info,
                 description = item.title ?: "",
                 sizeBox = 50,
                 boxRounded = 10,
-                colorBackground = MaterialTheme.colorScheme.surfaceContainer,
+                colorBackgroundBox = MaterialTheme.colorScheme.surfaceContainer,
                 colorIcon = MaterialTheme.colorScheme.primary
             )
             Spacer(modifier = Modifier.weight(1f))

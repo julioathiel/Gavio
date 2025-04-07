@@ -41,27 +41,3 @@ object UserProfileScreen
 
 @Serializable
 data class EmailPassword(val email: String, val password: String)
-
-sealed class NavigationAction {
-    data object  ToPantallaUno : NavigationAction()
-    data object  ToPantallaDos : NavigationAction()
-    data object ToSplash : NavigationAction()
-    data object ToLoginInit : NavigationAction()
-    data object ToLogin : NavigationAction()
-    data object ToRegister : NavigationAction()
-    data object ToForgotPassword : NavigationAction()
-    data object ToBiometric : NavigationAction()
-    data object ToHome : NavigationAction()
-    data object ToTransactions : NavigationAction()
-    data object ToMenu : NavigationAction()
-    data object ToAnalisisGastos : NavigationAction()
-    data object ToRecordatorio : NavigationAction()
-    data object ToCategory : NavigationAction()
-    data object ToCreateGastosProgramados : NavigationAction()
-    data object ToActualizarMaximoFecha : NavigationAction()
-    data object ToAcercaDe : NavigationAction()
-    data object ToAjustes : NavigationAction()
-    data object ToExportarDatos : NavigationAction()
-    data object ToCongratulations : NavigationAction()
-    data object ToUserProfile : NavigationAction()
-}

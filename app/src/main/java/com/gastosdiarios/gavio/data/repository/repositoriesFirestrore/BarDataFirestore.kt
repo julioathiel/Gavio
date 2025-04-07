@@ -7,6 +7,9 @@ import com.gastosdiarios.gavio.data.repository.AuthFirebaseImp
 import com.gastosdiarios.gavio.data.repository.CloudFirestore
 import com.gastosdiarios.gavio.data.repository.ListBaseRepository
 import com.google.firebase.firestore.FirebaseFirestoreException
+import kotlinx.coroutines.channels.awaitClose
+import kotlinx.coroutines.flow.Flow
+import kotlinx.coroutines.flow.callbackFlow
 import kotlinx.coroutines.tasks.await
 import java.util.UUID
 import javax.inject.Inject
@@ -19,23 +22,32 @@ class BarDataFirestore @Inject constructor(
 
     private val tag = "barDataFirestore"
 
-    override suspend fun get(): List<BarDataModel> {
-        return try {
-            val uidUser = authFirebaseImp.getCurrentUser()?.uid ?: return emptyList()
+    override suspend fun getFlow(): Flow<List<BarDataModel>> = callbackFlow {
 
-            cloudFirestore.getBarDataCollection()
-                .document(uidUser)
-                .collection(COLLECTION_LIST)
-               // .orderBy("monthNumber") // Ordenar por el número de mes
-                .get()
-                .await()
-                .documents.mapNotNull { snapShot ->
-                    snapShot.toObject(BarDataModel::class.java)
-                }
-        } catch (e: Exception) {
-            Log.d(tag, "Error en get de BarDataFirestore: ${e.message}")
-            emptyList()
+        val uidUser = authFirebaseImp.getCurrentUser()?.uid ?: run {
+            close()
+            return@callbackFlow
         }
+
+        val listener = cloudFirestore.getBarDataCollection()
+            .document(uidUser)
+            .collection(COLLECTION_LIST)
+            .addSnapshotListener { snapshot, error ->
+                if (error != null) {
+                    Log.e(tag, "lista barra grafica falida", error)
+                    close(error)
+                    return@addSnapshotListener
+                }
+                if (snapshot != null) {
+                    val list = snapshot.documents.mapNotNull { snapShot ->
+                        snapShot.toObject(BarDataModel::class.java)
+                    }
+                    trySend(list)
+                } else {
+                    trySend(emptyList())
+                }
+            }
+        awaitClose { listener.remove() }
     }
 
     override suspend fun create(entity: BarDataModel) {
@@ -44,7 +56,8 @@ class BarDataFirestore @Inject constructor(
             val uidItem = UUID.randomUUID().toString()
 
             cloudFirestore.getBarDataCollection().document(uidUser)
-                .collection(COLLECTION_LIST).document(uidItem).set(entity.copy(uid= uidItem)).await()
+                .collection(COLLECTION_LIST).document(uidItem).set(entity.copy(uid = uidItem))
+                .await()
         } catch (e: FirebaseFirestoreException) {
             Log.i(tag, "Error al crear item en lista de bardata: ${e.message}")
         }

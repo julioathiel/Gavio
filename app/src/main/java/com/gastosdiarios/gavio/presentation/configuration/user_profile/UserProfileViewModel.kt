@@ -8,6 +8,7 @@ import com.gastosdiarios.gavio.data.repository.CloudFirestore
 import com.google.firebase.auth.FirebaseAuth
 import com.google.firebase.auth.FirebaseUser
 import dagger.hilt.android.lifecycle.HiltViewModel
+import kotlinx.coroutines.Dispatchers
 import kotlinx.coroutines.launch
 import javax.inject.Inject
 
@@ -22,7 +23,7 @@ class UserProfileViewModel @Inject constructor(
 
     fun deleteUser() {
         //elimina la cuenta
-        viewModelScope.launch {
+        viewModelScope.launch(Dispatchers.IO){
             try {
                 val email = auth.currentUser?.email
                 // 1. Eliminar datos de Firestore

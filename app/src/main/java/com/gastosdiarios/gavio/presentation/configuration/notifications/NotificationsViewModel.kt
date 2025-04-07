@@ -8,6 +8,7 @@ import com.gastosdiarios.gavio.data.repository.DataBaseManager
 import com.gastosdiarios.gavio.data.ui_state.UiStateSingle
 import dagger.hilt.android.lifecycle.HiltViewModel
 import dagger.hilt.android.qualifiers.ApplicationContext
+import kotlinx.coroutines.Dispatchers
 import kotlinx.coroutines.flow.MutableStateFlow
 import kotlinx.coroutines.flow.SharingStarted
 import kotlinx.coroutines.flow.catch
@@ -33,9 +34,10 @@ class NotificationsViewModel @Inject constructor(
         .stateIn(viewModelScope, SharingStarted.WhileSubscribed(5000L), UiStateSingle.Loading)
 
     private fun getTime() {
-        viewModelScope.launch {
-            val data = dbm.getUserPreferences()
-            _uiState.update { UiStateSingle.Success(data) }
+        viewModelScope.launch(Dispatchers.IO) {
+            dbm.getUserPreferences().collect{ db ->
+                _uiState.update { UiStateSingle.Success(db) }
+            }
         }
     }
 

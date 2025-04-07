@@ -7,14 +7,10 @@ import android.content.BroadcastReceiver
 import android.content.Context
 import android.content.Intent
 import android.content.pm.PackageManager
-import android.graphics.Bitmap
 import android.graphics.BitmapFactory
-import android.graphics.drawable.BitmapDrawable
 import android.media.MediaPlayer
 import android.os.Build
 import android.provider.Settings
-import android.util.Log
-import androidx.compose.ui.graphics.Color
 import androidx.core.app.NotificationCompat
 import androidx.core.app.NotificationManagerCompat
 import androidx.core.content.ContextCompat
@@ -27,9 +23,10 @@ import com.gastosdiarios.gavio.utils.Constants.NOTIFICATION_ID
 import com.gastosdiarios.gavio.utils.Constants.STOP_ALARM
 import com.gastosdiarios.gavio.utils.cancelAlarm
 import dagger.hilt.android.AndroidEntryPoint
-import kotlinx.coroutines.runBlocking
+import kotlinx.coroutines.CoroutineScope
+import kotlinx.coroutines.Dispatchers
+import kotlinx.coroutines.launch
 import kotlinx.serialization.json.Json
-import okhttp3.internal.notify
 import javax.inject.Inject
 
 const val HECHO = "HECHO"
@@ -39,6 +36,7 @@ const val RECHAZAR = "RECHAZAR"
 class AlarmReceiver : BroadcastReceiver() {
     @Inject
     lateinit var gastosProgramadosFirestore: GastosProgramadosFirestore
+
     //Se declara mediaPlayer como una variable de clase, para que sea accesible desde cualquier parte de la clase
     private var mediaPlayer: MediaPlayer? = null
 
@@ -48,7 +46,7 @@ class AlarmReceiver : BroadcastReceiver() {
         val reminderJson = intent?.getStringExtra(ALARM_ID)
         val reminder = reminderJson?.let { Json.decodeFromString<Alarm>(it) }
 
-         mediaPlayer =
+        mediaPlayer =
             MediaPlayer.create(context, Settings.System.DEFAULT_ALARM_ALERT_URI)
         mediaPlayer?.isLooping = true
 
@@ -97,19 +95,21 @@ class AlarmReceiver : BroadcastReceiver() {
 
         when (intent?.action) {
             HECHO -> { //DONE SIGNIFICA HECHO
-                runBlocking {
+                CoroutineScope(Dispatchers.IO).launch {
                     if (reminder != null) {
                         // 1. Obtener el ID del GastosProgramadosModel
                         val gastosProgramadosId = reminder.gastosProgramadosId
                         // 2. Obtener el GastosProgramadosModel por su ID
-                        val item = gastosProgramadosFirestore.get()
-                            .firstOrNull { it.uid == gastosProgramadosId }
-                        // reminder?.copy(isTaken = true)
-                        if (item != null) {
-                            gastosProgramadosFirestore.update(item.copy(select = true))
+
+                        gastosProgramadosFirestore.getFlow().collect { db ->
+                            val item = db.firstOrNull { it.uid == gastosProgramadosId }
+                            if (item != null) {
+                                gastosProgramadosFirestore.update(item.copy(select = true))
+                            }
                         }
                     }
                 }
+
                 if (reminder != null) {
                     cancelAlarm(context, reminder)
                     //Se llama a stop() para detener la reproducción del sonido.
@@ -122,21 +122,21 @@ class AlarmReceiver : BroadcastReceiver() {
             }
 
             RECHAZAR -> { //REJECT SIGNIFICA RECHAZAR
-                runBlocking {
-                    //  updateUseCase.invoke(reminder.copy(isTaken = true))
-
+                CoroutineScope(Dispatchers.IO).launch {
                     if (reminder != null) {
                         // 1. Obtener el ID del GastosProgramadosModel
                         val gastosProgramadosId = reminder.gastosProgramadosId
                         // 2. Obtener el GastosProgramadosModel por su ID
-                        val item = gastosProgramadosFirestore.get()
-                            .firstOrNull { it.uid == gastosProgramadosId }
-                        // reminder?.copy(isTaken = true)
-                        if (item != null) {
-                            gastosProgramadosFirestore.update(item.copy(select = false))
+
+                        gastosProgramadosFirestore.getFlow().collect { db ->
+                            val item = db.firstOrNull { it.uid == gastosProgramadosId }
+                            if (item != null) {
+                                gastosProgramadosFirestore.update(item.copy(select = false))
+                            }
                         }
                     }
                 }
+
                 if (reminder != null) {
                     cancelAlarm(context, reminder)
                     //Detiene la reproducción del audio o video. El MediaPlayer sigue ocupando recursos y puede volver a iniciarse c
@@ -162,7 +162,7 @@ class AlarmReceiver : BroadcastReceiver() {
                             .setSmallIcon(R.drawable.ic_ahorro)
                             .setContentTitle(reminder?.title)
                             .setContentText(reminder?.message + "ERA ESTE")
-                           // .setLargeIcon(largeIconId)
+                            // .setLargeIcon(largeIconId)
                             .addAction(R.drawable.ic_add_task, "Hecho", donePendingIntent)
                             .addAction(R.drawable.ic_dark_mode, "Cerrar", closePendingIntent)
                             .build()
@@ -186,7 +186,12 @@ class AlarmReceiver : BroadcastReceiver() {
                             NotificationCompat.BigTextStyle()
                                 .bigText(reminder?.message)
                         )
-                        .setLargeIcon(BitmapFactory.decodeResource(context.resources,R.drawable.ic_ahorro))//icono grande a la derecha
+                        .setLargeIcon(
+                            BitmapFactory.decodeResource(
+                                context.resources,
+                                R.drawable.ic_ahorro
+                            )
+                        )//icono grande a la derecha
                         .addAction(R.drawable.ic_add_task, "Hecho", donePendingIntent)
                         .addAction(R.drawable.ic_dark_mode, "Cerrar", closePendingIntent)
                         .build()
@@ -199,7 +204,7 @@ class AlarmReceiver : BroadcastReceiver() {
                 mediaPlayer?.setOnCompletionListener {
                     mediaPlayer?.release()
                 }
-             //   mediaPlayer?.start()
+                //   mediaPlayer?.start()
             }
         }
     }

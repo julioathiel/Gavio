@@ -1,6 +1,5 @@
 package com.gastosdiarios.gavio.bar_graph_custom
 
-import android.util.Log
 import androidx.compose.material3.MaterialTheme
 import androidx.compose.runtime.Composable
 import androidx.compose.ui.unit.dp

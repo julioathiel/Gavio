@@ -18,6 +18,7 @@ import com.gastosdiarios.gavio.data.repository.repositoriesFirestrore.UserCatego
 import com.gastosdiarios.gavio.data.repository.repositoriesFirestrore.UserCategoryIngresosFirestore
 import com.gastosdiarios.gavio.data.repository.repositoriesFirestrore.UserDataFirestore
 import com.gastosdiarios.gavio.data.repository.repositoriesFirestrore.UserPreferencesFirestore
+import kotlinx.coroutines.flow.Flow
 import javax.inject.Inject
 
 class DataBaseManager @Inject constructor(
@@ -33,21 +34,15 @@ class DataBaseManager @Inject constructor(
 ) {
     //----------------------------------------------//
 
-    suspend fun getSharedLink(): com.gastosdiarios.gavio.data.domain.model.ShareDataModel = sharedLinkRepo.get()
-    suspend fun getUserData(): com.gastosdiarios.gavio.data.domain.model.modelFirebase.UserData? = userDataRepo.get()
-    suspend fun getUserPreferences(): com.gastosdiarios.gavio.data.domain.model.modelFirebase.UserPreferences? = userPreferencesRepo.get()
-    suspend fun getBarDataGraph(): List<com.gastosdiarios.gavio.data.domain.model.modelFirebase.BarDataModel> = barDataRepo.get()
-    suspend fun getTransactions(): List<com.gastosdiarios.gavio.data.domain.model.modelFirebase.TransactionModel> = transactionsRepo.get()
-    suspend fun getGastosPorCategoria(): List<com.gastosdiarios.gavio.data.domain.model.modelFirebase.GastosPorCategoriaModel> =
-        gastosPorCategoriaRepo.get()
-
-    suspend fun getUserCategoryGastos(): List<com.gastosdiarios.gavio.data.domain.model.UserCreateCategoryModel> =
-        userCategoryGastosRepo.get()
-
-    suspend fun getUserCategoryIngresos(): List<com.gastosdiarios.gavio.data.domain.model.UserCreateCategoryModel> =
-        userCategoryIngresosRepo.get()
-
-    suspend fun getGastosProgramados(): List<com.gastosdiarios.gavio.data.domain.model.modelFirebase.GastosProgramadosModel> = gastosProgramadosRepo.get()
+    suspend fun getSharedLink(): Flow<ShareDataModel> = sharedLinkRepo.getFlow()
+    suspend fun getUserData(): Flow<UserData> = userDataRepo.getFlow()
+    suspend fun getUserPreferences(): Flow<UserPreferences> = userPreferencesRepo.getFlow()
+    suspend fun getBarDataGraph(): Flow<List<BarDataModel>> = barDataRepo.getFlow()
+    suspend fun getTransactions(): Flow<List<TransactionModel>> = transactionsRepo.getFlow()
+    suspend fun getGastosPorCategoria(): Flow<List<GastosPorCategoriaModel>> = gastosPorCategoriaRepo.getFlow()
+    suspend fun getUserCategoryGastos(): Flow<List<UserCreateCategoryModel>> = userCategoryGastosRepo.getFlow()
+    suspend fun getUserCategoryIngresos(): Flow<List<UserCreateCategoryModel>> = userCategoryIngresosRepo.getFlow()
+    suspend fun getGastosProgramados(): Flow<List<GastosProgramadosModel>> = gastosProgramadosRepo.getFlow()
     //----------------------------------------------//
 
     //FUNCION PARA LA PANTALLA DE TRANSACTIONS
@@ -75,7 +70,7 @@ class DataBaseManager @Inject constructor(
     suspend fun deleteAllGastosPorCategory() = gastosPorCategoriaRepo.deleteAll()
     suspend fun deleteAllGastosProgramados() = gastosProgramadosRepo.deleteAll()
 
-    suspend fun deleteTransaction(item: com.gastosdiarios.gavio.data.domain.model.modelFirebase.TransactionModel) {
+    suspend fun deleteTransaction(item: TransactionModel) {
         transactionsRepo.delete(item)
     }
 
@@ -125,7 +120,7 @@ class DataBaseManager @Inject constructor(
         userPreferencesRepo.updateBiometricSecurity(value)
     }
 
-    suspend fun updateThemeMode(value: com.gastosdiarios.gavio.data.domain.enums.ThemeMode) {
+    suspend fun updateThemeMode(value: ThemeMode) {
         userPreferencesRepo.updateThemeMode(value)
     }
 

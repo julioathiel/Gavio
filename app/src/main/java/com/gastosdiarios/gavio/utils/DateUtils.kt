@@ -1,6 +1,7 @@
 package com.gastosdiarios.gavio.utils
 
 import android.icu.util.Calendar
+import com.gastosdiarios.gavio.data.domain.enums.Meses
 import java.text.DateFormatSymbols
 import java.text.SimpleDateFormat
 import java.time.Instant
@@ -28,18 +29,18 @@ object DateUtils {
 
     fun getMonthName(monthNumber: Int): String {
         return when (monthNumber) {
-            1 -> "ene."
-            2 -> "feb."
-            3 -> "mar."
-            4 -> "abr."
-            5 -> "may."
-            6 -> "jun."
-            7 -> "jul."
-            8 -> "ago."
-            9 -> "sep."
-            10 -> "oct."
-            11 -> "nov."
-            12 -> "dic."
+            1 -> Meses.ENERO.abreviatura
+            2 -> Meses.FEBRERO.abreviatura
+            3 -> Meses.MARZO.abreviatura
+            4 -> Meses.ABRIL.abreviatura
+            5 -> Meses.MAYO.abreviatura
+            6 -> Meses.JUNIO.abreviatura
+            7 -> Meses.JULIO.abreviatura
+            8 -> Meses.AGOSTO.abreviatura
+            9 -> Meses.SEPTIEMBRE.abreviatura
+            10 -> Meses.OCTUBRE.abreviatura
+            11 -> Meses.NOVIEMBRE.abreviatura
+            12 -> Meses.DICIEMBRE.abreviatura
             else -> "" // O manejar el error de otra manera
         }
     }

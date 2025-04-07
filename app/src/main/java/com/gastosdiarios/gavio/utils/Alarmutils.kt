@@ -1,16 +1,9 @@
 package com.gastosdiarios.gavio.utils
 
-import android.Manifest.permission.SCHEDULE_EXACT_ALARM
-import android.app.Activity
 import android.app.AlarmManager
 import android.app.PendingIntent
 import android.content.Context
 import android.content.Intent
-import android.icu.util.Calendar
-import android.os.Build
-import android.util.Log
-import android.widget.Toast
-import androidx.core.app.ActivityCompat
 import com.gastosdiarios.gavio.data.domain.model.Alarm
 import com.gastosdiarios.gavio.receiver.AlarmReceiver
 import com.gastosdiarios.gavio.utils.Constants.ALARM_ID
@@ -33,7 +26,8 @@ fun setUpAlarm(context: Context, alarm: Alarm) {
         )
 
     try {
-        alarmManager.setExact(AlarmManager.RTC_WAKEUP, alarm.timeInMillis, pendingIntent)
+       // alarmManager.setExact(AlarmManager.RTC_WAKEUP, alarm.timeInMillis, pendingIntent)
+        alarmManager.setExactAndAllowWhileIdle(AlarmManager.RTC_WAKEUP, alarm.timeInMillis, pendingIntent)
     } catch (e: SecurityException) {
         e.printStackTrace()
     }
