@@ -96,8 +96,7 @@ class UserDataFirestore @Inject constructor(
                 "selectedDate" to valueSelectedDate,
                 "isSelectedDate" to valueIsSelectedDate
             )
-            cloudFirestore.getUserData().document(uidUser)
-                .update(item).await()
+            cloudFirestore.getUserData().document(uidUser).update(item).await()
         } catch (e: Exception) {
             Log.e(tag, "Error al actualizar el selectedDate: ${e.message}")
         }

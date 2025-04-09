@@ -30,12 +30,9 @@ import kotlinx.coroutines.flow.SharingStarted
 import kotlinx.coroutines.flow.StateFlow
 import kotlinx.coroutines.flow.asStateFlow
 import kotlinx.coroutines.flow.catch
-import kotlinx.coroutines.flow.collectLatest
 import kotlinx.coroutines.flow.combine
 import kotlinx.coroutines.flow.first
-import kotlinx.coroutines.flow.flowOn
 import kotlinx.coroutines.flow.map
-import kotlinx.coroutines.flow.onEach
 import kotlinx.coroutines.flow.onStart
 import kotlinx.coroutines.flow.stateIn
 import kotlinx.coroutines.flow.update
@@ -92,36 +89,27 @@ class AnalisisGastosViewModel @Inject constructor(
             val totalIngresosFlow = dbm.getUserData().map { it.totalIngresos }
             val themeModeFlow = dbm.getUserPreferences().map { it.themeMode }
 
-            combine(
+            val combinedData = combine(
                 gastosPorCategoriaFlow,
                 totalIngresosFlow,
                 themeModeFlow
             ) { gastos, ingresos, theme ->
                 Triple(gastos, ingresos, theme)
-            }.onStart { Log.d(tag, "Starting to collect data") }
-                .catch { throwable ->
-                    Log.e(tag, "Error collecting data: ${throwable.message}")
-                    _uiState.update { UiStateList.Error(throwable = throwable) }
-                }
-                .onEach { (gastos, ingresos, themeMode) ->
-                    Log.d(
-                        tag,
-                        "Data collected: Gastos - ${gastos.size}, Ingresos - $ingresos, Theme - $themeMode"
-                    )
-                    if (gastos.isNotEmpty()) {
-                        _uiState.update { UiStateList.Success(gastos) }
-                    } else {
-                        _uiState.update { UiStateList.Empty }
-                    }
-                    _totalIngresosRegistros.value = ingresos
-                    if (ingresos != null) {
-                        calcularValorMaximo(ingresos)
-                    }
-                    if (themeMode != null) {
-                        _isDarkMode.value = themeMode
-                    }
-                }
-                .flowOn(Dispatchers.IO)
+            }.first()
+
+            val (gastos, ingresos, themeMode) = combinedData
+            if (gastos.isNotEmpty()) {
+                _uiState.update { UiStateList.Success(gastos) }
+            } else {
+                _uiState.update { UiStateList.Empty }
+            }
+            _totalIngresosRegistros.value = ingresos
+            if (ingresos != null) {
+                calcularValorMaximo(ingresos)
+            }
+            if (themeMode != null) {
+                _isDarkMode.value = themeMode
+            }
         }
     }
 
@@ -129,20 +117,18 @@ class AnalisisGastosViewModel @Inject constructor(
     private fun calcularValorMaximo(totalIngresos: Double) {
         viewModelScope.launch(Dispatchers.IO) {
             try {
-                dbm.getGastosPorCategoria().collectLatest { db ->
-                    val maximoGastos =
-                        db.maxByOrNull { it.totalGastado ?: 0.0 }?.totalGastado ?: 0.0
-                    val icono = db.maxByOrNull { it.totalGastado ?: 0.0 }?.icon
+                val db = dbm.getGastosPorCategoria().first()
+                val maximoGastos = db.maxByOrNull { it.totalGastado ?: 0.0 }?.totalGastado ?: 0.0
+                val icono = db.maxByOrNull { it.totalGastado ?: 0.0 }?.icon
 
-                    val porcentajeMes: Float =
-                        MathUtils.calcularProgresoRelativo(totalIngresos, maximoGastos)
-                    val porcentaje: String = MathUtils.formattedPorcentaje(porcentajeMes)
+                val porcentajeMes: Float =
+                    MathUtils.calcularProgresoRelativo(totalIngresos, maximoGastos)
+                val porcentaje: String = MathUtils.formattedPorcentaje(porcentajeMes)
 
-                    _porcentajeGasto.value = porcentaje.toInt()
-                    _icon.value = icono
+                _porcentajeGasto.value = porcentaje.toInt()
+                _icon.value = icono
 
-                    insertGraph(maximoGastos, porcentaje.toFloat())
-                }
+                insertGraph(maximoGastos, porcentaje.toFloat())
             } catch (e: Exception) {
                 Log.e(tag, "Error en calcularValorMaximo : ${e.message}")
                 insertGraph(0.0, 0f)
@@ -170,7 +156,7 @@ class AnalisisGastosViewModel @Inject constructor(
                     circularBuffer.updateBarGraphItem(newBarData, db)
                 }
                 // Actualizar la lista de datos de gráficos después de la inserción
-                //  updateBarGraphList()
+                updateBarGraphList()
             }
         } catch (e: Exception) {
             Log.e(tag, "Error en insertGraph: ${e.message}")

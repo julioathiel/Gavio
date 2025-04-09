@@ -57,13 +57,16 @@ import java.util.Locale
 fun <T> BarGraph(config: BarGraphConfig<T>) {
     var selectedBarIndex by remember { mutableIntStateOf(-1) }
     val ejeCartesianoX = 30
-    Column(Modifier.fillMaxWidth().padding(16.dp), horizontalAlignment = Alignment.CenterHorizontally) {
+    Column(
+        Modifier.fillMaxWidth()
+            .padding(16.dp),
+        horizontalAlignment = Alignment.CenterHorizontally
+    ) {
         //gráfico donde muestra el dinero de cada barra al ser seleccionada
         ViewBarText(selectedBarIndex = selectedBarIndex, config = config)
 
         Box(
-            modifier = Modifier
-                .fillMaxWidth(),
+            modifier = Modifier.fillMaxWidth(),
             contentAlignment = Alignment.TopCenter
         ) {
 
@@ -80,7 +83,7 @@ fun <T> BarGraph(config: BarGraphConfig<T>) {
                     .padding(
                         start =
                         if (config.etiquetaEjeYVisible) {
-                            ejeCartesianoX.dp + 10.dp
+                            ejeCartesianoX.dp
                         } else {
                             0.dp
                         }
@@ -96,7 +99,7 @@ fun <T> BarGraph(config: BarGraphConfig<T>) {
 
                 HorizontalDivider(
                     Modifier
-                        .offset(y = (-30).dp),
+                        .offset(y = (-31).dp),
                     color = if (config.lineaBaseVisible) config.lineaBaseColor else Color.Transparent
                 )
             }
@@ -120,14 +123,13 @@ fun <T> ViewBarText(
             .fillMaxSize()
             .padding(bottom = config.viewBarPaddingBottom),
     ) {
-        Text(text = "Total",modifier = Modifier.padding(start = 10.dp), textAlign = TextAlign.Start)
+        Text(text = "Total", textAlign = TextAlign.Start)
 
         val textDinero = selectedBarValue.toDoubleOrNull()?.let { amount ->
             formattedCurrency(amount)
         } ?: "$ 0.00"
         Text(
             text = textDinero,
-            modifier = Modifier.padding(start = 10.dp),
             textAlign = TextAlign.Start,
             color = config.viewBarTextColor,
             fontSize = config.viewBarTextSize,
@@ -236,14 +238,14 @@ private fun <T> LazyRowItems(
         horizontalArrangement = Arrangement.spacedBy(config.dataBarEspacioEntreBarras)
     ) {
         items(config.barGraphList.size) { index ->
-            val animationBarra by remember { mutableStateOf(false) }
+            var animationBarra by remember { mutableStateOf(false) }
             val calendar = Calendar.getInstance()
             val currentMonth =
                 calendar.getDisplayName(Calendar.MONTH, Calendar.SHORT, Locale.getDefault())
 
-//            LaunchedEffect(key1 = true) {
-//                animationBarra = true
-//            }
+            LaunchedEffect(key1 = true) {
+                animationBarra = true
+            }
             val data = config.barGraphList[index]
             val value = config.dataToValue(data) //ingresa el valor de porcentaje
             val month = config.dataToMonth(data) //ingresa a los meses de la lista
@@ -273,7 +275,7 @@ private fun <T> LazyRowItems(
                     //muestra cada barra del mes
                     Box(
                         modifier = Modifier
-                            // .fillMaxHeight(graphBarHeight)
+                             .fillMaxHeight(graphBarHeight)
                             .fillMaxHeight(item)
                             .width(config.dataBarWidth)
                             .background(barColor, barShape)
@@ -335,14 +337,15 @@ private fun <T> GraphEleCartesiano(
     Row {
         // Y-Axis Scale Text
         if (config.etiquetaEjeYVisible) {
-            Column {
+            //muestra los numeros del 0 al 100 que es el porcentaje
+            Column(Modifier.background(Color.Transparent)) {
                 Canvas(
                     modifier = Modifier
                         .fillMaxHeight()
-                        .padding(start = 10.dp, end = 30.dp)
+                        .padding(end = 30.dp)
                 ) {
-                    val stepHeight =
-                        size.height / (config.lineasEjeGraphcantidadLineas) // Altura entre cada línea
+                    // Altura entre cada línea
+                    val stepHeight = size.height / (config.lineasEjeGraphcantidadLineas)
 
                     for (i in 0 until config.lineasEjeGraphcantidadLineas.plus(1)) {
                         val value = config.maxGraphValue - (i * separacion)
@@ -357,7 +360,6 @@ private fun <T> GraphEleCartesiano(
             }
         }
         // Línea divisoria
-
         Column(
             Modifier.height(config.altura),
             verticalArrangement = Arrangement.SpaceBetween

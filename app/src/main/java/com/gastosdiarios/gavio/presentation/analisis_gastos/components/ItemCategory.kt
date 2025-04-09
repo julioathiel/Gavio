@@ -38,8 +38,8 @@ import com.gastosdiarios.gavio.utils.MathUtils
 
 @Composable
 fun ItemCategory(
-    uiState: com.gastosdiarios.gavio.data.domain.model.modelFirebase.GastosPorCategoriaModel,
-    uiStateList: List<com.gastosdiarios.gavio.data.domain.model.modelFirebase.GastosPorCategoriaModel>,
+    uiState: GastosPorCategoriaModel,
+    uiStateList: List<GastosPorCategoriaModel>,
     viewModel: AnalisisGastosViewModel,
     tertiaryContainer: Color,
     onTertiary: Color,
@@ -82,7 +82,7 @@ fun ItemCategory(
                                 )
                                 Text(
                                     text = "$porcentaje%",
-                                    style = MaterialTheme.typography.bodyMedium,
+                                    style = MaterialTheme.typography.bodySmall,
                                 )
                             }
                         )

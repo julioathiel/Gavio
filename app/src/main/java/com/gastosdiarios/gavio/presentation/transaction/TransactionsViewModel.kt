@@ -94,12 +94,10 @@ class TransactionsViewModel @Inject constructor(
             val totalGastos = db.totalGastos ?: 0.0
             val hasFirstItem = _dataList.value.selectedItems.any { it.index == 0 }
 
-            val sumTotalIngresos =
-                _dataList.value.selectedItems.filter { it.tipoTransaccion == TipoTransaccion.INGRESOS }
-                    .sumOf { it.cash?.toDouble() ?: 0.0 }
-            val sumTotalGastos =
-                _dataList.value.selectedItems.filter { it.tipoTransaccion == TipoTransaccion.GASTOS }
-                    .sumOf { it.cash?.toDouble() ?: 0.0 }
+            val sumTotalIngresos = _dataList.value.selectedItems.filter {
+                it.tipoTransaccion == TipoTransaccion.INGRESOS }.sumOf { it.cash?.toDouble() ?: 0.0 }
+            val sumTotalGastos = _dataList.value.selectedItems.filter {
+                it.tipoTransaccion == TipoTransaccion.GASTOS }.sumOf { it.cash?.toDouble() ?: 0.0 }
 
             //nuevo currentMoney
             val updatedMoney = currentMoney - sumTotalIngresos + sumTotalGastos
@@ -109,25 +107,11 @@ class TransactionsViewModel @Inject constructor(
                 dbm.deleteAllScreenTransactions()
                 dbm.updateCurrentMoney(0.0, true)
                 _dataList.update { it.copy(updateItem = false) }
-              //  cargandoListaActualizada()
                 return@launch
             }else{
                 _dataList.update { it.copy(updateItem = true) }
                 //eliminando elementos seleccionados
                 _dataList.value.selectedItems.forEach { item ->
-                    val esPrimerItem = item.index == 0
-                    if (esPrimerItem) {
-                        dbm.deleteAllScreenTransactions()
-                        dbm.updateCurrentMoney(0.0, true)
-                        _dataList.update {
-                            it.copy(
-                                selectionMode = false,
-                                selectedItems = emptyList()
-                            )
-                        }
-                        cargandoListaActualizada()
-                        return@launch
-                    }
                     dbm.deleteTransaction(item)
                     if (item.tipoTransaccion == TipoTransaccion.GASTOS) {
                         deleteGastosPorCategoria(item.title.orEmpty())
@@ -143,7 +127,6 @@ class TransactionsViewModel @Inject constructor(
                 updateTotalIngresos(totalIngresos.minus(sumTotalIngresos))
                 updateTotalGastos(totalGastos.minus(sumTotalGastos))
                 _dataList.update { it.copy(updateItem = false) }
-               // cargandoListaActualizada()
             }
         }
     }

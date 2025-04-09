@@ -35,13 +35,15 @@ fun MyDatePickerDialog(homeViewModel: HomeViewModel) {
     }
     if (showDatePicker) {
         DatePickerView(
-            onDateSelected = { selectedDate = it },
+            onDateSelected = {
+                homeViewModel.insertUpdateFecha(it)
+                selectedDate = it
+                showDatePicker = false
+            },
             onDismiss = { showDatePicker = false },
             homeViewModel
         )
     }
-
-    selectedDate?.let { homeViewModel.insertUpdateFecha(it) }
 }
 
 @OptIn(ExperimentalMaterial3Api::class)

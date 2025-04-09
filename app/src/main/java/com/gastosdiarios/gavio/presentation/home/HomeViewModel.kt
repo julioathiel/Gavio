@@ -105,12 +105,13 @@ class HomeViewModel @Inject constructor(
     private val circularBuffer = CircularBuffer(capacity = LIMIT_MONTH, db = barDataFirestore)
 
     private fun calculandoInit() {
-        viewModelScope.launch {
+        viewModelScope.launch(Dispatchers.IO) {
             try {
-                val fechaActual = obtenerFechaActual()// muestra 2025-01-01
-                dbm.getUserData().collectLatest { data ->
-                    val dataCurrentMoney = data.currentMoney
-                    val dataDate = data.selectedDate
+                // val fechaActual = obtenerFechaActual()// muestra 2025-01-01
+                val fechaActual = LocalDate.parse("2025-04-09")// muestra 2025-01-01
+                dbm.getUserData().collectLatest { db ->
+                    val dataCurrentMoney = db.currentMoney
+                    val dataDate = db.selectedDate
 
                     // Verificar si fechaGuardada es nula o esta vacia antes de intentar analizarla
                     when (dataDate?.isNotEmpty()) {
@@ -141,9 +142,11 @@ class HomeViewModel @Inject constructor(
                                     _homeUiState.update { it.copy(showNuevoMes = true) }
                                     //si el usuario aun tiene dinero en el mes
                                 } else if (dataCurrentMoney != 0.0) {
+                                    Log.d(tag, "calculandoInit: $dataCurrentMoney")
                                     //si aun tiene dinero el usuario al finalizar la fecha elegida
                                     updateFechaUnMesMas(fechaActual, fechaLocalDate)
                                     updateIngresos(dataCurrentMoney ?: 0.0)
+                                    Log.d(tag, "calculandoInit: se actualizo el dinero")
                                     // Insertar un nuevo elemento
                                     //agrega un nuevo mes a la lista
                                     val newItem = BarDataModel(
@@ -151,13 +154,14 @@ class HomeViewModel @Inject constructor(
                                         money = "0",
                                         monthNumber = DateUtils.currentMonthNumber()
                                     )
-                                    circularBuffer.getBarGraphList().collect { list ->
-                                        circularBuffer.updateBarGraphItem(newItem, list)
-                                    }
-
+                                    Log.d(tag, "calculandoInit newItem de la barra: $newItem")
+                                    val dbList = circularBuffer.getBarGraphList().first()
+                                    Log.d(tag, "calculandoInit list de la barra: $dbList")
+                                    circularBuffer.updateBarGraphItem(newItem, dbList)
                                     dbm.updateTotalGastos(0.0)
+                                    Log.d(tag, "calculandoInit: se actualizo el dinero de gastos")
                                     dbm.deleteAllTransactions()
-
+                                    Log.d(tag, "calculandoInit: se borro las transacciones")
                                     crearTransaction(
                                         cantidad = dataCurrentMoney.toString(),
                                         categoryName = getString(R.string.saldo_restante),
@@ -165,6 +169,7 @@ class HomeViewModel @Inject constructor(
                                         categoryIcon = R.drawable.ic_sueldo,
                                         tipoTransaccion = TipoTransaccion.INGRESOS
                                     )
+                                    Log.d(tag, "calculandoInit: se creo la transaccion")
                                     //actualizando con el nuevo valor maximo del progress
                                     _homeUiState.update {
                                         _homeUiState.value.copy(
@@ -432,16 +437,22 @@ class HomeViewModel @Inject constructor(
                 val selectedDate: String? = db.selectedDate
 
                 if (selectedDate == null) {
-                    //si es null se ingresa por primera vez
+                    // Primera vez que se guarda la fecha
                     dbm.updateSelectedDate(fecha, false)
                     mostrarLimitePorDia(
                         currentMoney = db.currentMoney,
                         selectedDate = ""
                     )
 
-                } else {
-                    //si es false se actualiza en la base de datos y por las dudas se sigue manteniendo que es false
+                } else if (selectedDate != fecha) {
+                    // La fecha es diferente, se debe actualizar
+                    Log.d(tag, "insertUpdateFecha: $selectedDate")
+                    Log.d(tag, "insertUpdateFecha: $fecha")
                     dbm.updateSelectedDate(fecha, false)
+                    mostrarLimitePorDia(currentMoney = db.currentMoney, selectedDate = fecha)
+                } else {
+                    // La fecha es la misma, no es necesario actualizar
+                    Log.d(tag, "insertUpdateFecha: La fecha es la misma, no se necesita actualizar")
                     mostrarLimitePorDia(currentMoney = db.currentMoney, selectedDate = fecha)
                 }
                 mostrandoAlUsuario(fecha)
@@ -456,8 +467,8 @@ class HomeViewModel @Inject constructor(
         viewModelScope.launch(Dispatchers.IO) {
             try {
                 dbm.updateTotalIngresos(value)
-                mostrarCurrentMoney()
-                mostrarTotalIngresos()
+//                mostrarCurrentMoney()
+//                mostrarTotalIngresos()
             } catch (e: Exception) {
                 Toast.makeText(context, "Error en updateTotalIngresos", Toast.LENGTH_SHORT).show()
                 Log.e(tag, "updateTotalIngresos: ${e.message}")
@@ -529,33 +540,31 @@ class HomeViewModel @Inject constructor(
     }
 
     fun crearNuevaCategoriaDeGastos(nameCategory: String, icon: Int, cantidadIngresada: String) {
-        // Esta función se llamará desde tu Composable para crear
         // una nueva categoría de gastos unicas en el registro
         viewModelScope.launch(Dispatchers.IO) {
-            dbm.getGastosPorCategoria().collectLatest { data ->
-                // Verificar si la categoría ya existe en la lista
-                if (data.any { it.title == nameCategory }) {
-                    val uid = data.first { it.title == nameCategory }.uid
-                    val getCantidad = data.first { it.title == nameCategory }.totalGastado
-                    val newTotalGastado = getCantidad!! + cantidadIngresada.toDouble()
-                    // Actualizar la cantidad en la lista
-                    val entity =
-                        GastosPorCategoriaModel(
-                            uid = uid,
-                            title = nameCategory,
-                            icon = icon.toString(),
-                            totalGastado = newTotalGastado
-                        )
-                    gastosPorCategoriaFirestore.update(entity)
-                } else {
-                    gastosPorCategoriaFirestore.create(
-                        GastosPorCategoriaModel(
-                            title = nameCategory,
-                            icon = icon.toString(),
-                            totalGastado = cantidadIngresada.toDouble()
-                        )
+            val db = dbm.getGastosPorCategoria().first()
+            // Verificar si la categoría ya existe en la lista
+            if (db.any { it.title == nameCategory }) {
+                val uid = db.first { it.title == nameCategory }.uid
+                val getCantidad = db.first { it.title == nameCategory }.totalGastado
+                val newTotalGastado = getCantidad!! + cantidadIngresada.toDouble()
+                // Actualizar la cantidad en la lista
+                val entity =
+                    GastosPorCategoriaModel(
+                        uid = uid,
+                        title = nameCategory,
+                        icon = icon.toString(),
+                        totalGastado = newTotalGastado
                     )
-                }
+                gastosPorCategoriaFirestore.update(entity)
+            } else {
+                gastosPorCategoriaFirestore.create(
+                    GastosPorCategoriaModel(
+                        title = nameCategory,
+                        icon = icon.toString(),
+                        totalGastado = cantidadIngresada.toDouble()
+                    )
+                )
             }
         }
     }
