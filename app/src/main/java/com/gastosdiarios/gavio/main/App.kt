@@ -1,10 +1,11 @@
-package com.gastosdiarios.gavio
+package com.gastosdiarios.gavio.main
 
 import android.app.Application
 import android.app.NotificationChannel
 import android.app.NotificationManager
 import android.os.Build
 import androidx.credentials.CredentialManager
+import com.gastosdiarios.gavio.R
 import com.gastosdiarios.gavio.utils.Constants.ALARM_CHANNEL_NAME
 import com.gastosdiarios.gavio.utils.NetworkReceiver
 import com.google.firebase.FirebaseApp

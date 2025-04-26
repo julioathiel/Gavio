@@ -99,6 +99,7 @@ class AnalisisGastosViewModel @Inject constructor(
 
             val (gastos, ingresos, themeMode) = combinedData
             if (gastos.isNotEmpty()) {
+                Log.d(tag, "getAllListGastos: $gastos")
                 _uiState.update { UiStateList.Success(gastos) }
             } else {
                 _uiState.update { UiStateList.Empty }
@@ -117,21 +118,67 @@ class AnalisisGastosViewModel @Inject constructor(
     private fun calcularValorMaximo(totalIngresos: Double) {
         viewModelScope.launch(Dispatchers.IO) {
             try {
-                val db = dbm.getGastosPorCategoria().first()
-                val maximoGastos = db.maxByOrNull { it.totalGastado ?: 0.0 }?.totalGastado ?: 0.0
-                val icono = db.maxByOrNull { it.totalGastado ?: 0.0 }?.icon
+                val dbGastos = dbm.getGastosPorCategoria().first()
+                val maximoGastosCategoria = dbGastos.maxByOrNull { it.totalGastado ?: 0.0 }?.totalGastado ?: 0.0
+                val icono = dbGastos.maxByOrNull { it.totalGastado ?: 0.0 }?.icon
 
-                val porcentajeMes: Float =
-                    MathUtils.calcularProgresoRelativo(totalIngresos, maximoGastos)
+                val porcentajeMes: Float = MathUtils.calcularProgresoRelativo(totalIngresos, maximoGastosCategoria)
                 val porcentaje: String = MathUtils.formattedPorcentaje(porcentajeMes)
-
-                _porcentajeGasto.value = porcentaje.toInt()
+                val porcentajeInt = porcentaje.toInt()
+                _porcentajeGasto.value = porcentajeInt
                 _icon.value = icono
 
-                insertGraph(maximoGastos, porcentaje.toFloat())
+                //Obtener datos de barra existentes para el mes actuala existentes para el mes actual
+                val mesActual = DateUtils.currentMonthNumber()
+                val dbBarData = dbm.getBarDataGraph().first()
+                val existingItem = dbBarData.find { it.monthNumber == mesActual }
+
+                existingItem?.let{
+                    val existingExpense = it.money?.toDoubleOrNull() ?: 0.0
+                    if(maximoGastosCategoria > existingExpense){
+                        // El nuevo gasto es mayor, actualiza el gráfico
+                        val newBarData = BarDataModel(
+                            value = porcentaje.toFloat(),
+                            money = maximoGastosCategoria.toString(),
+                            monthNumber = mesActual,
+                            index = it.index
+                        )
+                        insertGraph(newBarData, dbBarData)
+                    }else if(
+                        maximoGastosCategoria == existingExpense && porcentajeMes > (it.value ?: 0f)
+                    ){
+                      //  Si los gastos son iguales, comparamos los porcentajes, si el nuevo porcentaje es mayor, actualizamos.
+                        val newBarData = BarDataModel(
+                            value = porcentaje.toFloat(),
+                            money = maximoGastosCategoria.toString(),
+                            monthNumber = mesActual,
+                            index = it.index
+                        )
+                        insertGraph(newBarData, dbBarData)
+                    }
+                }?: run {
+                    // No existen datos para el mes, inserte nuevos datos
+                    val newBarData = BarDataModel(
+                        value = porcentaje.toFloat(),
+                        money = maximoGastosCategoria.toString(),
+                        monthNumber = mesActual,
+                        index = null
+                    )
+                    insertGraph(newBarData, dbBarData)
+                }
+
+              //  insertGraph(maximoGastosCategoria, porcentaje.toFloat())
             } catch (e: Exception) {
                 Log.e(tag, "Error en calcularValorMaximo : ${e.message}")
-                insertGraph(0.0, 0f)
+                val mesActual = DateUtils.currentMonthNumber()
+                val newBarData = BarDataModel(
+                    value = 0f,
+                    money = "0.0",
+                    monthNumber = mesActual,
+                    index = null
+                )
+                insertGraph(newBarData, emptyList())
+              //  insertGraph(0.0, 0f)
             }
         }
     }
@@ -139,23 +186,47 @@ class AnalisisGastosViewModel @Inject constructor(
     //-------------------------------CIRCULAR BUFFER ---------------------------------//
 
     // Función para insertar datos en la base de datos a través de CircularBuffer
-    private fun insertGraph(maximoGastos: Double, porcentajeMes: Float) {
+//    private fun insertGraph(maximoGastos: Double, porcentajeMes: Float) {
+//        try {
+//            viewModelScope.launch(Dispatchers.Main) {
+//                val mesActual = DateUtils.currentMonthNumber()
+//                // Obtener la lista actual de datos de gráficos
+//                val db = dbm.getBarDataGraph().first()
+//                val existingItem = db.find { it.monthNumber == mesActual }
+//                val newBarData = BarDataModel(
+//                    value = porcentajeMes,
+//                    money = maximoGastos.toString(),
+//                    monthNumber = mesActual,
+//                    index = existingItem?.index
+//                )
+//                if (existingItem != null && (existingItem.value ?: 0f) < porcentajeMes) {
+//                    circularBuffer.updateBarGraphItem(newBarData, db)
+//                }
+//                // Actualizar la lista de datos de gráficos después de la inserción
+//                updateBarGraphList()
+//            }
+//        } catch (e: Exception) {
+//            Log.e(tag, "Error en insertGraph: ${e.message}")
+//        }
+//    }
+    private fun insertGraph(newBarData: BarDataModel, db: List<BarDataModel>) {
         try {
             viewModelScope.launch(Dispatchers.Main) {
-                val mesActual = DateUtils.currentMonthNumber()
-                // Obtener la lista actual de datos de gráficos
-                val db = dbm.getBarDataGraph().first()
-                val existingItem = db.find { it.monthNumber == mesActual }
-                val newBarData = BarDataModel(
-                    value = porcentajeMes,
-                    money = maximoGastos.toString(),
-                    monthNumber = mesActual,
-                    index = existingItem?.index
-                )
-                if (existingItem != null && (existingItem.value ?: 0f) < porcentajeMes) {
-                    circularBuffer.updateBarGraphItem(newBarData, db)
-                }
+//                val mesActual = DateUtils.currentMonthNumber()
+//                // Obtener la lista actual de datos de gráficos
+//                val db = dbm.getBarDataGraph().first()
+//                val existingItem = db.find { it.monthNumber == mesActual }
+//                val newBarData = BarDataModel(
+//                    value = porcentajeMes,
+//                    money = maximoGastos.toString(),
+//                    monthNumber = mesActual,
+//                    index = existingItem?.index
+//                )
+//                if (existingItem != null && (existingItem.value ?: 0f) < porcentajeMes) {
+//                    circularBuffer.updateBarGraphItem(newBarData, db)
+//                }
                 // Actualizar la lista de datos de gráficos después de la inserción
+                circularBuffer.updateBarGraphItem(newBarData, db)
                 updateBarGraphList()
             }
         } catch (e: Exception) {

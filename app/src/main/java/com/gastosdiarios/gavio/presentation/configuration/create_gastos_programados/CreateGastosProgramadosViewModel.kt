@@ -70,14 +70,12 @@ class CreateGastosProgramadosViewModel @Inject constructor(
     fun create(item: GastosProgramadosModel) {
         viewModelScope.launch(Dispatchers.IO) {
             gastosProgramadosFirestore.create(item)
-            cargandoListaActualizada()
         }
     }
 
     fun update(item: GastosProgramadosModel) {
         viewModelScope.launch(Dispatchers.IO) {
             gastosProgramadosFirestore.update(item)
-            cargandoListaActualizada()
         }
     }
 
@@ -95,7 +93,6 @@ class CreateGastosProgramadosViewModel @Inject constructor(
     fun deleteItemSelected(item: GastosProgramadosModel) {
         delete(item)
         _dataList.update { it.copy(selectedItems = emptyList(), selectionMode = false) }
-        cargandoListaActualizada()
     }
 
 

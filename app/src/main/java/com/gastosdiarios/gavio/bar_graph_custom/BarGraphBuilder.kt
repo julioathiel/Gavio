@@ -221,7 +221,7 @@ private fun <T> LazyRowItems(
     LaunchedEffect(state) {
         try {
             if (config.barGraphList.isNotEmpty()) {
-                delay(3000)
+               // delay(3000)
                 state.scrollToItem(index = config.barGraphList.size - 1)
             }
 
@@ -238,24 +238,24 @@ private fun <T> LazyRowItems(
         horizontalArrangement = Arrangement.spacedBy(config.dataBarEspacioEntreBarras)
     ) {
         items(config.barGraphList.size) { index ->
-            var animationBarra by remember { mutableStateOf(false) }
+//            var animationBarra by remember { mutableStateOf(false) }
             val calendar = Calendar.getInstance()
             val currentMonth =
                 calendar.getDisplayName(Calendar.MONTH, Calendar.SHORT, Locale.getDefault())
 
-            LaunchedEffect(key1 = true) {
-                animationBarra = true
-            }
+//            LaunchedEffect(key1 = true) {
+//                animationBarra = true
+//            }
             val data = config.barGraphList[index]
             val value = config.dataToValue(data) //ingresa el valor de porcentaje
             val month = config.dataToMonth(data) //ingresa a los meses de la lista
             var barColor =
                 if (index == selectedBarIndex) config.dataBarSelectedBarColor else config.dataBarUnSelectedBarColor
 
-            val graphBarHeight by animateFloatAsState(
-                targetValue = if (animationBarra) value / config.maxGraphValue else 0f,
-                animationSpec = tween(durationMillis = 1000, delayMillis = 0), label = ""
-            )
+//            val graphBarHeight by animateFloatAsState(
+//                targetValue = if (animationBarra) value / config.maxGraphValue else 0f,
+//                animationSpec = tween(durationMillis = 1000, delayMillis = 0), label = ""
+//            )
             val item = value / config.maxGraphValue
             if (month == currentMonth) {
                 barColor = config.dataBarSelectedBarColor
@@ -275,7 +275,7 @@ private fun <T> LazyRowItems(
                     //muestra cada barra del mes
                     Box(
                         modifier = Modifier
-                             .fillMaxHeight(graphBarHeight)
+//                             .fillMaxHeight(graphBarHeight)
                             .fillMaxHeight(item)
                             .width(config.dataBarWidth)
                             .background(barColor, barShape)

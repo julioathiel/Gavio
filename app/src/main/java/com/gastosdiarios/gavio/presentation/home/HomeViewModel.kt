@@ -107,8 +107,8 @@ class HomeViewModel @Inject constructor(
     private fun calculandoInit() {
         viewModelScope.launch(Dispatchers.IO) {
             try {
-                // val fechaActual = obtenerFechaActual()// muestra 2025-01-01
-                val fechaActual = LocalDate.parse("2025-04-09")// muestra 2025-01-01
+                val fechaActual = obtenerFechaActual()// muestra 2025-01-01
+                //   val fechaActual = LocalDate.parse("2025-04-30")// muestra 2025-01-01
                 dbm.getUserData().collectLatest { db ->
                     val dataCurrentMoney = db.currentMoney
                     val dataDate = db.selectedDate
@@ -124,22 +124,24 @@ class HomeViewModel @Inject constructor(
                             if (fechaActual == fechaLocalDate || fechaActual.isAfter(fechaLocalDate)) {
                                 //si el usuario no tiene dinero en el mes
                                 if (dataCurrentMoney == 0.0) {
+                                    Log.d(tag, "calculandoInit: $dataCurrentMoney")
                                     //actualiza a un mes mas la fecha guardada
                                     updateFechaUnMesMas(fechaActual, fechaLocalDate)
-                                    //controla si la lista esta llena para hacer espacio
-
+                                    Log.d(tag, "calculandoInit: se actualizo la fecha")
                                     //agrega un nuevo mes a la lista
                                     val newItem = BarDataModel(
                                         value = 0f,
                                         money = "0",
                                         monthNumber = DateUtils.currentMonthNumber()
                                     )
-
-                                    circularBuffer.getBarGraphList().collect { list ->
+                                    Log.d(tag, "calculandoInit newItem de la barra: $newItem")
+                                    circularBuffer.getBarGraphList().collectLatest { list ->
+                                        Log.d(tag, "calculandoInit list de la barra: $list")
                                         circularBuffer.updateBarGraphItem(newItem, list)
                                     }
 
                                     _homeUiState.update { it.copy(showNuevoMes = true) }
+                                    Log.d(tag, "calculandoInit: se mostro el nuevo mes")
                                     //si el usuario aun tiene dinero en el mes
                                 } else if (dataCurrentMoney != 0.0) {
                                     Log.d(tag, "calculandoInit: $dataCurrentMoney")
@@ -659,38 +661,37 @@ class HomeViewModel @Inject constructor(
 
     fun getCurrentUser(): FirebaseUser? = authFirebaseImp.getCurrentUser()
 
-    //--------------Gastos programados
+//---------------------Gastos programados-----------------------------//
     fun pagarItem(item: GastosProgramadosModel) {
         viewModelScope.launch(Dispatchers.IO) {
             try {
-                dbm.getUserData().collectLatest { data ->
-                    val totalIngresos: Double = data.totalIngresos ?: 0.0
-                    val cash: Double = item.cash?.toDouble() ?: 0.0
+                val db = dbm.getUserData().first()
+                val totalIngresos: Double = db.totalIngresos ?: 0.0
+                val cash: Double = item.cash?.toDouble() ?: 0.0
 
-                    if (totalIngresos == 0.0) {
-                        snackbarManager.showMessage(context.getString(R.string.no_hay_dinero_para_pagar))
-                    } else if (totalIngresos < cash) {
-                        snackbarManager.showMessage(context.getString(R.string.dinero_insuficiente))
-                    } else {
-                        clearItem(item)
-                        //
-                        cantidadIngresada(item.cash ?: "", TipoTransaccion.GASTOS)
-                        //se crea para la lista de transacciones
-                        crearTransaction(
-                            cantidad = item.cash ?: "",
-                            categoryName = item.title ?: "",
-                            description = item.subTitle ?: "",
-                            categoryIcon = item.icon ?: 0,
-                            tipoTransaccion = TipoTransaccion.GASTOS
-                        )
-                        //dentro de esta funcion se verifica si no esta creado el item en la base de datos
-                        crearNuevaCategoriaDeGastos(
-                            nameCategory = item.title ?: "",
-                            icon = item.icon?.toInt() ?: 0,
-                            cantidadIngresada = item.cash ?: ""
-                        )
-                        snackbarManager.showMessage(context.getString(R.string.pagado_con_exito))
-                    }
+                if (totalIngresos == 0.0) {
+                    snackbarManager.showMessage(context.getString(R.string.no_hay_dinero_para_pagar))
+                } else if (totalIngresos < cash) {
+                    snackbarManager.showMessage(context.getString(R.string.dinero_insuficiente))
+                } else {
+                    clearItem(item)
+                    //
+                    cantidadIngresada(item.cash ?: "", TipoTransaccion.GASTOS)
+                    //se crea para la lista de transacciones
+                    crearTransaction(
+                        cantidad = item.cash ?: "",
+                        categoryName = item.title ?: "",
+                        description = item.subTitle ?: "",
+                        categoryIcon = item.icon ?: 0,
+                        tipoTransaccion = TipoTransaccion.GASTOS
+                    )
+                    //dentro de esta funcion se verifica si no esta creado el item en la base de datos
+                    crearNuevaCategoriaDeGastos(
+                        nameCategory = item.title ?: "",
+                        icon = item.icon?.toInt() ?: 0,
+                        cantidadIngresada = item.cash ?: ""
+                    )
+                    snackbarManager.showMessage(context.getString(R.string.pagado_con_exito))
                 }
             } catch (e: Exception) {
                 Toast.makeText(context, "Error en pagarItem", Toast.LENGTH_SHORT).show()
@@ -717,9 +718,8 @@ class HomeViewModel @Inject constructor(
     }
 
     private fun getGastosProgramados() {
-        viewModelScope.launch {
+        viewModelScope.launch(Dispatchers.IO) {
             try {
-                withContext(Dispatchers.IO) {
                     dbm.getGastosProgramados().collectLatest { data ->
                         val filterList = data.filter {
                             try {
@@ -734,10 +734,8 @@ class HomeViewModel @Inject constructor(
                         _listFilter.clear()
                         _listFilter.addAll(filterList)
                     }
-                }
-
             } catch (e: Exception) {
-                Toast.makeText(context, "Error en getGastosprogramados", Toast.LENGTH_SHORT)
+                Toast.makeText(context, "Error en getGastosprogramados en HomeViewModel", Toast.LENGTH_SHORT)
                     .show()
                 Log.e(tag, "getGastosprogramados: error", e)
             }

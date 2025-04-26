@@ -76,19 +76,19 @@ fun ConfigurationScreen(
 
 
     ListConf(modifier = modifier.fillMaxSize(),
-        items = com.gastosdiarios.gavio.data.domain.enums.ItemConfigurationEnum.entries,
+        items = ItemConfigurationEnum.entries,
         onItemClick = { item ->
             when (item) {
-                com.gastosdiarios.gavio.data.domain.enums.ItemConfigurationEnum.ELIMINAR_EDITAR_PERFIL -> onToUserProfileScreen()
-                com.gastosdiarios.gavio.data.domain.enums.ItemConfigurationEnum.CATEGORIASNUEVAS -> onToCategoriasGastosScreen()
-                com.gastosdiarios.gavio.data.domain.enums.ItemConfigurationEnum.CREATE_GASTOS_PROGRAMADOS -> onToCreateGastosProgramadosScreen()
-                com.gastosdiarios.gavio.data.domain.enums.ItemConfigurationEnum.UPDATEDATE -> onToActualizarMaximoFechaScreen()
-                com.gastosdiarios.gavio.data.domain.enums.ItemConfigurationEnum.RECORDATORIOS -> onToRecordatorioScreen()
-                com.gastosdiarios.gavio.data.domain.enums.ItemConfigurationEnum.RESET -> viewModel.setShowBottomSheet(true)
-                com.gastosdiarios.gavio.data.domain.enums.ItemConfigurationEnum.COMPARTIR -> viewModel.setShowShare(true)
-                com.gastosdiarios.gavio.data.domain.enums.ItemConfigurationEnum.ACERCADE -> onToAcercaDeScreen()
-                com.gastosdiarios.gavio.data.domain.enums.ItemConfigurationEnum.AJUSTES_AVANZADOS -> onToAjustesScreen()
-                com.gastosdiarios.gavio.data.domain.enums.ItemConfigurationEnum.EXPORTAR_DATOS -> onToExportarDatosScreen()
+                ItemConfigurationEnum.ELIMINAR_EDITAR_PERFIL -> onToUserProfileScreen()
+                ItemConfigurationEnum.CATEGORIASNUEVAS -> onToCategoriasGastosScreen()
+                ItemConfigurationEnum.CREATE_GASTOS_PROGRAMADOS -> onToCreateGastosProgramadosScreen()
+                ItemConfigurationEnum.UPDATEDATE -> onToActualizarMaximoFechaScreen()
+                ItemConfigurationEnum.RECORDATORIOS -> onToRecordatorioScreen()
+                ItemConfigurationEnum.RESET -> viewModel.setShowBottomSheet(true)
+                ItemConfigurationEnum.COMPARTIR -> viewModel.setShowShare(true)
+                ItemConfigurationEnum.ACERCADE -> onToAcercaDeScreen()
+                ItemConfigurationEnum.AJUSTES_AVANZADOS -> onToAjustesScreen()
+                ItemConfigurationEnum.EXPORTAR_DATOS -> onToExportarDatosScreen()
             }
         }
     )
@@ -138,13 +138,13 @@ fun ContentBottomSheetReset(
     onToCongratulationsScreen: () -> Unit,
     onDismiss: () -> Unit,
     onAccept: () -> Unit,
-    opcionesEliminar: List<com.gastosdiarios.gavio.data.domain.model.OpcionEliminarModel>,
-    onConfirm: (Set<com.gastosdiarios.gavio.data.domain.model.OpcionEliminarModel>) -> Unit
+    opcionesEliminar: List<OpcionEliminarModel>,
+    onConfirm: (Set<OpcionEliminarModel>) -> Unit
 ) {
     val uiState by viewModel.configurationUiState.collectAsState()
     var isRotate by remember { mutableStateOf(false) }
     var isActivated by remember { mutableStateOf(false) }
-    var selectedOptions by remember { mutableStateOf(setOf<com.gastosdiarios.gavio.data.domain.model.OpcionEliminarModel>()) }
+    var selectedOptions by remember { mutableStateOf(setOf<OpcionEliminarModel>()) }
 
     LaunchedEffect(key1 = uiState.resetPending) {
         if (uiState.resetPending) {
@@ -163,7 +163,9 @@ fun ContentBottomSheetReset(
             Text(
                 text = stringResource(R.string.title_reiniciar),
                 style = MaterialTheme.typography.labelMedium,
-                modifier = Modifier.weight(1f) // Occupy available space
+                modifier = Modifier
+                    .weight(1f)
+                    .padding(bottom = 16.dp)
             )
             //aparece cuando se apreto el boton para reiniciar
             if (isActivated) {
@@ -226,13 +228,6 @@ fun ContentBottomSheetReset(
             Text(
                 text = stringResource(id = android.R.string.ok)
             )
-        }
-        Spacer(modifier = Modifier.size(8.dp))
-        TextButton(
-            onClick = { onDismiss() },
-            modifier = modifier.height(51.dp)
-        ) {
-            Text(text = stringResource(id = android.R.string.cancel))
         }
         Spacer(modifier = Modifier.size(8.dp))
     }

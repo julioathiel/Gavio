@@ -25,8 +25,8 @@ import com.gastosdiarios.gavio.data.domain.enums.ItemConfigurationEnum
 @Composable
 fun ListConf(
     modifier: Modifier,
-    items: List<com.gastosdiarios.gavio.data.domain.enums.ItemConfigurationEnum>,
-    onItemClick: (com.gastosdiarios.gavio.data.domain.enums.ItemConfigurationEnum) -> Unit
+    items: List<ItemConfigurationEnum>,
+    onItemClick: (ItemConfigurationEnum) -> Unit
 ) {
     val context = LocalContext.current
 

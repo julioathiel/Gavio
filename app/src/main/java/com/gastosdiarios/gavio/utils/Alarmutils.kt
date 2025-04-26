@@ -5,7 +5,7 @@ import android.app.PendingIntent
 import android.content.Context
 import android.content.Intent
 import com.gastosdiarios.gavio.data.domain.model.Alarm
-import com.gastosdiarios.gavio.receiver.AlarmReceiver
+import com.gastosdiarios.gavio.alarm.receiver.AlarmReceiver
 import com.gastosdiarios.gavio.utils.Constants.ALARM_ID
 import kotlinx.serialization.encodeToString
 import kotlinx.serialization.json.Json

@@ -1,4 +1,4 @@
-package com.gastosdiarios.gavio.receiver
+package com.gastosdiarios.gavio.alarm.receiver
 
 import android.Manifest.permission.POST_NOTIFICATIONS
 import android.app.AlarmManager
@@ -15,11 +15,11 @@ import androidx.core.app.NotificationCompat
 import androidx.core.app.NotificationManagerCompat
 import androidx.core.content.ContextCompat
 import com.gastosdiarios.gavio.R
+import com.gastosdiarios.gavio.alarm.PermissionActivity
 import com.gastosdiarios.gavio.data.domain.model.Alarm
 import com.gastosdiarios.gavio.data.repository.repositoriesFirestrore.GastosProgramadosFirestore
 import com.gastosdiarios.gavio.utils.Constants.ALARM_CHANNEL_NAME
 import com.gastosdiarios.gavio.utils.Constants.ALARM_ID
-import com.gastosdiarios.gavio.utils.Constants.NOTIFICATION_ID
 import com.gastosdiarios.gavio.utils.Constants.STOP_ALARM
 import com.gastosdiarios.gavio.utils.cancelAlarm
 import dagger.hilt.android.AndroidEntryPoint
@@ -45,17 +45,19 @@ class AlarmReceiver : BroadcastReceiver() {
         val alarmManager = context?.getSystemService(Context.ALARM_SERVICE) as AlarmManager
         val reminderJson = intent?.getStringExtra(ALARM_ID)
         val reminder = reminderJson?.let { Json.decodeFromString<Alarm>(it) }
-
+        val idAlarm: Int = reminder?.id?.toInt() ?: 0
         mediaPlayer =
             MediaPlayer.create(context, Settings.System.DEFAULT_ALARM_ALERT_URI)
         mediaPlayer?.isLooping = true
 
 
         if (intent?.action == STOP_ALARM) {
-            val alarmId = intent.getIntExtra(ALARM_ID, 2)
-            NotificationManagerCompat.from(context).cancel(alarmId)
+            val alarmId = intent.getIntExtra(ALARM_ID, idAlarm)//donde estaba idAlarm antes puse 2 por defecto
+
+         //   NotificationManagerCompat.from(context).cancel(alarmId)
 
             if (mediaPlayer != null) {
+                NotificationManagerCompat.from(context).cancel(alarmId)
                 mediaPlayer?.stop()
                 mediaPlayer?.release()
                 mediaPlayer = null
@@ -117,7 +119,7 @@ class AlarmReceiver : BroadcastReceiver() {
                     //Libera todos los recursos del MediaPlayer y lo pone en un estado "muerto". Ya no se puede usar.
                     mediaPlayer?.release()
                     //cancela la notificacion para que no siga apareciendo
-                    NotificationManagerCompat.from(context).cancel(NOTIFICATION_ID)
+                    NotificationManagerCompat.from(context).cancel(reminder.id.toInt())
                 }
             }
 
@@ -143,7 +145,7 @@ class AlarmReceiver : BroadcastReceiver() {
                     mediaPlayer?.stop()
                     //Libera todos los recursos del MediaPlayer y lo pone en un estado "muerto". Ya no se puede usar.
                     mediaPlayer?.release()
-                    NotificationManagerCompat.from(context).cancel(NOTIFICATION_ID)
+                    NotificationManagerCompat.from(context).cancel(reminder.id.toInt())
                 }
             }
 
@@ -167,16 +169,18 @@ class AlarmReceiver : BroadcastReceiver() {
                             .addAction(R.drawable.ic_dark_mode, "Cerrar", closePendingIntent)
                             .build()
                         NotificationManagerCompat.from(context)
-                            .notify(1, notification)
+                            .notify(idAlarm, notification)
                     } else {
                         // El usuario NO ha concedido el permiso POST_NOTIFICATIONS.
-                        // En este caso, no se muestra la notificación.
-                        // Aquí podrías añadir código para solicitar el permiso al usuario.
+                        // Lanzar la Activity para solicitar el permiso
+                        val intent = Intent(context, PermissionActivity::class.java).apply {
+                            flags = Intent.FLAG_ACTIVITY_NEW_TASK
+                        }
+                        context.startActivity(intent)
                     }
                 } else {
                     // Se ejecuta si el dispositivo tiene Android 12 o una versión inferior.
                     // En estas versiones, el permiso POST_NOTIFICATIONS no es necesario.
-
 
                     val notification = NotificationCompat.Builder(context, ALARM_CHANNEL_NAME)
                         .setSmallIcon(R.drawable.ic_ahorro)//icono de la app
@@ -198,13 +202,13 @@ class AlarmReceiver : BroadcastReceiver() {
 
 
                     NotificationManagerCompat.from(context)
-                        .notify(1, notification)
+                        .notify(idAlarm, notification)
 
                 }
                 mediaPlayer?.setOnCompletionListener {
                     mediaPlayer?.release()
                 }
-                //   mediaPlayer?.start()
+                  mediaPlayer?.start()
             }
         }
     }

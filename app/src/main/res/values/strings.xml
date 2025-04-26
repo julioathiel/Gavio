@@ -172,4 +172,10 @@
     <string name="delete_item_title">Eliminar elemento</string>
     <string name="delete_first_item_title">Eliminar primer elemento</string>
     <string name="delete_item_content">¿Estás seguro de que quieres eliminar este elemento?</string>
+    <string name="permission_denied_title">Permiso de notificaciones necesario</string>
+    <string name="permission_denied_message">Para recordarte tus gastos programados, necesitamos que actives las notificaciones. Sin este permiso, no podremos enviarte recordatorios. Puedes activar las notificaciones en la configuración de la aplicación.</string>
+    <string name="go_to_settings">Ir a Configuración</string>
+    <string name="cancel">Cancelar</string>
+    <string name="delete_multiple_items_title">Elimiar %d elementos</string>
+    <string name="delete_multiple_items_content">¿Estás seguro de que quieres eliminar los %d elementos seleccionados?</string>
 </resources>

@@ -1,4 +1,4 @@
-package com.gastosdiarios.gavio
+package com.gastosdiarios.gavio.main
 
 import android.os.Bundle
 import androidx.activity.compose.setContent

@@ -16,7 +16,7 @@ fun BarGraphConfigCustom(listBarGraph: List<BarDataModel>) {
         .dataBar(
             selectedBarColor = MaterialTheme.colorScheme.primary,
             unSelectedBarColor = MaterialTheme.colorScheme.secondaryContainer,
-            width = 60.dp,
+            width = 50.dp,
             espacioEntreBarras = 8.dp
         )
         .height(altura = 200.dp)

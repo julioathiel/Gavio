@@ -225,7 +225,7 @@ fun RealizarAccion(
                         item.hour ?: timeInMillis.hour,
                         item.minute ?: timeInMillis.minute
                     )
-                    set(context, time)
+
                     val alarm = Alarm(
                         id = time,
                         icon = item.icon.toString().toIntOrNull() ?: 0,
@@ -253,8 +253,7 @@ fun RealizarAccion(
                         item.hour ?: 0,
                         item.minute ?: 0
                     )
-                    Log.d("timein", " la alarma se activara el dia ${time.milliseconds}")
-                    set(context, time)
+
                     val alarm = Alarm(
                         id = time,
                         icon = item.icon ?: 0,
@@ -273,21 +272,4 @@ fun RealizarAccion(
             }
         }
     }
-}
-
-fun set(context: Context, time: Long) {
-    val calendar = Calendar.getInstance()
-    calendar.timeInMillis = time
-
-    val year = calendar.get(Calendar.YEAR)
-    val month = calendar.get(Calendar.MONTH) + 1 // Los meses empiezan en 0
-    val day = calendar.get(Calendar.DAY_OF_MONTH)
-    val hour = calendar.get(Calendar.HOUR_OF_DAY)
-    val minute = calendar.get(Calendar.MINUTE)
-    val second = calendar.get(Calendar.SECOND)
-    Toast.makeText(
-        context,
-        "La alarma se activará el día: $day/$month/$year a las $hour:$minute",
-        Toast.LENGTH_LONG
-    ).show()
 }

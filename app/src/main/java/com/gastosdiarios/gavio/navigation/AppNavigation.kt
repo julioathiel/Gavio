@@ -12,7 +12,7 @@ import androidx.navigation.compose.NavHost
 import androidx.navigation.compose.composable
 import androidx.navigation.compose.rememberNavController
 import androidx.navigation.toRoute
-import com.gastosdiarios.gavio.MainActivity
+import com.gastosdiarios.gavio.main.MainActivity
 import com.gastosdiarios.gavio.data.commons.CommonsLoadingScreen
 import com.gastosdiarios.gavio.data.commons.ConnectivityErrorScreen
 import com.gastosdiarios.gavio.main_scaffold.scaffold.MainScaffold

@@ -109,11 +109,11 @@ fun TransactionsScreen(
                 else {
                     stringResource(id = R.string.toolbar_registro_gastos)
                 },
-                containerColor = MaterialTheme.colorScheme.surface,
+                containerColor = MaterialTheme.colorScheme.surfaceBright,
                 onBack = onBack,
                 actions = {
                     if (data.selectionMode && data.selectedItems.size > 1) {
-                        IconButton(onClick = { viewModel.deleteItemSelected() }) {
+                        IconButton(onClick = { viewModel.isDeleteTrue() }) {
                             Icon(
                                 imageVector = Icons.Outlined.Delete,
                                 contentDescription = "delete items"
@@ -190,16 +190,25 @@ fun TransactionsScreen(
         },
         snackbarHost = { SnackbarHost(hostState = isShowSnackbar) }
     )
+    val dialogTitle: String
+    val dialogContentText: String
     val isFirstItem = itemToDelete?.index == 0
-    val dialogTitle = if (isFirstItem) {
-        stringResource(id = R.string.delete_first_item_title)
-    } else {
-        stringResource(R.string.delete_item_title)
-    }
-    val dialogContentText = if (isFirstItem) {
-        stringResource(R.string.delete_first_item_content)
-    } else {
-        stringResource(id = R.string.delete_item_content)
+
+    if(data.selectedItems.size == 1){
+        dialogTitle = if (itemToDelete?.index == 0) {
+            stringResource(id = R.string.delete_first_item_title)
+        } else {
+            stringResource(R.string.delete_item_title)
+        }
+        dialogContentText = if (isFirstItem) {
+            stringResource(R.string.delete_first_item_content)
+        } else {
+            stringResource(id = R.string.delete_item_content)
+        }
+    }else{
+        val itemCount = data.selectedItems.size
+        dialogTitle = stringResource(R.string.delete_multiple_items_title, itemCount)
+        dialogContentText = stringResource(R.string.delete_multiple_items_content, itemCount)
     }
 
     DialogDelete(data.isDelete,

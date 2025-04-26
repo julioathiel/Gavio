@@ -1,14 +1,10 @@
 package com.gastosdiarios.gavio.utils
 
-import android.content.BroadcastReceiver
 import android.content.Context
-import android.content.Intent
 import android.net.ConnectivityManager
 import android.net.Network
 import android.net.NetworkCapabilities
 import android.net.NetworkRequest
-import com.gastosdiarios.gavio.App
-import com.gastosdiarios.gavio.MainActivity
 
 class NetworkReceiver(private val context: Context) {
     private val connectivityManager =

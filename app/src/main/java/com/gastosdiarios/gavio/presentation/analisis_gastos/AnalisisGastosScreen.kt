@@ -41,6 +41,7 @@ import com.gastosdiarios.gavio.data.commons.CommonsIsEmpty
 import com.gastosdiarios.gavio.data.commons.CommonsLoadingScreen
 import com.gastosdiarios.gavio.data.commons.ErrorScreen
 import com.gastosdiarios.gavio.data.domain.model.modelFirebase.BarDataModel
+import com.gastosdiarios.gavio.data.domain.model.modelFirebase.GastosPorCategoriaModel
 import com.gastosdiarios.gavio.data.ui_state.UiStateList
 import com.gastosdiarios.gavio.presentation.analisis_gastos.components.ItemCategoriaConMasGastos
 import com.gastosdiarios.gavio.presentation.analisis_gastos.components.ItemCategory
@@ -70,7 +71,7 @@ fun GastosPorCategoriaList(
 ) {
     val uiState by viewModel.uiState.collectAsStateWithLifecycle()
     val showTwoColumns by viewModel.showTwoColumns.collectAsStateWithLifecycle()
-    val columns = if (showTwoColumns) 2 else 1
+    val columns = if (showTwoColumns) 1 else 2
     LazyVerticalGrid(
         columns = GridCells.Fixed(columns),
         modifier = modifier.background(MaterialTheme.colorScheme.surface),
@@ -212,7 +213,7 @@ fun GastosPorCategoriaList(
             }
 
             is UiStateList.Success -> {
-                val list = (uiState as UiStateList.Success<com.gastosdiarios.gavio.data.domain.model.modelFirebase.GastosPorCategoriaModel>).data
+                val list = (uiState as UiStateList.Success<GastosPorCategoriaModel>).data
                 items(list.size) { index ->
                     val (tertiaryContainer, onTertiary) = viewModel.getRandomColor(
                         isSystemInDarkTheme()

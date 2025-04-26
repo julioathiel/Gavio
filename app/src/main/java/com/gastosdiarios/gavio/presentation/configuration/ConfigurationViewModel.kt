@@ -27,7 +27,7 @@ class ConfigurationViewModel @Inject constructor(
     private val dbm: DataBaseManager,
     private val barDataFirestore: BarDataFirestore,
 ) : ViewModel() {
-
+    private val tag = "ConfigurationViewModel"
     private val _configurationUiState = MutableStateFlow(ConfigurationUiState())
     val configurationUiState: StateFlow<ConfigurationUiState> = _configurationUiState.asStateFlow()
 
@@ -38,10 +38,11 @@ class ConfigurationViewModel @Inject constructor(
     private fun getShareLink() {
         viewModelScope.launch(Dispatchers.IO) {
             dbm.getSharedLink().collect { db ->
-            if (db.shareUrl != null) {
-                _configurationUiState.update { it.copy(sharedLink = db.shareUrl) }
+                Log.d(tag, "getShareLink: $db")
+                if (db.link != null) {
+                    _configurationUiState.update { it.copy(sharedLink = db.link) }
+                }
             }
-        }
         }
     }
 
@@ -69,7 +70,7 @@ class ConfigurationViewModel @Inject constructor(
                 monthNumber = month,
                 index = 0
             )
-         barDataFirestore.create(entity)
+            barDataFirestore.create(entity)
         }
     }
 
